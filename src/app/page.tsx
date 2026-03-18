@@ -25,6 +25,8 @@ import {
   Ticket,
   Trophy,
   Plane,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 
 function formatDriveTime(minutes: number): string {
@@ -139,6 +141,7 @@ interface DateCardProps {
 const DateCard = memo(function DateCard({
   group,
 }: DateCardProps) {
+  const [expanded, setExpanded] = useState(true);
   const [routeFocus, setRouteFocus] = useState<RouteFocus | null>(null);
   const [venueFocus, setVenueFocus] = useState<VenueFocus | null>(null);
   const hoverTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -165,8 +168,9 @@ const DateCard = memo(function DateCard({
 
   return (
     <Card>
-      <CardHeader className="pb-3">
+      <CardHeader className="cursor-pointer select-none pb-3" onClick={() => setExpanded((v) => !v)}>
         <CardTitle className="flex items-center gap-3">
+          {expanded ? <ChevronDown className="size-4 text-muted-foreground" /> : <ChevronRight className="size-4 text-muted-foreground" />}
           <Calendar className="size-4 text-primary" />
           <span>{formatDateHeading(group.date)}</span>
           <Badge variant="secondary">
@@ -175,7 +179,7 @@ const DateCard = memo(function DateCard({
           </Badge>
         </CardTitle>
       </CardHeader>
-      <CardContent className="px-0">
+      {expanded && <CardContent className="px-0">
         <div className="mb-4 px-4">
           <GameMap events={group.events} routeFocus={routeFocus} venueFocus={venueFocus} />
         </div>
@@ -270,7 +274,12 @@ const DateCard = memo(function DateCard({
                               onMouseLeave={() => handleAirportHover(null)}
                             >
                               <Plane className="size-3 shrink-0" />
-                              <span className="font-mono font-semibold">{apt.code}</span>
+                              <a
+                                href={`https://frontier-flight-search.vercel.app/?to=${apt.code}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="font-mono font-semibold hover:text-foreground hover:underline"
+                              >{apt.code}</a>
                               {mapsUrl ? (
                                 <a
                                   href={mapsUrl}
@@ -300,6 +309,17 @@ const DateCard = memo(function DateCard({
                             </div>
                           );
                         })}
+                        {airports.length > 1 && (
+                          <div className="flex items-center gap-1.5 text-muted-foreground">
+                            <Plane className="size-3 shrink-0" />
+                            <a
+                              href={`https://frontier-flight-search.vercel.app/?${airports.map((apt) => `to=${apt.code}`).join("&")}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-mono font-semibold hover:text-foreground hover:underline"
+                            >ALL</a>
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <span className="text-xs text-muted-foreground">—</span>
@@ -310,7 +330,7 @@ const DateCard = memo(function DateCard({
             })}
           </TableBody>
         </Table>
-      </CardContent>
+      </CardContent>}
     </Card>
   );
 });

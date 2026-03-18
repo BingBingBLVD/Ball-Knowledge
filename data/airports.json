@@ -1,0 +1,746 @@
+[
+  {
+    "code": "AGU",
+    "shortName": "Aguascalientes, Mexico",
+    "fullName": "Aguascalientes, Mexico, MX (AGU)",
+    "countryCode": "MX"
+  },
+  {
+    "code": "ATL",
+    "shortName": "Atlanta, GA",
+    "fullName": "Atlanta, GA (ATL)",
+    "countryCode": "US"
+  },
+  {
+    "code": "AUA",
+    "shortName": "Aruba, Aruba",
+    "fullName": "Aruba, Aruba, AW (AUA)",
+    "countryCode": "AW"
+  },
+  {
+    "code": "AUS",
+    "shortName": "Austin, TX",
+    "fullName": "Austin, TX (AUS)",
+    "countryCode": "US"
+  },
+  {
+    "code": "BDL",
+    "shortName": "Hartford, CT",
+    "fullName": "Hartford, CT (BDL)",
+    "countryCode": "US"
+  },
+  {
+    "code": "BJX",
+    "shortName": "Leon, Mexico",
+    "fullName": "Leon, Mexico, MX (BJX)",
+    "countryCode": "MX"
+  },
+  {
+    "code": "BNA",
+    "shortName": "Nashville, TN",
+    "fullName": "Nashville, TN (BNA)",
+    "countryCode": "US"
+  },
+  {
+    "code": "BOI",
+    "shortName": "Boise, ID",
+    "fullName": "Boise, ID (BOI)",
+    "countryCode": "US"
+  },
+  {
+    "code": "BOS",
+    "shortName": "Boston, MA",
+    "fullName": "Boston, MA (BOS)",
+    "countryCode": "US"
+  },
+  {
+    "code": "BQN",
+    "shortName": "Aguadilla, PR",
+    "fullName": "Aguadilla, PR, PR (BQN)",
+    "countryCode": "PR"
+  },
+  {
+    "code": "BUF",
+    "shortName": "Buffalo, NY",
+    "fullName": "Buffalo, NY (BUF)",
+    "countryCode": "US"
+  },
+  {
+    "code": "BUR",
+    "shortName": "Hollywood Burbank/LA, CA",
+    "fullName": "Hollywood Burbank/LA, CA (BUR)",
+    "countryCode": "US"
+  },
+  {
+    "code": "BWI",
+    "shortName": "Baltimore, MD",
+    "fullName": "Baltimore, MD (BWI)",
+    "countryCode": "US"
+  },
+  {
+    "code": "CHS",
+    "shortName": "Charleston, SC",
+    "fullName": "Charleston, SC (CHS)",
+    "countryCode": "US"
+  },
+  {
+    "code": "CID",
+    "shortName": "Cedar Rapids, IA",
+    "fullName": "Cedar Rapids, IA (CID)",
+    "countryCode": "US"
+  },
+  {
+    "code": "CJS",
+    "shortName": "Ciudad Juarez, Mexico",
+    "fullName": "Ciudad Juarez, Mexico, MX (CJS)",
+    "countryCode": "MX"
+  },
+  {
+    "code": "CLE",
+    "shortName": "Cleveland, OH",
+    "fullName": "Cleveland, OH (CLE)",
+    "countryCode": "US"
+  },
+  {
+    "code": "CLT",
+    "shortName": "Charlotte, NC",
+    "fullName": "Charlotte, NC (CLT)",
+    "countryCode": "US"
+  },
+  {
+    "code": "CMH",
+    "shortName": "Columbus, OH",
+    "fullName": "Columbus, OH (CMH)",
+    "countryCode": "US"
+  },
+  {
+    "code": "CRP",
+    "shortName": "Corpus Christi, TX",
+    "fullName": "Corpus Christi, TX (CRP)",
+    "countryCode": "US"
+  },
+  {
+    "code": "CUL",
+    "shortName": "Culiacan, Mexico",
+    "fullName": "Culiacan, Mexico, MX (CUL)",
+    "countryCode": "MX"
+  },
+  {
+    "code": "CUN",
+    "shortName": "Cancun, Mexico",
+    "fullName": "Cancun, Mexico, MX (CUN)",
+    "countryCode": "MX"
+  },
+  {
+    "code": "CUU",
+    "shortName": "Chihuahua, Mexico",
+    "fullName": "Chihuahua, Mexico, MX (CUU)",
+    "countryCode": "MX"
+  },
+  {
+    "code": "CVG",
+    "shortName": "Cincinnati, OH",
+    "fullName": "Cincinnati, OH (CVG)",
+    "countryCode": "US"
+  },
+  {
+    "code": "DCA",
+    "shortName": "Washington-Reagan, DC",
+    "fullName": "Washington-Reagan, DC (DCA)",
+    "countryCode": "US"
+  },
+  {
+    "code": "DEN",
+    "shortName": "Denver, CO",
+    "fullName": "Denver, CO (DEN)",
+    "countryCode": "US"
+  },
+  {
+    "code": "DFW",
+    "shortName": "Dallas/Ft. Worth, TX",
+    "fullName": "Dallas/Ft. Worth, TX (DFW)",
+    "countryCode": "US"
+  },
+  {
+    "code": "DGO",
+    "shortName": "Durango, Mexico",
+    "fullName": "Durango, Mexico, MX (DGO)",
+    "countryCode": "MX"
+  },
+  {
+    "code": "DSM",
+    "shortName": "Des Moines, IA",
+    "fullName": "Des Moines, IA (DSM)",
+    "countryCode": "US"
+  },
+  {
+    "code": "DTW",
+    "shortName": "Detroit, MI",
+    "fullName": "Detroit, MI (DTW)",
+    "countryCode": "US"
+  },
+  {
+    "code": "ELP",
+    "shortName": "El Paso, TX",
+    "fullName": "El Paso, TX (ELP)",
+    "countryCode": "US"
+  },
+  {
+    "code": "EWR",
+    "shortName": "Newark, NJ",
+    "fullName": "Newark, NJ (EWR)",
+    "countryCode": "US"
+  },
+  {
+    "code": "FAR",
+    "shortName": "Fargo, ND",
+    "fullName": "Fargo, ND (FAR)",
+    "countryCode": "US"
+  },
+  {
+    "code": "FLL",
+    "shortName": "Fort Lauderdale, FL",
+    "fullName": "Fort Lauderdale, FL (FLL)",
+    "countryCode": "US"
+  },
+  {
+    "code": "FSD",
+    "shortName": "Sioux Falls, SD",
+    "fullName": "Sioux Falls, SD (FSD)",
+    "countryCode": "US"
+  },
+  {
+    "code": "GDL",
+    "shortName": "Guadalajara, Mexico",
+    "fullName": "Guadalajara, Mexico, MX (GDL)",
+    "countryCode": "MX"
+  },
+  {
+    "code": "GEG",
+    "shortName": "Spokane, WA",
+    "fullName": "Spokane, WA (GEG)",
+    "countryCode": "US"
+  },
+  {
+    "code": "GRR",
+    "shortName": "Grand Rapids, MI",
+    "fullName": "Grand Rapids, MI (GRR)",
+    "countryCode": "US"
+  },
+  {
+    "code": "GTP",
+    "shortName": "Gate, CA",
+    "fullName": "Gate, CA (GTP)",
+    "countryCode": "US"
+  },
+  {
+    "code": "GUA",
+    "shortName": "Guatemala City, Guatemala",
+    "fullName": "Guatemala City, Guatemala, GT (GUA)",
+    "countryCode": "GT"
+  },
+  {
+    "code": "HMO",
+    "shortName": "Hermosillo, Mexico",
+    "fullName": "Hermosillo, Mexico, MX (HMO)",
+    "countryCode": "MX"
+  },
+  {
+    "code": "HUX",
+    "shortName": "Huatulco, Mexico",
+    "fullName": "Huatulco, Mexico, MX (HUX)",
+    "countryCode": "MX"
+  },
+  {
+    "code": "IAD",
+    "shortName": "Washington-Dulles, VA",
+    "fullName": "Washington-Dulles, VA (IAD)",
+    "countryCode": "US"
+  },
+  {
+    "code": "IAH",
+    "shortName": "Houston-Intercontinental, TX",
+    "fullName": "Houston-Intercontinental, TX (IAH)",
+    "countryCode": "US"
+  },
+  {
+    "code": "IND",
+    "shortName": "Indianapolis, IN",
+    "fullName": "Indianapolis, IN (IND)",
+    "countryCode": "US"
+  },
+  {
+    "code": "ISP",
+    "shortName": "Long Island/Islip, NY",
+    "fullName": "Long Island/Islip, NY (ISP)",
+    "countryCode": "US"
+  },
+  {
+    "code": "JAX",
+    "shortName": "Jacksonville, FL",
+    "fullName": "Jacksonville, FL (JAX)",
+    "countryCode": "US"
+  },
+  {
+    "code": "JFK",
+    "shortName": "New York (JFK), NY",
+    "fullName": "New York (JFK), NY (JFK)",
+    "countryCode": "US"
+  },
+  {
+    "code": "LAS",
+    "shortName": "Las Vegas, NV",
+    "fullName": "Las Vegas, NV (LAS)",
+    "countryCode": "US"
+  },
+  {
+    "code": "LAX",
+    "shortName": "Los Angeles, CA",
+    "fullName": "Los Angeles, CA (LAX)",
+    "countryCode": "US"
+  },
+  {
+    "code": "LGA",
+    "shortName": "New York-LaGuardia, NY",
+    "fullName": "New York-LaGuardia, NY (LGA)",
+    "countryCode": "US"
+  },
+  {
+    "code": "LIT",
+    "shortName": "Little Rock, AR",
+    "fullName": "Little Rock, AR (LIT)",
+    "countryCode": "US"
+  },
+  {
+    "code": "MBJ",
+    "shortName": "Montego Bay, Jamaica",
+    "fullName": "Montego Bay, Jamaica, JM (MBJ)",
+    "countryCode": "JM"
+  },
+  {
+    "code": "MCI",
+    "shortName": "Kansas City, MO",
+    "fullName": "Kansas City, MO (MCI)",
+    "countryCode": "US"
+  },
+  {
+    "code": "MCO",
+    "shortName": "Orlando, FL",
+    "fullName": "Orlando, FL (MCO)",
+    "countryCode": "US"
+  },
+  {
+    "code": "MDT",
+    "shortName": "Harrisburg, PA",
+    "fullName": "Harrisburg, PA (MDT)",
+    "countryCode": "US"
+  },
+  {
+    "code": "MDW",
+    "shortName": "Chicago-Midway, IL",
+    "fullName": "Chicago-Midway, IL (MDW)",
+    "countryCode": "US"
+  },
+  {
+    "code": "MEM",
+    "shortName": "Memphis, TN ",
+    "fullName": "Memphis, TN  (MEM)",
+    "countryCode": "US"
+  },
+  {
+    "code": "MEX",
+    "shortName": "Mexico City, Mexico",
+    "fullName": "Mexico City, Mexico, MX (MEX)",
+    "countryCode": "MX"
+  },
+  {
+    "code": "MIA",
+    "shortName": "Miami, FL",
+    "fullName": "Miami, FL (MIA)",
+    "countryCode": "US"
+  },
+  {
+    "code": "MKE",
+    "shortName": "Milwaukee, WI",
+    "fullName": "Milwaukee, WI (MKE)",
+    "countryCode": "US"
+  },
+  {
+    "code": "MLM",
+    "shortName": "Morelia, Mexico",
+    "fullName": "Morelia, Mexico, MX (MLM)",
+    "countryCode": "MX"
+  },
+  {
+    "code": "MSN",
+    "shortName": "Madison, WI",
+    "fullName": "Madison, WI (MSN)",
+    "countryCode": "US"
+  },
+  {
+    "code": "MSP",
+    "shortName": "Minneapolis/St. Paul, MN",
+    "fullName": "Minneapolis/St. Paul, MN (MSP)",
+    "countryCode": "US"
+  },
+  {
+    "code": "MSY",
+    "shortName": "New Orleans, LA",
+    "fullName": "New Orleans, LA (MSY)",
+    "countryCode": "US"
+  },
+  {
+    "code": "MTY",
+    "shortName": "Monterrey, Mexico",
+    "fullName": "Monterrey, Mexico, MX (MTY)",
+    "countryCode": "MX"
+  },
+  {
+    "code": "MXL",
+    "shortName": "Mexicali, Mexico",
+    "fullName": "Mexicali, Mexico, MX (MXL)",
+    "countryCode": "MX"
+  },
+  {
+    "code": "MYR",
+    "shortName": "Myrtle Beach, SC",
+    "fullName": "Myrtle Beach, SC (MYR)",
+    "countryCode": "US"
+  },
+  {
+    "code": "NAS",
+    "shortName": "Nassau, Bahamas",
+    "fullName": "Nassau, Bahamas, BS (NAS)",
+    "countryCode": "BS"
+  },
+  {
+    "code": "NLU",
+    "shortName": "Mexico City (AIFA), Mexico",
+    "fullName": "Mexico City (AIFA), Mexico, MX (NLU)",
+    "countryCode": "MX"
+  },
+  {
+    "code": "OAK",
+    "shortName": "Oakland, CA",
+    "fullName": "Oakland, CA (OAK)",
+    "countryCode": "US"
+  },
+  {
+    "code": "OAX",
+    "shortName": "Oaxaca, Mexico",
+    "fullName": "Oaxaca, Mexico, MX (OAX)",
+    "countryCode": "MX"
+  },
+  {
+    "code": "OKC",
+    "shortName": "Oklahoma City, OK",
+    "fullName": "Oklahoma City, OK (OKC)",
+    "countryCode": "US"
+  },
+  {
+    "code": "OMA",
+    "shortName": "Omaha, NE",
+    "fullName": "Omaha, NE (OMA)",
+    "countryCode": "US"
+  },
+  {
+    "code": "ONT",
+    "shortName": "Ontario/LA, CA",
+    "fullName": "Ontario/LA, CA (ONT)",
+    "countryCode": "US"
+  },
+  {
+    "code": "ORD",
+    "shortName": "Chicago-O'Hare, IL",
+    "fullName": "Chicago-O'Hare, IL (ORD)",
+    "countryCode": "US"
+  },
+  {
+    "code": "ORF",
+    "shortName": "Norfolk, VA",
+    "fullName": "Norfolk, VA (ORF)",
+    "countryCode": "US"
+  },
+  {
+    "code": "PBC",
+    "shortName": "Puebla, Mexico",
+    "fullName": "Puebla, Mexico, MX (PBC)",
+    "countryCode": "MX"
+  },
+  {
+    "code": "PBI",
+    "shortName": "Palm Beach, FL",
+    "fullName": "Palm Beach, FL (PBI)",
+    "countryCode": "US"
+  },
+  {
+    "code": "PDX",
+    "shortName": "Portland, OR",
+    "fullName": "Portland, OR (PDX)",
+    "countryCode": "US"
+  },
+  {
+    "code": "PHL",
+    "shortName": "Philadelphia, PA",
+    "fullName": "Philadelphia, PA (PHL)",
+    "countryCode": "US"
+  },
+  {
+    "code": "PHX",
+    "shortName": "Phoenix-Sky Harbor, AZ",
+    "fullName": "Phoenix-Sky Harbor, AZ (PHX)",
+    "countryCode": "US"
+  },
+  {
+    "code": "PIT",
+    "shortName": "Pittsburgh, PA",
+    "fullName": "Pittsburgh, PA (PIT)",
+    "countryCode": "US"
+  },
+  {
+    "code": "PLS",
+    "shortName": "Providenciales, Turks and Caicos",
+    "fullName": "Providenciales, Turks and Caicos, TC (PLS)",
+    "countryCode": "TC"
+  },
+  {
+    "code": "PNS",
+    "shortName": "Pensacola, FL",
+    "fullName": "Pensacola, FL (PNS)",
+    "countryCode": "US"
+  },
+  {
+    "code": "PSE",
+    "shortName": "Ponce, PR",
+    "fullName": "Ponce, PR, PR (PSE)",
+    "countryCode": "PR"
+  },
+  {
+    "code": "PUJ",
+    "shortName": "Punta Cana, Dominican Republic",
+    "fullName": "Punta Cana, Dominican Republic, DO (PUJ)",
+    "countryCode": "DO"
+  },
+  {
+    "code": "PVR",
+    "shortName": "Puerto Vallarta, Mexico",
+    "fullName": "Puerto Vallarta, Mexico, MX (PVR)",
+    "countryCode": "MX"
+  },
+  {
+    "code": "QRO",
+    "shortName": "Querétaro, Mexico",
+    "fullName": "Querétaro, Mexico, MX (QRO)",
+    "countryCode": "MX"
+  },
+  {
+    "code": "RDU",
+    "shortName": "Raleigh/Durham, NC",
+    "fullName": "Raleigh/Durham, NC (RDU)",
+    "countryCode": "US"
+  },
+  {
+    "code": "RIC",
+    "shortName": "Richmond, VA",
+    "fullName": "Richmond, VA (RIC)",
+    "countryCode": "US"
+  },
+  {
+    "code": "RNO",
+    "shortName": "Reno/Tahoe, NV",
+    "fullName": "Reno/Tahoe, NV (RNO)",
+    "countryCode": "US"
+  },
+  {
+    "code": "RSW",
+    "shortName": "Fort Myers, FL",
+    "fullName": "Fort Myers, FL (RSW)",
+    "countryCode": "US"
+  },
+  {
+    "code": "SAL",
+    "shortName": "San Salvador, El Salvador",
+    "fullName": "San Salvador, El Salvador, SV (SAL)",
+    "countryCode": "SV"
+  },
+  {
+    "code": "SAN",
+    "shortName": "San Diego, CA",
+    "fullName": "San Diego, CA (SAN)",
+    "countryCode": "US"
+  },
+  {
+    "code": "SAP",
+    "shortName": "San Pedro Sula, Honduras",
+    "fullName": "San Pedro Sula, Honduras, HN (SAP)",
+    "countryCode": "HN"
+  },
+  {
+    "code": "SAT",
+    "shortName": "San Antonio, TX",
+    "fullName": "San Antonio, TX (SAT)",
+    "countryCode": "US"
+  },
+  {
+    "code": "SDQ",
+    "shortName": "Santo Domingo, Dominican Republic",
+    "fullName": "Santo Domingo, Dominican Republic, DO (SDQ)",
+    "countryCode": "DO"
+  },
+  {
+    "code": "SEA",
+    "shortName": "Seattle/Tacoma, WA",
+    "fullName": "Seattle/Tacoma, WA (SEA)",
+    "countryCode": "US"
+  },
+  {
+    "code": "SFO",
+    "shortName": "San Francisco, CA",
+    "fullName": "San Francisco, CA (SFO)",
+    "countryCode": "US"
+  },
+  {
+    "code": "SJC",
+    "shortName": "San Jose, CA",
+    "fullName": "San Jose, CA (SJC)",
+    "countryCode": "US"
+  },
+  {
+    "code": "SJD",
+    "shortName": "Cabo San Lucas, Mexico",
+    "fullName": "Cabo San Lucas, Mexico, MX (SJD)",
+    "countryCode": "MX"
+  },
+  {
+    "code": "SJO",
+    "shortName": "San Jose, Costa Rica",
+    "fullName": "San Jose, Costa Rica, CR (SJO)",
+    "countryCode": "CR"
+  },
+  {
+    "code": "SJU",
+    "shortName": "San Juan, Puerto Rico",
+    "fullName": "San Juan, Puerto Rico, PR (SJU)",
+    "countryCode": "PR"
+  },
+  {
+    "code": "SLC",
+    "shortName": "Salt Lake City, UT",
+    "fullName": "Salt Lake City, UT (SLC)",
+    "countryCode": "US"
+  },
+  {
+    "code": "SLP",
+    "shortName": "San Luis Potosi, Mexico",
+    "fullName": "San Luis Potosi, Mexico, MX (SLP)",
+    "countryCode": "MX"
+  },
+  {
+    "code": "SMF",
+    "shortName": "Sacramento, CA",
+    "fullName": "Sacramento, CA (SMF)",
+    "countryCode": "US"
+  },
+  {
+    "code": "SNA",
+    "shortName": "Orange County/Santa Ana, CA",
+    "fullName": "Orange County/Santa Ana, CA (SNA)",
+    "countryCode": "US"
+  },
+  {
+    "code": "SRQ",
+    "shortName": "Sarasota, FL",
+    "fullName": "Sarasota, FL (SRQ)",
+    "countryCode": "US"
+  },
+  {
+    "code": "STI",
+    "shortName": "Santiago, Dominican Republic",
+    "fullName": "Santiago, Dominican Republic, DO (STI)",
+    "countryCode": "DO"
+  },
+  {
+    "code": "STL",
+    "shortName": "St. Louis, MO",
+    "fullName": "St. Louis, MO (STL)",
+    "countryCode": "US"
+  },
+  {
+    "code": "SXM",
+    "shortName": "St. Maarten, St. Maarten",
+    "fullName": "St. Maarten, St. Maarten, SX (SXM)",
+    "countryCode": "SX"
+  },
+  {
+    "code": "SYR",
+    "shortName": "Syracuse, NY",
+    "fullName": "Syracuse, NY (SYR)",
+    "countryCode": "US"
+  },
+  {
+    "code": "TGZ",
+    "shortName": "Tuxtla Gutiérrez, Mexico",
+    "fullName": "Tuxtla Gutiérrez, Mexico, MX (TGZ)",
+    "countryCode": "MX"
+  },
+  {
+    "code": "TIJ",
+    "shortName": "Tijuana, Mexico",
+    "fullName": "Tijuana, Mexico, MX (TIJ)",
+    "countryCode": "MX"
+  },
+  {
+    "code": "TLC",
+    "shortName": "Toluca, Mexico",
+    "fullName": "Toluca, Mexico, MX (TLC)",
+    "countryCode": "MX"
+  },
+  {
+    "code": "TPA",
+    "shortName": "Tampa, FL",
+    "fullName": "Tampa, FL (TPA)",
+    "countryCode": "US"
+  },
+  {
+    "code": "TTN",
+    "shortName": "Trenton/Princeton, NJ",
+    "fullName": "Trenton/Princeton, NJ (TTN)",
+    "countryCode": "US"
+  },
+  {
+    "code": "TUL",
+    "shortName": "Tulsa, OK",
+    "fullName": "Tulsa, OK (TUL)",
+    "countryCode": "US"
+  },
+  {
+    "code": "TUS",
+    "shortName": "Tucson, AZ",
+    "fullName": "Tucson, AZ (TUS)",
+    "countryCode": "US"
+  },
+  {
+    "code": "TYS",
+    "shortName": "Knoxville, TN",
+    "fullName": "Knoxville, TN (TYS)",
+    "countryCode": "US"
+  },
+  {
+    "code": "UPN",
+    "shortName": "Uruapan, Mexico",
+    "fullName": "Uruapan, Mexico, MX (UPN)",
+    "countryCode": "MX"
+  },
+  {
+    "code": "XNA",
+    "shortName": "Bentonville/Fayetteville, AR",
+    "fullName": "Bentonville/Fayetteville, AR (XNA)",
+    "countryCode": "US"
+  },
+  {
+    "code": "ZCL",
+    "shortName": "Zacatecas, Mexico",
+    "fullName": "Zacatecas, Mexico, MX (ZCL)",
+    "countryCode": "MX"
+  }
+]
