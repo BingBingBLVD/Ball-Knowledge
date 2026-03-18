@@ -181,6 +181,8 @@ export default function Home() {
           onDateChange={handleDateChange}
           gameCount={todayGames.length}
           gameCountByDate={gameCountByDate}
+          userLocation={userLocation}
+          onLocationChange={setUserLocation}
         />
       )}
 

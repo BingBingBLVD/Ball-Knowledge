@@ -172,11 +172,11 @@ export function BottomTray({
             <table className="w-full text-sm">
               <thead className="sticky top-0 glass">
                 <tr className="text-xs text-white/50 border-b border-white/10">
+                  <th className="text-right py-2 px-2 font-medium">Price</th>
+                  <th className="text-left py-2 px-2 font-medium">Odds</th>
                   <th className="text-left py-2 px-2 font-medium">Game</th>
                   <th className="text-left py-2 px-2 font-medium">Time</th>
                   <th className="text-left py-2 px-2 font-medium">Venue</th>
-                  <th className="text-right py-2 px-2 font-medium">Price</th>
-                  <th className="text-left py-2 px-2 font-medium">Odds</th>
                   <th className="text-left py-2 px-2 font-medium">Airports</th>
                   <th className="text-left py-2 px-2 font-medium">Trains</th>
                 </tr>
@@ -225,6 +225,29 @@ export function BottomTray({
                         }
                       }}
                     >
+                      <td className="py-2 px-2 text-right font-mono text-emerald-400 text-xs">
+                        {formatPrice(event.min_price)}
+                      </td>
+                      <td className="py-2 px-2 text-xs font-mono">
+                        {event.odds && kalshiUrl ? (
+                          <a
+                            href={kalshiUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:underline"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <div className={event.odds.home_win > event.odds.away_win ? "text-emerald-400" : "text-white/60"}>
+                              H {event.odds.home_win}%
+                            </div>
+                            <div className={event.odds.away_win > event.odds.home_win ? "text-emerald-400" : "text-white/60"}>
+                              A {event.odds.away_win}%
+                            </div>
+                          </a>
+                        ) : (
+                          <span className="text-white/30">--</span>
+                        )}
+                      </td>
                       <td className="py-2 px-2">
                         <a
                           href={event.url}
@@ -257,29 +280,6 @@ export function BottomTray({
                         <span className="text-[10px] text-white/40">
                           {event.city}, {event.state}
                         </span>
-                      </td>
-                      <td className="py-2 px-2 text-right font-mono text-emerald-400 text-xs">
-                        {formatPrice(event.min_price)}
-                      </td>
-                      <td className="py-2 px-2 text-xs font-mono">
-                        {event.odds && kalshiUrl ? (
-                          <a
-                            href={kalshiUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="hover:underline"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <div className={event.odds.home_win > event.odds.away_win ? "text-emerald-400" : "text-white/60"}>
-                              H {event.odds.home_win}%
-                            </div>
-                            <div className={event.odds.away_win > event.odds.home_win ? "text-emerald-400" : "text-white/60"}>
-                              A {event.odds.away_win}%
-                            </div>
-                          </a>
-                        ) : (
-                          <span className="text-white/30">--</span>
-                        )}
                       </td>
                       <td className="py-2 px-2">
                         {airports.length > 0 ? (
