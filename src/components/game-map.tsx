@@ -101,6 +101,8 @@ export function GameMap({
   onMarkerClickRef.current = onMarkerClick;
   const bottomPaddingRef = useRef(bottomPadding);
   bottomPaddingRef.current = bottomPadding;
+  const routeFocusRef = useRef(routeFocus);
+  routeFocusRef.current = routeFocus;
 
   // Store events ref for building VenueInfo on click
   const eventsRef = useRef(events);
@@ -219,8 +221,7 @@ export function GameMap({
 
     if (Object.keys(byVenue).length === 1) {
       const only = Object.values(byVenue)[0];
-      map.setCenter({ lat: only.lat, lng: only.lng });
-      map.setZoom(6);
+      map.fitBounds(bounds, { top: 40, left: 40, right: 40, bottom: 40 + bottomPaddingRef.current });
     } else {
       map.fitBounds(bounds, { top: 40, left: 40, right: 40, bottom: 40 + bottomPaddingRef.current });
     }
@@ -270,11 +271,19 @@ export function GameMap({
   // Re-fit bounds when bottom padding changes (tray open/close)
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !mapReady || routeFocus) return;
-    if (defaultBoundsRef.current) {
+    if (!map || !mapReady) return;
+
+    const rf = routeFocusRef.current;
+    if (rf) {
+      // Route is active — re-fit the route bounds with new padding
+      const bounds = new google.maps.LatLngBounds();
+      bounds.extend({ lat: rf.venueLat, lng: rf.venueLng });
+      bounds.extend({ lat: rf.airportLat, lng: rf.airportLng });
+      map.fitBounds(bounds, { top: 50, left: 50, right: 50, bottom: 50 + bottomPadding });
+    } else if (defaultBoundsRef.current) {
       map.fitBounds(defaultBoundsRef.current, { top: 40, left: 40, right: 40, bottom: 40 + bottomPadding });
     }
-  }, [bottomPadding, mapReady, routeFocus]);
+  }, [bottomPadding, mapReady]);
 
   // Route focus
   useEffect(() => {
