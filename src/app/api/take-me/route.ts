@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { searchRoutes, type Preference } from "@/lib/route-search";
 
-const VALID_PREFS = new Set(["balanced", "cheapest", "fastest", "prefer_bus", "prefer_train", "prefer_plane"]);
+const VALID_PREFS = new Set(["cheapest", "fastest"]);
 
 export async function GET(req: NextRequest) {
   const sp = req.nextUrl.searchParams;
@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
   const venueLng = parseFloat(sp.get("venueLng") ?? "");
   const date = sp.get("date") ?? "";
   const time = sp.get("time") ?? "";
-  const preference = (sp.get("preference") ?? "balanced") as Preference;
+  const preference = (sp.get("preference") ?? "cheapest") as Preference;
   const maxTransfers = parseInt(sp.get("maxTransfers") ?? "1", 10);
   const limit = parseInt(sp.get("limit") ?? "5", 10);
 

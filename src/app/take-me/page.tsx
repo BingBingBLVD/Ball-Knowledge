@@ -49,7 +49,7 @@ interface Itinerary {
   legs: Leg[];
 }
 
-type Preference = "balanced" | "cheapest" | "fastest";
+type Preference = "cheapest" | "fastest";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -114,8 +114,22 @@ function modeLabel(mode: string): string {
   }
 }
 
-function uberUrl(fromLat: number, fromLng: number, toLat: number, toLng: number): string {
-  return `https://m.uber.com/ul/?action=setPickup&pickup[latitude]=${fromLat}&pickup[longitude]=${fromLng}&dropoff[latitude]=${toLat}&dropoff[longitude]=${toLng}`;
+function uberUrl(fromName: string, fromLat: number, fromLng: number, toName: string, toLat: number, toLng: number): string {
+  const pickup = encodeURIComponent(JSON.stringify({
+    addressLine1: fromName,
+    latitude: fromLat,
+    longitude: fromLng,
+    source: "SEARCH",
+    provider: "uber_places",
+  }));
+  const drop = encodeURIComponent(JSON.stringify({
+    addressLine1: toName,
+    latitude: toLat,
+    longitude: toLng,
+    source: "SEARCH",
+    provider: "uber_places",
+  }));
+  return `https://m.uber.com/go/product-selection?pickup=${pickup}&drop%5B0%5D=${drop}`;
 }
 
 function lyftUrl(fromLat: number, fromLng: number, toLat: number, toLng: number): string {
@@ -189,15 +203,9 @@ function TakeMePage() {
 
   const prefs: { value: Preference; label: string }[] = [
     { value: "cheapest", label: "Cheapest" },
-    { value: "balanced", label: "Balanced" },
     { value: "fastest", label: "Fastest" },
   ];
 
-  const transferOpts = [
-    { value: 0, label: "Direct" },
-    { value: 1, label: "1 Stop" },
-    { value: 2, label: "2 Stops" },
-  ];
 
   // Compute unique modes for each itinerary (merge drive/rideshare, exclude walk)
   const getMainModes = (it: Itinerary) =>
@@ -237,22 +245,6 @@ function TakeMePage() {
                   }`}
                 >
                   {p.label}
-                </button>
-              ))}
-            </div>
-            <div className="w-px h-5 bg-gray-300" />
-            <div className="flex gap-1">
-              {transferOpts.map((t) => (
-                <button
-                  key={t.value}
-                  onClick={() => setMaxTransfers(t.value)}
-                  className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
-                    maxTransfers === t.value
-                      ? "bg-gray-900 text-white"
-                      : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
-                  }`}
-                >
-                  {t.label}
                 </button>
               ))}
             </div>
@@ -414,7 +406,7 @@ function TakeMePage() {
                                   ) : (leg.mode === "drive" || leg.mode === "rideshare") ? (
                                     <div className="flex gap-1.5 mt-1.5">
                                       <a
-                                        href={uberUrl(leg.fromLat, leg.fromLng, leg.toLat, leg.toLng)}
+                                        href={uberUrl(leg.from, leg.fromLat, leg.fromLng, leg.to, leg.toLat, leg.toLng)}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-black text-white hover:opacity-80 transition-opacity"

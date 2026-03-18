@@ -27,7 +27,7 @@ export interface SearchParams {
   limit?: number; // max results to return (default 5)
 }
 
-export type Preference = "balanced" | "cheapest" | "fastest" | "prefer_bus" | "prefer_train" | "prefer_plane";
+export type Preference = "cheapest" | "fastest";
 
 export interface Leg {
   mode: "bus" | "train" | "flight" | "drive" | "rideshare" | "walk" | "transit";
@@ -820,75 +820,65 @@ export async function searchRoutes(params: SearchParams): Promise<Itinerary[]> {
 
 // ── Scoring ────────────────────────────────────────────────────────────────
 
-const WEIGHTS: Record<Preference, { time: number; cost: number; transfers: number; modeBonus?: string }> = {
-  balanced:      { time: 0.35, cost: 0.35, transfers: 0.30 },
-  cheapest:      { time: 0.15, cost: 0.70, transfers: 0.15 },
-  fastest:       { time: 0.70, cost: 0.15, transfers: 0.15 },
-  prefer_bus:    { time: 0.25, cost: 0.30, transfers: 0.20, modeBonus: "bus" },
-  prefer_train:  { time: 0.25, cost: 0.30, transfers: 0.20, modeBonus: "train" },
-  prefer_plane:  { time: 0.25, cost: 0.30, transfers: 0.20, modeBonus: "flight" },
+// Mode priority for cheapest: transit > bus > train > flight > drive
+const CHEAPEST_MODE_BONUS: Record<string, number> = {
+  transit: -0.3,
+  bus: -0.2,
+  train: -0.1,
+  flight: 0,
+  drive: 0.05,
+};
+
+// Mode priority for fastest: flight/direct > drive > train > bus > transit
+const FASTEST_MODE_BONUS: Record<string, number> = {
+  flight: -0.3,
+  drive: -0.1,
+  train: 0,
+  bus: 0.05,
+  transit: 0.1,
 };
 
 function rankItineraries(itineraries: Itinerary[], preference: Preference, limit: number = 5): Itinerary[] {
   if (itineraries.length === 0) return [];
 
-  const w = WEIGHTS[preference];
-
   // Compute min/max for normalization
   const times = itineraries.map((i) => i.totalMinutes);
   const costs = itineraries.map((i) => i.totalCost);
-  const transfers = itineraries.map((i) => Math.max(0, i.legs.filter((l) => l.mode !== "rideshare" && l.mode !== "walk" && l.mode !== "transit").length - 1));
 
   const minTime = Math.min(...times), maxTime = Math.max(...times);
   const minCost = Math.min(...costs), maxCost = Math.max(...costs);
-  const minTx = Math.min(...transfers), maxTx = Math.max(...transfers);
 
   const norm = (val: number, min: number, max: number) => max === min ? 0 : (val - min) / (max - min);
+
+  const modeBonuses = preference === "cheapest" ? CHEAPEST_MODE_BONUS : FASTEST_MODE_BONUS;
 
   const scored = itineraries.map((it, idx) => {
     const tNorm = norm(times[idx], minTime, maxTime);
     const cNorm = norm(costs[idx], minCost, maxCost);
-    const xNorm = norm(transfers[idx], minTx, maxTx);
 
-    let score = w.time * tNorm + w.cost * cNorm + w.transfers * xNorm;
+    // Cheapest: heavily weight cost; Fastest: heavily weight time
+    let score = preference === "cheapest"
+      ? 0.15 * tNorm + 0.85 * cNorm
+      : 0.85 * tNorm + 0.15 * cNorm;
 
-    // Mode bonus: penalize if preferred mode not present
-    if (w.modeBonus) {
-      const hasMode = it.legs.some((l) => l.mode === w.modeBonus);
-      if (!hasMode) score += 0.3;
-    }
+    // Apply mode bonuses based on the primary transport mode
+    const primaryMode = it.legs.find((l) =>
+      l.mode !== "rideshare" && l.mode !== "walk" && l.mode !== "transit"
+    )?.mode ?? it.legs[0]?.mode ?? "drive";
 
-    // Boost itineraries that include public transit legs (lower score = better)
+    // Also check if itinerary has transit legs (first/last mile)
     const hasTransit = it.legs.some((l) => l.mode === "transit");
-    if (hasTransit) score -= 0.1;
+    const hasFlight = it.legs.some((l) => l.mode === "flight");
+
+    score += modeBonuses[primaryMode] ?? 0;
+    if (hasTransit) score += modeBonuses.transit;
+    if (preference === "fastest" && hasFlight && it.legs.filter((l) => l.mode !== "rideshare" && l.mode !== "walk" && l.mode !== "transit").length === 1) {
+      score -= 0.15; // extra bonus for direct flights in fastest mode
+    }
 
     return { it, score };
   });
 
   scored.sort((a, b) => a.score - b.score);
-
-  // Ensure mode diversity: at least 1 of each available mode in top 5
-  const top: Itinerary[] = [];
-  const modes = new Set<string>();
-  const usedIds = new Set<string>();
-
-  // First, pick one of each mode
-  for (const mode of ["drive", "transit", "bus", "train", "flight"]) {
-    const entry = scored.find((s) => !usedIds.has(s.it.id) && s.it.legs.some((l) => l.mode === mode));
-    if (entry) {
-      top.push(entry.it);
-      usedIds.add(entry.it.id);
-      modes.add(mode);
-    }
-  }
-
-  // Fill remaining from scored order
-  for (const entry of scored) {
-    if (top.length >= limit) break;
-    if (usedIds.has(entry.it.id)) continue;
-    top.push(entry.it);
-    usedIds.add(entry.it.id);
-  }
-
-  return top;
+  return scored.slice(0, limit).map((s) => s.it);
 }
