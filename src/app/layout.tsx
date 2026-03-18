@@ -13,7 +13,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ball Knowledge — NBA Games, Odds & Tickets",
+  title: "Balltastic — Game Intelligence",
   description:
     "NBA games sorted by date with Kalshi odds, Ticketmaster links, and venue maps.",
 };
@@ -24,9 +24,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
-      <body className="antialiased">
-
+    <html lang="en" className={`dark ${inter.variable} ${jetbrainsMono.variable}`}>
+      <body className="bg-[#0a0a0f] text-[#c8ccd4] antialiased">
         {children}
       </body>
     </html>

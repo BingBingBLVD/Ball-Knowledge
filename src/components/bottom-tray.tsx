@@ -93,7 +93,7 @@ function haversineMiles(lat1: number, lng1: number, lat2: number, lng2: number):
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-type SortKey = "game" | "time" | "distance" | "spread" | "price" | null;
+type SortKey = "game" | "time" | "distance" | "spread" | "price" | "record" | null;
 type SortDir = "asc" | "desc";
 
 function formatDateHeading(dateStr: string) {
@@ -219,6 +219,7 @@ export function BottomTray({
   trayState,
   onTrayStateChange,
   userLocation,
+  allAirports,
 }: {
   games: GameEvent[];
   date: string;
@@ -228,6 +229,7 @@ export function BottomTray({
   trayState: TrayState;
   onTrayStateChange: (state: TrayState) => void;
   userLocation: { lat: number; lng: number } | null;
+  allAirports?: { code: string; name: string; lat: number; lng: number }[];
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const dragStartY = useRef(0);
@@ -235,20 +237,34 @@ export function BottomTray({
   const [isAnimating, setIsAnimating] = useState(false);
   const prevTrayState = useRef(trayState);
 
-  const [sortKey, setSortKey] = useState<SortKey>(null);
-  const [sortDir, setSortDir] = useState<SortDir>("asc");
+  // Persist tray columns & sort to localStorage
+  const trayLsKey = "balltastic_tray";
+  function loadTray(): Record<string, unknown> {
+    try { return JSON.parse(localStorage.getItem(trayLsKey) ?? "{}"); } catch { return {}; }
+  }
+  function saveTray(patch: Record<string, unknown>) {
+    try { const prev = loadTray(); localStorage.setItem(trayLsKey, JSON.stringify({ ...prev, ...patch })); } catch { /* */ }
+  }
+  const saved = useRef(loadTray());
 
-  const [showOdds, setShowOdds] = useState(true);
-  const [showTickets, setShowTickets] = useState(true);
-  const [showRecord, setShowRecord] = useState(true);
-  const [showGame, setShowGame] = useState(true);
-  const [showTime, setShowTime] = useState(true);
-  const [showVenue, setShowVenue] = useState(true);
-  const [showAirports, setShowAirports] = useState(true);
-  const [showTrains, setShowTrains] = useState(true);
-  const [showBuses, setShowBuses] = useState(true);
-  const [showLinks, setShowLinks] = useState(true);
-  const [showAction, setShowAction] = useState(true);
+  const [sortKey, setSortKey] = useState<SortKey>((saved.current.sortKey as SortKey) ?? null);
+  const [sortDir, setSortDir] = useState<SortDir>((saved.current.sortDir as SortDir) ?? "asc");
+
+  const b = (k: string, def = true) => saved.current[k] != null ? saved.current[k] as boolean : def;
+  const [showOdds, setShowOdds] = useState(b("showOdds"));
+  const [showTickets, setShowTickets] = useState(b("showTickets"));
+  const [showRecord, setShowRecord] = useState(b("showRecord"));
+  const [showGame, setShowGame] = useState(b("showGame"));
+  const [showTime, setShowTime] = useState(b("showTime"));
+  const [showVenue, setShowVenue] = useState(b("showVenue"));
+  const [showAirports, setShowAirports] = useState(b("showAirports"));
+  const [showTrains, setShowTrains] = useState(b("showTrains"));
+  const [showBuses, setShowBuses] = useState(b("showBuses"));
+  const [showLinks, setShowLinks] = useState(b("showLinks"));
+  const [showAction, setShowAction] = useState(b("showAction"));
+
+  useEffect(() => { saveTray({ sortKey, sortDir }); }, [sortKey, sortDir]);
+  useEffect(() => { saveTray({ showOdds, showTickets, showRecord, showGame, showTime, showVenue, showAirports, showTrains, showBuses, showLinks, showAction }); }, [showOdds, showTickets, showRecord, showGame, showTime, showVenue, showAirports, showTrains, showBuses, showLinks, showAction]);
 
   // Precompute distances
   const distanceMap = useMemo(() => {
@@ -261,6 +277,21 @@ export function BottomTray({
     }
     return map;
   }, [games, userLocation]);
+
+  // Nearest airport to the user (searches ALL known airports, not just today's game airports)
+  const nearestUserAirport = useMemo(() => {
+    if (!userLocation) return null;
+    const airports = allAirports && allAirports.length > 0 ? allAirports : games.flatMap((g) => g.nearbyAirports ?? []);
+    let best: { code: string; dist: number } | null = null;
+    const seen = new Set<string>();
+    for (const apt of airports) {
+      if (seen.has(apt.code)) continue;
+      seen.add(apt.code);
+      const d = haversineMiles(userLocation.lat, userLocation.lng, apt.lat, apt.lng);
+      if (!best || d < best.dist) best = { code: apt.code, dist: d };
+    }
+    return best?.code ?? null;
+  }, [allAirports, games, userLocation]);
 
   const handleSort = useCallback((key: SortKey) => {
     if (key === "distance" && !userLocation) return;
@@ -307,6 +338,20 @@ export function BottomTray({
           const pA = a.espn_price?.amount ?? a.min_price?.amount ?? Infinity;
           const pB = b.espn_price?.amount ?? b.min_price?.amount ?? Infinity;
           cmp = pA - pB;
+          break;
+        }
+        case "record": {
+          function recDiff(away: string | null | undefined, home: string | null | undefined): number {
+            if (!away || !home) return Infinity;
+            const pa = away.split("-").map(Number);
+            const ph = home.split("-").map(Number);
+            if (pa.length < 2 || ph.length < 2) return Infinity;
+            const tA = pa[0] + pa[1];
+            const tH = ph[0] + ph[1];
+            if (tA === 0 || tH === 0) return Infinity;
+            return Math.abs(pa[0] / tA - ph[0] / tH);
+          }
+          cmp = recDiff(a.away_record, a.home_record) - recDiff(b.away_record, b.home_record);
           break;
         }
       }
@@ -437,8 +482,8 @@ export function BottomTray({
             {trayState === "half" && (
               <span className="flex items-center gap-1 ml-2" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
                 {([
-                  ["Odds", showOdds, setShowOdds],
                   ["Tickets", showTickets, setShowTickets],
+                  ["Odds", showOdds, setShowOdds],
                   ["Record", showRecord, setShowRecord],
                   ["Game", showGame, setShowGame],
                   ["Time", showTime, setShowTime],
@@ -471,19 +516,24 @@ export function BottomTray({
             <table className="w-full text-sm">
               <thead className="sticky top-0 glass">
                 <tr className="text-xs text-gray-400">
-                  {showOdds && <th className="text-left py-2 px-2 font-medium">
-                    <button onClick={() => handleSort("spread")} className="flex items-center gap-0.5 hover:text-gray-600">
-                      Odds
-                      {sortKey === "spread" ? (sortDir === "asc" ? <ArrowUp className="size-2.5" /> : <ArrowDown className="size-2.5" />) : <ArrowUpDown className="size-2.5" />}
-                    </button>
-                  </th>}
                   {showTickets && <th className="text-left py-2 px-2 font-medium">
                     <button onClick={() => handleSort("price")} className="flex items-center gap-0.5 hover:text-gray-600">
                       Tickets
                       {sortKey === "price" ? (sortDir === "asc" ? <ArrowUp className="size-2.5" /> : <ArrowDown className="size-2.5" />) : <ArrowUpDown className="size-2.5" />}
                     </button>
                   </th>}
-                  {showRecord && <th className="text-left py-2 px-2 font-medium">Record</th>}
+                  {showOdds && <th className="text-left py-2 px-2 font-medium">
+                    <button onClick={() => handleSort("spread")} className="flex items-center gap-0.5 hover:text-gray-600">
+                      Odds
+                      {sortKey === "spread" ? (sortDir === "asc" ? <ArrowUp className="size-2.5" /> : <ArrowDown className="size-2.5" />) : <ArrowUpDown className="size-2.5" />}
+                    </button>
+                  </th>}
+                  {showRecord && <th className="text-left py-2 px-2 font-medium">
+                    <button onClick={() => handleSort("record")} className="flex items-center gap-0.5 hover:text-gray-600">
+                      Record
+                      {sortKey === "record" ? (sortDir === "asc" ? <ArrowUp className="size-2.5" /> : <ArrowDown className="size-2.5" />) : <ArrowUpDown className="size-2.5" />}
+                    </button>
+                  </th>}
                   {showGame && <th className="text-left py-2 px-2 font-medium">
                     <button onClick={() => handleSort("game")} className="flex items-center gap-0.5 hover:text-gray-600">
                       Game
@@ -592,23 +642,6 @@ export function BottomTray({
                         }
                       }}
                     >
-                      {showOdds && <td className="py-2 px-2 text-xs font-mono">
-                        {event.odds ? (
-                          <>
-                            <div className={event.odds.away_win > event.odds.home_win ? "text-emerald-600" : "text-gray-500"}>
-                              A {event.odds.away_win}%
-                            </div>
-                            <div className={event.odds.home_win > event.odds.away_win ? "text-emerald-600" : "text-gray-500"}>
-                              H {event.odds.home_win}%
-                            </div>
-                            <div className={Math.abs(event.odds.away_win - event.odds.home_win) <= 10 ? "text-amber-600 font-semibold" : "text-gray-400"}>
-                              ±{Math.abs(event.odds.away_win - event.odds.home_win)}%
-                            </div>
-                          </>
-                        ) : (
-                          <span className="text-gray-300">--</span>
-                        )}
-                      </td>}
                       {showTickets && <td className="py-2 px-2 text-xs" onClick={(e) => e.stopPropagation()}>
                         {event.espn_price ? (
                           <div className="flex flex-col gap-0.5">
@@ -627,16 +660,47 @@ export function BottomTray({
                           <span className="text-gray-300">--</span>
                         )}
                       </td>}
-                      {showRecord && <td className="py-2 px-2 text-xs text-gray-400 tabular-nums">
-                        {away ? (
+                      {showOdds && <td className="py-2 px-2 text-xs font-mono">
+                        {event.odds ? (
                           <>
-                            <div>{event.away_record ?? "—"}</div>
-                            <div>{event.home_record ?? "—"}</div>
+                            <div className={event.odds.away_win > event.odds.home_win ? "text-emerald-600" : "text-gray-500"}>
+                              A {event.odds.away_win}%
+                            </div>
+                            <div className={event.odds.home_win > event.odds.away_win ? "text-emerald-600" : "text-gray-500"}>
+                              H {event.odds.home_win}%
+                            </div>
+                            <div className={Math.abs(event.odds.away_win - event.odds.home_win) <= 10 ? "text-amber-600 font-semibold" : "text-gray-400"}>
+                              ±{Math.abs(event.odds.away_win - event.odds.home_win)}%
+                            </div>
                           </>
                         ) : (
                           <span className="text-gray-300">--</span>
                         )}
                       </td>}
+                      {showRecord && (() => {
+                        function parseWinPct(rec: string | null | undefined): number | null {
+                          if (!rec) return null;
+                          const parts = rec.split("-").map(Number);
+                          if (parts.length < 2 || isNaN(parts[0]) || isNaN(parts[1])) return null;
+                          const total = parts[0] + parts[1];
+                          return total > 0 ? parts[0] / total : 0.5;
+                        }
+                        const awayPct = parseWinPct(event.away_record);
+                        const homePct = parseWinPct(event.home_record);
+                        const closeMatch = awayPct != null && homePct != null && Math.abs(awayPct - homePct) <= 0.05;
+                        return (
+                          <td className={`py-2 px-2 text-xs tabular-nums ${closeMatch ? "text-amber-600 font-semibold" : "text-gray-400"}`}>
+                            {away ? (
+                              <>
+                                <div>{event.away_record ?? "—"}</div>
+                                <div>{event.home_record ?? "—"}</div>
+                              </>
+                            ) : (
+                              <span className="text-gray-300">--</span>
+                            )}
+                          </td>
+                        );
+                      })()}
                       {showGame && <td className="py-2 px-2">
                         {away ? (
                           <>
@@ -826,8 +890,6 @@ export function BottomTray({
                           {userLocation && event.lat != null && event.est_time ? (
                             <a
                               href={`/take-me?originLat=${userLocation.lat}&originLng=${userLocation.lng}&venue=${encodeURIComponent(event.venue)}&venueLat=${event.lat}&venueLng=${event.lng}&date=${date}&time=${event.est_time}&game=${encodeURIComponent(event.name)}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
                               className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-50 text-yellow-700 text-xs font-medium hover:bg-yellow-100 transition-colors"
                               onClick={(e) => e.stopPropagation()}
                             >
@@ -839,28 +901,33 @@ export function BottomTray({
                           {airports.length > 0 && (
                             <div className="flex flex-col gap-1">
                               {airports.map((apt) => (
-                                <a
-                                  key={apt.code}
-                                  href={`https://frontier-flight-search.vercel.app/?to=${apt.code}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-600 text-[10px] font-medium hover:bg-emerald-100 transition-colors"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <Plane className="size-2.5" />
-                                  {apt.code}
-                                </a>
+                                <span key={apt.code} className="inline-flex items-center gap-0" onClick={(e) => e.stopPropagation()}>
+                                  <a
+                                    href={`https://www.google.com/travel/flights?q=flights+from+${nearestUserAirport ?? ""}+to+${apt.code}+on+${date}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-l bg-emerald-50 text-emerald-600 text-[10px] font-medium hover:bg-emerald-100 transition-colors"
+                                  >
+                                    <Plane className="size-2.5" />
+                                    {apt.code}
+                                  </a>
+                                  <a
+                                    href={`/flights?to=${apt.code}${nearestUserAirport ? `&from=${nearestUserAirport}` : ""}&date=${date}`}
+                                    className="inline-flex items-center justify-center w-5 h-5 rounded-r bg-emerald-600 text-white text-[9px] font-black hover:bg-emerald-700 transition-colors leading-none"
+                                    title="Frontier flights"
+                                  >
+                                    F
+                                  </a>
+                                </span>
                               ))}
                               {airports.length > 1 && (
                                 <a
-                                  href={`https://frontier-flight-search.vercel.app/?${airports.map((apt) => `to=${apt.code}`).join("&")}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 text-[10px] font-semibold hover:bg-emerald-200 transition-colors"
+                                  href={`/flights?${airports.map((apt) => `to=${apt.code}`).join("&")}${nearestUserAirport ? `&from=${nearestUserAirport}` : ""}&date=${date}`}
+                                  className="inline-flex items-center justify-center w-5 h-5 rounded bg-emerald-700 text-white text-[9px] font-black hover:bg-emerald-800 transition-colors leading-none"
+                                  title="Frontier flights – all airports"
                                   onClick={(e) => e.stopPropagation()}
                                 >
-                                  <Plane className="size-2.5" />
-                                  All
+                                  F
                                 </a>
                               )}
                             </div>

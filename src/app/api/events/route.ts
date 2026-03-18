@@ -222,10 +222,23 @@ export async function GET() {
         events: events.map(({ _awayCode, _homeCode, ...rest }) => rest),
       }));
 
+    // Collect all unique airports from stadium data for nearest-airport lookup
+    const seenAirports = new Set<string>();
+    const allAirports: AirportCoord[] = [];
+    for (const entry of Object.values(stadiumAirports)) {
+      for (const apt of entry.airports) {
+        if (!seenAirports.has(apt.code)) {
+          seenAirports.add(apt.code);
+          allAirports.push(apt);
+        }
+      }
+    }
+
     return NextResponse.json({
       total: mapped.length,
       date_count: dates.length,
       dates,
+      allAirports,
       updated_at: new Date().toISOString(),
     });
   } catch (error) {

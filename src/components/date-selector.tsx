@@ -1,31 +1,18 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-function formatDate(dateStr: string) {
+function formatDateMono(dateStr: string) {
   const [y, m, d] = dateStr.split("-").map(Number);
   const date = new Date(y, m - 1, d);
-  return date.toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  });
+  const mon = date.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
+  const day = String(d).padStart(2, "0");
+  const wday = date.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase();
+  return `${mon} ${day} ${wday}`;
 }
 
-function formatShortDate(dateStr: string) {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  const date = new Date(y, m - 1, d);
-  return date.toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  });
-}
-
-function gameLabel(n: number) {
-  return `${n} game${n !== 1 ? "s" : ""}`;
-}
+const DAY_NAMES = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
 export function DateSelector({
   currentDate,
@@ -49,7 +36,71 @@ export function DateSelector({
   const prevDate = hasPrev ? availableDates[idx - 1] : null;
   const nextDate = hasNext ? availableDates[idx + 1] : null;
 
-  // Close dropdown on outside click
+  const [viewYear, setViewYear] = useState(() => {
+    const [y] = currentDate.split("-").map(Number);
+    return y;
+  });
+  const [viewMonth, setViewMonth] = useState(() => {
+    const [, m] = currentDate.split("-").map(Number);
+    return m - 1;
+  });
+
+  useEffect(() => {
+    const [y, m] = currentDate.split("-").map(Number);
+    setViewYear(y);
+    setViewMonth(m - 1);
+  }, [currentDate]);
+
+  const availableSet = useMemo(() => new Set(availableDates), [availableDates]);
+
+  const calendarDays = useMemo(() => {
+    const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+    const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+    const rows: (string | null)[][] = [];
+    let week: (string | null)[] = [];
+
+    for (let i = 0; i < firstDay; i++) week.push(null);
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      week.push(dateStr);
+      if (week.length === 7) {
+        rows.push(week);
+        week = [];
+      }
+    }
+
+    if (week.length > 0) {
+      while (week.length < 7) week.push(null);
+      rows.push(week);
+    }
+
+    return rows;
+  }, [viewYear, viewMonth]);
+
+  const monthLabel = new Date(viewYear, viewMonth, 1).toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+  });
+
+  function prevMonth() {
+    if (viewMonth === 0) {
+      setViewYear((y) => y - 1);
+      setViewMonth(11);
+    } else {
+      setViewMonth((m) => m - 1);
+    }
+  }
+
+  function nextMonth() {
+    if (viewMonth === 11) {
+      setViewYear((y) => y + 1);
+      setViewMonth(0);
+    } else {
+      setViewMonth((m) => m + 1);
+    }
+  }
+
   useEffect(() => {
     if (!open) return;
     function handleClick(e: MouseEvent) {
@@ -63,7 +114,7 @@ export function DateSelector({
 
   return (
     <div ref={ref} className="relative">
-      <div className="glass rounded-xl flex items-center gap-0.5 px-2 py-1.5 shrink-0">
+      <div className="flex items-center gap-0.5 px-2 py-1.5 shrink-0">
         {/* Prev arrow */}
         <div className="flex flex-col items-center">
           <button
@@ -71,12 +122,12 @@ export function DateSelector({
               if (hasPrev) onDateChange(availableDates[idx - 1]);
             }}
             disabled={!hasPrev}
-            className="p-1 rounded-lg hover:bg-black/5 disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
+            className="p-1 rounded hover:bg-white/5 disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
           >
-            <ChevronLeft className="size-4 text-gray-700" />
+            <ChevronLeft className="size-4 text-[--color-dim]" />
           </button>
           {prevDate && (
-            <span className="text-[9px] text-gray-400 leading-none -mt-0.5">
+            <span className="text-[9px] font-mono text-[--color-dim] leading-none -mt-0.5">
               {gameCountByDate[prevDate] ?? 0}
             </span>
           )}
@@ -85,13 +136,13 @@ export function DateSelector({
         {/* Center date — clickable */}
         <button
           onClick={() => setOpen((o) => !o)}
-          className="text-center min-w-[120px] px-1 rounded-lg hover:bg-black/5 transition-colors py-0.5"
+          className="text-center min-w-[120px] px-1 rounded hover:bg-white/5 transition-colors py-0.5"
         >
-          <div className="text-sm font-medium leading-tight text-gray-900">
-            {formatDate(currentDate)}
+          <div className="text-sm font-mono font-medium leading-tight text-foreground tracking-wide">
+            {formatDateMono(currentDate)}
           </div>
-          <div className="text-[10px] text-gray-400 leading-tight">
-            {gameLabel(gameCount)}
+          <div className="text-[10px] font-mono text-[--primary] leading-tight tracking-widest uppercase">
+            {gameCount} OPS
           </div>
         </button>
 
@@ -102,44 +153,80 @@ export function DateSelector({
               if (hasNext) onDateChange(availableDates[idx + 1]);
             }}
             disabled={!hasNext}
-            className="p-1 rounded-lg hover:bg-black/5 disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
+            className="p-1 rounded hover:bg-white/5 disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
           >
-            <ChevronRight className="size-4 text-gray-700" />
+            <ChevronRight className="size-4 text-[--color-dim]" />
           </button>
           {nextDate && (
-            <span className="text-[9px] text-gray-400 leading-none -mt-0.5">
+            <span className="text-[9px] font-mono text-[--color-dim] leading-none -mt-0.5">
               {gameCountByDate[nextDate] ?? 0}
             </span>
           )}
         </div>
       </div>
 
-      {/* Dropdown date picker */}
+      {/* Calendar dropdown */}
       {open && (
-        <div className="absolute top-full right-0 mt-2 glass rounded-xl p-2 max-h-[60vh] overflow-y-auto no-scrollbar min-w-[200px] z-50">
-          {availableDates.map((date) => {
-            const count = gameCountByDate[date] ?? 0;
-            const isActive = date === currentDate;
-            return (
-              <button
-                key={date}
-                onClick={() => {
-                  onDateChange(date);
-                  setOpen(false);
-                }}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
-                  isActive
-                    ? "bg-blue-50 font-medium text-blue-700"
-                    : "text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                <span>{formatShortDate(date)}</span>
-                <span className="text-[11px] text-gray-400 ml-3">
-                  {gameLabel(count)}
-                </span>
-              </button>
-            );
-          })}
+        <div className="absolute top-full right-0 mt-2 panel-elevated rounded-lg p-3 z-50 min-w-[280px]">
+          {/* Month nav */}
+          <div className="flex items-center justify-between mb-2">
+            <button onClick={prevMonth} className="p-1 rounded hover:bg-white/5 transition-colors">
+              <ChevronLeft className="size-4 text-[--color-dim]" />
+            </button>
+            <span className="text-sm font-semibold text-foreground">{monthLabel}</span>
+            <button onClick={nextMonth} className="p-1 rounded hover:bg-white/5 transition-colors">
+              <ChevronRight className="size-4 text-[--color-dim]" />
+            </button>
+          </div>
+
+          {/* Day headers */}
+          <div className="grid grid-cols-7 mb-1">
+            {DAY_NAMES.map((d) => (
+              <div key={d} className="text-center text-[10px] font-mono font-semibold text-[--color-dim] py-1">{d}</div>
+            ))}
+          </div>
+
+          {/* Calendar grid */}
+          <div className="grid grid-cols-7">
+            {calendarDays.flat().map((dateStr, i) => {
+              if (!dateStr) {
+                return <div key={`blank-${i}`} className="h-9" />;
+              }
+              const dayNum = parseInt(dateStr.split("-")[2]);
+              const hasGames = availableSet.has(dateStr);
+              const count = gameCountByDate[dateStr] ?? 0;
+              const isSelected = dateStr === currentDate;
+              const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+              const isToday = dateStr === today;
+
+              return (
+                <button
+                  key={dateStr}
+                  onClick={() => {
+                    if (hasGames) {
+                      onDateChange(dateStr);
+                      setOpen(false);
+                    }
+                  }}
+                  disabled={!hasGames}
+                  className={`relative h-9 flex flex-col items-center justify-center rounded text-xs font-mono transition-colors ${
+                    isSelected
+                      ? "bg-[--primary] text-[--primary-foreground] font-bold"
+                      : hasGames
+                        ? "text-foreground font-medium hover:bg-white/5 cursor-pointer"
+                        : "text-[--color-dim]/40 cursor-default"
+                  } ${isToday && !isSelected ? "ring-1 ring-[--primary]/50" : ""}`}
+                >
+                  <span className="leading-none">{dayNum}</span>
+                  {hasGames && count > 0 && (
+                    <span className={`text-[8px] leading-none mt-0.5 ${isSelected ? "text-[--primary-foreground]/70" : "text-[--primary]"}`}>
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

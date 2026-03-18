@@ -45,10 +45,18 @@ interface DateGroup {
   events: GameEvent[];
 }
 
+interface AirportCoord {
+  code: string;
+  name: string;
+  lat: number;
+  lng: number;
+}
+
 interface EventsResponse {
   total: number;
   date_count: number;
   dates: DateGroup[];
+  allAirports?: AirportCoord[];
   updated_at: string;
 }
 
@@ -58,17 +66,38 @@ function todayEST(): string {
   });
 }
 
+const LS_KEY = "balltastic_state";
+
+function loadState(): { date?: string; search?: string; tray?: "collapsed" | "half"; loc?: { lat: number; lng: number } } {
+  try {
+    return JSON.parse(localStorage.getItem(LS_KEY) ?? "{}");
+  } catch { return {}; }
+}
+
+function saveState(patch: Record<string, unknown>) {
+  try {
+    const prev = loadState();
+    localStorage.setItem(LS_KEY, JSON.stringify({ ...prev, ...patch }));
+  } catch { /* ignore */ }
+}
+
 export default function Home() {
   const [data, setData] = useState<EventsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [currentDate, setCurrentDate] = useState(todayEST());
-  const [search, setSearch] = useState("");
+  const [currentDate, setCurrentDate] = useState(() => loadState().date ?? todayEST());
+  const [search, setSearch] = useState(() => loadState().search ?? "");
   const [selectedVenue, setSelectedVenue] = useState<VenueInfo | null>(null);
   const [routeFocus, setRouteFocus] = useState<RouteFocus | null>(null);
-  const [trayState, setTrayState] = useState<"collapsed" | "half">("collapsed");
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [trayState, setTrayState] = useState<"collapsed" | "half">(() => loadState().tray ?? "collapsed");
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(() => loadState().loc ?? null);
   const [vh, setVh] = useState(800);
+
+  // Persist state changes
+  useEffect(() => { saveState({ date: currentDate }); }, [currentDate]);
+  useEffect(() => { saveState({ search }); }, [search]);
+  useEffect(() => { saveState({ tray: trayState }); }, [trayState]);
+  useEffect(() => { saveState({ loc: userLocation }); }, [userLocation]);
 
   // Track viewport height
   useEffect(() => {
@@ -78,8 +107,9 @@ export default function Home() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  // Request geolocation
+  // Request geolocation only if no saved location
   useEffect(() => {
+    if (userLocation) return; // already have saved location
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -212,6 +242,7 @@ export default function Home() {
           trayState={trayState}
           onTrayStateChange={handleTrayStateChange}
           userLocation={userLocation}
+          allAirports={data.allAirports ?? []}
         />
       )}
 

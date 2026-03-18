@@ -197,13 +197,17 @@ export function LocationPicker({
   return (
     <div ref={ref} className="relative">
       <button
-        onClick={() => setOpen((o) => !o)}
-        className="glass rounded-xl flex items-center gap-2 px-3 py-3 text-sm hover:bg-black/5 transition-colors"
+        onClick={() => {
+          if (!userLocation) {
+            handleUseMyLocation();
+          } else {
+            setOpen((o) => !o);
+          }
+        }}
+        className={`glass rounded-xl flex items-center justify-center w-10 h-10 transition-colors ${userLocation ? "hover:bg-black/5" : "hover:bg-blue-50"}`}
+        title={label ?? (userLocation ? "My Location" : "Use GPS location")}
       >
-        <MapPin className="size-4 text-blue-500 shrink-0" />
-        <span className="truncate max-w-[120px] text-gray-700">
-          {label ?? (userLocation ? "My Location" : "Set Location")}
-        </span>
+        <Navigation className={`size-4 ${userLocation ? "text-blue-500" : "text-gray-400"}`} />
       </button>
 
       {open && (
@@ -228,7 +232,6 @@ export function LocationPicker({
             )}
           </div>
 
-          {/* Autocomplete suggestions */}
           {suggestions.length > 0 && (
             <div className="mt-2 flex flex-col">
               {suggestions.map((s, i) => (

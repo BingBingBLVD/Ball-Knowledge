@@ -10,14 +10,15 @@ export async function GET(req: NextRequest) {
   const venueLng = parseFloat(sp.get("venueLng") ?? "");
   const date = sp.get("date") ?? "";
   const time = sp.get("time") ?? "";
-  const limit = parseInt(sp.get("limit") ?? "5", 10);
+  const limit = parseInt(sp.get("limit") ?? "10", 10);
+  const transitPref = (sp.get("transitPref") ?? "all") as "all" | "bus" | "train";
 
   if ([originLat, originLng, venueLat, venueLng].some(isNaN) || !venue || !date || !time) {
     return NextResponse.json({ error: "Missing or invalid parameters" }, { status: 400 });
   }
 
   try {
-    console.log("[take-me] Searching:", { originLat, originLng, venue, venueLat, venueLng, date, time });
+    console.log("[take-me] Searching:", { originLat, originLng, venue, venueLat, venueLng, date, time, transitPref });
     const results = await searchRoutes({
       originLat,
       originLng,
@@ -26,7 +27,8 @@ export async function GET(req: NextRequest) {
       venueLng,
       gameDate: date,
       gameTime: time,
-      limit: Math.min(Math.max(limit, 1), 20),
+      limit: Math.min(Math.max(limit, 1), 30),
+      transitPref,
     });
     console.log("[take-me] Found", results.length, "itineraries");
     return NextResponse.json({ itineraries: results });

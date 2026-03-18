@@ -1,0 +1,3418 @@
+[
+  {
+    "from": "Aguadilla, PR",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Austin, TX"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Baltimore, MD"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Boston, MA"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Buffalo, NY"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Cabo San Lucas, Mexico"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Cancun, Mexico"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Chicago-O'Hare, IL"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Cincinnati, OH"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Cleveland, OH"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Columbus, OH"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Detroit, MI"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Fort Lauderdale, FL"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Fort Myers, FL"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Grand Rapids, MI"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Guatemala City, Guatemala"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Hartford, CT"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Houston-Intercontinental, TX"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Indianapolis, IN"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Jacksonville, FL"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Kansas City, MO"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Los Angeles, CA"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Memphis, TN"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Miami, FL"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Milwaukee, WI"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Minneapolis/St. Paul, MN"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Montego Bay, Jamaica"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Nassau, Bahamas"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "New Orleans, LA"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "New York-LaGuardia, NY"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Newark, NJ"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Norfolk, VA"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Oklahoma City, OK"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Omaha, NE"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Aruba, Aruba"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Philadelphia, PA"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Phoenix-Sky Harbor, AZ"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Providenciales, Turks and Caicos"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Puerto Vallarta, Mexico"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Punta Cana, Dominican Republic"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Raleigh/Durham, NC"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Richmond, VA"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Salt Lake City, UT"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "San Antonio, TX"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "San Francisco, CA"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "San Jose, Costa Rica"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "San Juan, Puerto Rico"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "San Pedro Sula, Honduras"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "San Salvador, El Salvador"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Santo Domingo, Dominican Republic"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "St. Louis, MO"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "St. Maarten, St. Maarten"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Tampa, FL"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Washington-Dulles, VA"
+  },
+  {
+    "from": "Atlanta, GA",
+    "to": "Palm Beach, FL"
+  },
+  {
+    "from": "Austin, TX",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Austin, TX",
+    "to": "Chicago-O'Hare, IL"
+  },
+  {
+    "from": "Austin, TX",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Austin, TX",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "Austin, TX",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Austin, TX",
+    "to": "Phoenix-Sky Harbor, AZ"
+  },
+  {
+    "from": "Austin, TX",
+    "to": "San Diego, CA"
+  },
+  {
+    "from": "Baltimore, MD",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Baltimore, MD",
+    "to": "Cancun, Mexico"
+  },
+  {
+    "from": "Baltimore, MD",
+    "to": "Charlotte, NC"
+  },
+  {
+    "from": "Baltimore, MD",
+    "to": "Chicago-O'Hare, IL"
+  },
+  {
+    "from": "Baltimore, MD",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "Baltimore, MD",
+    "to": "Detroit, MI"
+  },
+  {
+    "from": "Baltimore, MD",
+    "to": "Fort Lauderdale, FL"
+  },
+  {
+    "from": "Baltimore, MD",
+    "to": "Houston-Intercontinental, TX"
+  },
+  {
+    "from": "Baltimore, MD",
+    "to": "Miami, FL"
+  },
+  {
+    "from": "Baltimore, MD",
+    "to": "New Orleans, LA"
+  },
+  {
+    "from": "Baltimore, MD",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Baltimore, MD",
+    "to": "San Juan, Puerto Rico"
+  },
+  {
+    "from": "Baltimore, MD",
+    "to": "Tampa, FL"
+  },
+  {
+    "from": "Bentonville/Fayetteville, AR",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Boise, ID",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Boston, MA",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Boston, MA",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Boston, MA",
+    "to": "Raleigh/Durham, NC"
+  },
+  {
+    "from": "Boston, MA",
+    "to": "San Juan, Puerto Rico"
+  },
+  {
+    "from": "Buffalo, NY",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Buffalo, NY",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Buffalo, NY",
+    "to": "Raleigh/Durham, NC"
+  },
+  {
+    "from": "Buffalo, NY",
+    "to": "Tampa, FL"
+  },
+  {
+    "from": "Hollywood Burbank/LA, CA",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "Cabo San Lucas, Mexico",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Cabo San Lucas, Mexico",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Cancun, Mexico",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Cancun, Mexico",
+    "to": "Baltimore, MD"
+  },
+  {
+    "from": "Cancun, Mexico",
+    "to": "Charlotte, NC"
+  },
+  {
+    "from": "Cancun, Mexico",
+    "to": "Chicago-O'Hare, IL"
+  },
+  {
+    "from": "Cancun, Mexico",
+    "to": "Cincinnati, OH"
+  },
+  {
+    "from": "Cancun, Mexico",
+    "to": "Cleveland, OH"
+  },
+  {
+    "from": "Cancun, Mexico",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "Cancun, Mexico",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Cancun, Mexico",
+    "to": "Detroit, MI"
+  },
+  {
+    "from": "Cancun, Mexico",
+    "to": "Houston-Intercontinental, TX"
+  },
+  {
+    "from": "Cancun, Mexico",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Cancun, Mexico",
+    "to": "Philadelphia, PA"
+  },
+  {
+    "from": "Cancun, Mexico",
+    "to": "Raleigh/Durham, NC"
+  },
+  {
+    "from": "Cancun, Mexico",
+    "to": "St. Louis, MO"
+  },
+  {
+    "from": "Cedar Rapids, IA",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Charleston, SC",
+    "to": "Philadelphia, PA"
+  },
+  {
+    "from": "Charlotte, NC",
+    "to": "Baltimore, MD"
+  },
+  {
+    "from": "Charlotte, NC",
+    "to": "Cancun, Mexico"
+  },
+  {
+    "from": "Charlotte, NC",
+    "to": "Chicago-O'Hare, IL"
+  },
+  {
+    "from": "Charlotte, NC",
+    "to": "Cleveland, OH"
+  },
+  {
+    "from": "Charlotte, NC",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "Charlotte, NC",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Charlotte, NC",
+    "to": "Detroit, MI"
+  },
+  {
+    "from": "Charlotte, NC",
+    "to": "Fort Lauderdale, FL"
+  },
+  {
+    "from": "Charlotte, NC",
+    "to": "Houston-Intercontinental, TX"
+  },
+  {
+    "from": "Charlotte, NC",
+    "to": "Miami, FL"
+  },
+  {
+    "from": "Charlotte, NC",
+    "to": "New York-LaGuardia, NY"
+  },
+  {
+    "from": "Charlotte, NC",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Charlotte, NC",
+    "to": "Philadelphia, PA"
+  },
+  {
+    "from": "Charlotte, NC",
+    "to": "San Juan, Puerto Rico"
+  },
+  {
+    "from": "Charlotte, NC",
+    "to": "Tampa, FL"
+  },
+  {
+    "from": "Chicago-O'Hare, IL",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Chicago-O'Hare, IL",
+    "to": "Austin, TX"
+  },
+  {
+    "from": "Chicago-O'Hare, IL",
+    "to": "Baltimore, MD"
+  },
+  {
+    "from": "Chicago-O'Hare, IL",
+    "to": "Cancun, Mexico"
+  },
+  {
+    "from": "Chicago-O'Hare, IL",
+    "to": "Charlotte, NC"
+  },
+  {
+    "from": "Chicago-O'Hare, IL",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "Chicago-O'Hare, IL",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Chicago-O'Hare, IL",
+    "to": "Fort Lauderdale, FL"
+  },
+  {
+    "from": "Chicago-O'Hare, IL",
+    "to": "Fort Myers, FL"
+  },
+  {
+    "from": "Chicago-O'Hare, IL",
+    "to": "Houston-Intercontinental, TX"
+  },
+  {
+    "from": "Chicago-O'Hare, IL",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "Chicago-O'Hare, IL",
+    "to": "Los Angeles, CA"
+  },
+  {
+    "from": "Chicago-O'Hare, IL",
+    "to": "Miami, FL"
+  },
+  {
+    "from": "Chicago-O'Hare, IL",
+    "to": "New York-LaGuardia, NY"
+  },
+  {
+    "from": "Chicago-O'Hare, IL",
+    "to": "Newark, NJ"
+  },
+  {
+    "from": "Chicago-O'Hare, IL",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Chicago-O'Hare, IL",
+    "to": "Philadelphia, PA"
+  },
+  {
+    "from": "Chicago-O'Hare, IL",
+    "to": "Phoenix-Sky Harbor, AZ"
+  },
+  {
+    "from": "Chicago-O'Hare, IL",
+    "to": "Punta Cana, Dominican Republic"
+  },
+  {
+    "from": "Chicago-O'Hare, IL",
+    "to": "Raleigh/Durham, NC"
+  },
+  {
+    "from": "Chicago-O'Hare, IL",
+    "to": "San Juan, Puerto Rico"
+  },
+  {
+    "from": "Chicago-O'Hare, IL",
+    "to": "Tampa, FL"
+  },
+  {
+    "from": "Cincinnati, OH",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Cincinnati, OH",
+    "to": "Cancun, Mexico"
+  },
+  {
+    "from": "Cincinnati, OH",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "Cincinnati, OH",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Cincinnati, OH",
+    "to": "Fort Lauderdale, FL"
+  },
+  {
+    "from": "Cincinnati, OH",
+    "to": "Fort Myers, FL"
+  },
+  {
+    "from": "Cincinnati, OH",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "Cincinnati, OH",
+    "to": "Miami, FL"
+  },
+  {
+    "from": "Cincinnati, OH",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Cincinnati, OH",
+    "to": "Phoenix-Sky Harbor, AZ"
+  },
+  {
+    "from": "Cincinnati, OH",
+    "to": "Punta Cana, Dominican Republic"
+  },
+  {
+    "from": "Cincinnati, OH",
+    "to": "Tampa, FL"
+  },
+  {
+    "from": "Cincinnati, OH",
+    "to": "Palm Beach, FL"
+  },
+  {
+    "from": "Cleveland, OH",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Cleveland, OH",
+    "to": "Cancun, Mexico"
+  },
+  {
+    "from": "Cleveland, OH",
+    "to": "Charlotte, NC"
+  },
+  {
+    "from": "Cleveland, OH",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "Cleveland, OH",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Cleveland, OH",
+    "to": "Fort Lauderdale, FL"
+  },
+  {
+    "from": "Cleveland, OH",
+    "to": "Fort Myers, FL"
+  },
+  {
+    "from": "Cleveland, OH",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "Cleveland, OH",
+    "to": "Miami, FL"
+  },
+  {
+    "from": "Cleveland, OH",
+    "to": "Myrtle Beach, SC"
+  },
+  {
+    "from": "Cleveland, OH",
+    "to": "New York-LaGuardia, NY"
+  },
+  {
+    "from": "Cleveland, OH",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Cleveland, OH",
+    "to": "Phoenix-Sky Harbor, AZ"
+  },
+  {
+    "from": "Cleveland, OH",
+    "to": "Punta Cana, Dominican Republic"
+  },
+  {
+    "from": "Cleveland, OH",
+    "to": "Raleigh/Durham, NC"
+  },
+  {
+    "from": "Cleveland, OH",
+    "to": "Sarasota, FL"
+  },
+  {
+    "from": "Cleveland, OH",
+    "to": "Tampa, FL"
+  },
+  {
+    "from": "Cleveland, OH",
+    "to": "Palm Beach, FL"
+  },
+  {
+    "from": "Columbus, OH",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Columbus, OH",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Columbus, OH",
+    "to": "Fort Lauderdale, FL"
+  },
+  {
+    "from": "Columbus, OH",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Corpus Christi, TX",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "Baltimore, MD"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "Cancun, Mexico"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "Charlotte, NC"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "Chicago-O'Hare, IL"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "Cincinnati, OH"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "Cleveland, OH"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "Detroit, MI"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "Fort Lauderdale, FL"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "Fort Myers, FL"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "Guatemala City, Guatemala"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "Indianapolis, IN"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "Los Angeles, CA"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "Miami, FL"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "Minneapolis/St. Paul, MN"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "Nashville, TN"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "New Orleans, LA"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "New York-LaGuardia, NY"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "Newark, NJ"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "Ontario/LA, CA"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "Philadelphia, PA"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "Phoenix-Sky Harbor, AZ"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "Raleigh/Durham, NC"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "Salt Lake City, UT"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "San Diego, CA"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "San Francisco, CA"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "San Juan, Puerto Rico"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "San Salvador, El Salvador"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "Orange County/Santa Ana, CA"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "St. Louis, MO"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "Tampa, FL"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "Tucson, AZ"
+  },
+  {
+    "from": "Dallas/Ft. Worth, TX",
+    "to": "Washington-Dulles, VA"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Austin, TX"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Bentonville/Fayetteville, AR"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Boise, ID"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Cabo San Lucas, Mexico"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Cancun, Mexico"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Cedar Rapids, IA"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Charlotte, NC"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Chicago-O'Hare, IL"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Cincinnati, OH"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Cleveland, OH"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Columbus, OH"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Corpus Christi, TX"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Des Moines, IA"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Detroit, MI"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "El Paso, TX"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Fargo, ND"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Fort Myers, FL"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Grand Rapids, MI"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Houston-Intercontinental, TX"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Indianapolis, IN"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Kansas City, MO"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Knoxville, TN"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Little Rock, AR"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Los Angeles, CA"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Madison, WI"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Memphis, TN"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Miami, FL"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Milwaukee, WI"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Minneapolis/St. Paul, MN"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Nashville, TN"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "New Orleans, LA"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "New York-LaGuardia, NY"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Oklahoma City, OK"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Omaha, NE"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Ontario/LA, CA"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Pensacola, FL"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Philadelphia, PA"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Phoenix-Sky Harbor, AZ"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Pittsburgh, PA"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Portland, OR"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Puerto Vallarta, Mexico"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Raleigh/Durham, NC"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Richmond, VA"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Sacramento, CA"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Salt Lake City, UT"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "San Antonio, TX"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "San Diego, CA"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "San Francisco, CA"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Orange County/Santa Ana, CA"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Seattle/Tacoma, WA"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Sioux Falls, SD"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Spokane, WA"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "St. Louis, MO"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Tampa, FL"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Tucson, AZ"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Tulsa, OK"
+  },
+  {
+    "from": "Denver, CO",
+    "to": "Washington-Dulles, VA"
+  },
+  {
+    "from": "Des Moines, IA",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Des Moines, IA",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Des Moines, IA",
+    "to": "Phoenix-Sky Harbor, AZ"
+  },
+  {
+    "from": "Detroit, MI",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Detroit, MI",
+    "to": "Baltimore, MD"
+  },
+  {
+    "from": "Detroit, MI",
+    "to": "Cancun, Mexico"
+  },
+  {
+    "from": "Detroit, MI",
+    "to": "Charlotte, NC"
+  },
+  {
+    "from": "Detroit, MI",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "Detroit, MI",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Detroit, MI",
+    "to": "Fort Lauderdale, FL"
+  },
+  {
+    "from": "Detroit, MI",
+    "to": "Fort Myers, FL"
+  },
+  {
+    "from": "Detroit, MI",
+    "to": "Houston-Intercontinental, TX"
+  },
+  {
+    "from": "Detroit, MI",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "Detroit, MI",
+    "to": "Miami, FL"
+  },
+  {
+    "from": "Detroit, MI",
+    "to": "New Orleans, LA"
+  },
+  {
+    "from": "Detroit, MI",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Detroit, MI",
+    "to": "Philadelphia, PA"
+  },
+  {
+    "from": "Detroit, MI",
+    "to": "Phoenix-Sky Harbor, AZ"
+  },
+  {
+    "from": "Detroit, MI",
+    "to": "Raleigh/Durham, NC"
+  },
+  {
+    "from": "Detroit, MI",
+    "to": "Tampa, FL"
+  },
+  {
+    "from": "El Paso, TX",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "El Paso, TX",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "Fargo, ND",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Fort Lauderdale, FL",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Fort Lauderdale, FL",
+    "to": "Baltimore, MD"
+  },
+  {
+    "from": "Fort Lauderdale, FL",
+    "to": "Charlotte, NC"
+  },
+  {
+    "from": "Fort Lauderdale, FL",
+    "to": "Chicago-O'Hare, IL"
+  },
+  {
+    "from": "Fort Lauderdale, FL",
+    "to": "Cincinnati, OH"
+  },
+  {
+    "from": "Fort Lauderdale, FL",
+    "to": "Cleveland, OH"
+  },
+  {
+    "from": "Fort Lauderdale, FL",
+    "to": "Columbus, OH"
+  },
+  {
+    "from": "Fort Lauderdale, FL",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "Fort Lauderdale, FL",
+    "to": "Detroit, MI"
+  },
+  {
+    "from": "Fort Lauderdale, FL",
+    "to": "Houston-Intercontinental, TX"
+  },
+  {
+    "from": "Fort Lauderdale, FL",
+    "to": "Indianapolis, IN"
+  },
+  {
+    "from": "Fort Lauderdale, FL",
+    "to": "Philadelphia, PA"
+  },
+  {
+    "from": "Fort Lauderdale, FL",
+    "to": "Raleigh/Durham, NC"
+  },
+  {
+    "from": "Fort Lauderdale, FL",
+    "to": "San Juan, Puerto Rico"
+  },
+  {
+    "from": "Fort Lauderdale, FL",
+    "to": "St. Louis, MO"
+  },
+  {
+    "from": "Fort Lauderdale, FL",
+    "to": "Trenton/Princeton, NJ"
+  },
+  {
+    "from": "Fort Lauderdale, FL",
+    "to": "Washington-Dulles, VA"
+  },
+  {
+    "from": "Fort Myers, FL",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Fort Myers, FL",
+    "to": "Chicago-O'Hare, IL"
+  },
+  {
+    "from": "Fort Myers, FL",
+    "to": "Cincinnati, OH"
+  },
+  {
+    "from": "Fort Myers, FL",
+    "to": "Cleveland, OH"
+  },
+  {
+    "from": "Fort Myers, FL",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "Fort Myers, FL",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Fort Myers, FL",
+    "to": "Detroit, MI"
+  },
+  {
+    "from": "Fort Myers, FL",
+    "to": "Indianapolis, IN"
+  },
+  {
+    "from": "Fort Myers, FL",
+    "to": "Long Island/Islip, NY"
+  },
+  {
+    "from": "Fort Myers, FL",
+    "to": "Philadelphia, PA"
+  },
+  {
+    "from": "Fort Myers, FL",
+    "to": "Trenton/Princeton, NJ"
+  },
+  {
+    "from": "Grand Rapids, MI",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Grand Rapids, MI",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Grand Rapids, MI",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Grand Rapids, MI",
+    "to": "Tampa, FL"
+  },
+  {
+    "from": "Guatemala City, Guatemala",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Guatemala City, Guatemala",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "Guatemala City, Guatemala",
+    "to": "Houston-Intercontinental, TX"
+  },
+  {
+    "from": "Guatemala City, Guatemala",
+    "to": "Miami, FL"
+  },
+  {
+    "from": "Guatemala City, Guatemala",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Harrisburg, PA",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Hartford, CT",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Hartford, CT",
+    "to": "Miami, FL"
+  },
+  {
+    "from": "Hartford, CT",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Hartford, CT",
+    "to": "San Juan, Puerto Rico"
+  },
+  {
+    "from": "Houston-Intercontinental, TX",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Houston-Intercontinental, TX",
+    "to": "Baltimore, MD"
+  },
+  {
+    "from": "Houston-Intercontinental, TX",
+    "to": "Cancun, Mexico"
+  },
+  {
+    "from": "Houston-Intercontinental, TX",
+    "to": "Charlotte, NC"
+  },
+  {
+    "from": "Houston-Intercontinental, TX",
+    "to": "Chicago-O'Hare, IL"
+  },
+  {
+    "from": "Houston-Intercontinental, TX",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Houston-Intercontinental, TX",
+    "to": "Detroit, MI"
+  },
+  {
+    "from": "Houston-Intercontinental, TX",
+    "to": "Fort Lauderdale, FL"
+  },
+  {
+    "from": "Houston-Intercontinental, TX",
+    "to": "Guatemala City, Guatemala"
+  },
+  {
+    "from": "Houston-Intercontinental, TX",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "Houston-Intercontinental, TX",
+    "to": "Los Angeles, CA"
+  },
+  {
+    "from": "Houston-Intercontinental, TX",
+    "to": "Miami, FL"
+  },
+  {
+    "from": "Houston-Intercontinental, TX",
+    "to": "New Orleans, LA"
+  },
+  {
+    "from": "Houston-Intercontinental, TX",
+    "to": "Ontario/LA, CA"
+  },
+  {
+    "from": "Houston-Intercontinental, TX",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Houston-Intercontinental, TX",
+    "to": "Philadelphia, PA"
+  },
+  {
+    "from": "Houston-Intercontinental, TX",
+    "to": "Phoenix-Sky Harbor, AZ"
+  },
+  {
+    "from": "Houston-Intercontinental, TX",
+    "to": "Raleigh/Durham, NC"
+  },
+  {
+    "from": "Houston-Intercontinental, TX",
+    "to": "San Pedro Sula, Honduras"
+  },
+  {
+    "from": "Houston-Intercontinental, TX",
+    "to": "San Salvador, El Salvador"
+  },
+  {
+    "from": "Houston-Intercontinental, TX",
+    "to": "Tampa, FL"
+  },
+  {
+    "from": "Indianapolis, IN",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Indianapolis, IN",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "Indianapolis, IN",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Indianapolis, IN",
+    "to": "Fort Lauderdale, FL"
+  },
+  {
+    "from": "Indianapolis, IN",
+    "to": "Fort Myers, FL"
+  },
+  {
+    "from": "Indianapolis, IN",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "Indianapolis, IN",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Indianapolis, IN",
+    "to": "Phoenix-Sky Harbor, AZ"
+  },
+  {
+    "from": "Long Island/Islip, NY",
+    "to": "Fort Myers, FL"
+  },
+  {
+    "from": "Long Island/Islip, NY",
+    "to": "Myrtle Beach, SC"
+  },
+  {
+    "from": "Long Island/Islip, NY",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Long Island/Islip, NY",
+    "to": "Tampa, FL"
+  },
+  {
+    "from": "Long Island/Islip, NY",
+    "to": "Palm Beach, FL"
+  },
+  {
+    "from": "Jacksonville, FL",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Jacksonville, FL",
+    "to": "Philadelphia, PA"
+  },
+  {
+    "from": "Jacksonville, FL",
+    "to": "San Juan, Puerto Rico"
+  },
+  {
+    "from": "Kansas City, MO",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Kansas City, MO",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Kansas City, MO",
+    "to": "Phoenix-Sky Harbor, AZ"
+  },
+  {
+    "from": "Kansas City, MO",
+    "to": "Tampa, FL"
+  },
+  {
+    "from": "Knoxville, TN",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "Austin, TX"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "Hollywood Burbank/LA, CA"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "Chicago-O'Hare, IL"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "Cincinnati, OH"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "Cleveland, OH"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "Detroit, MI"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "El Paso, TX"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "Houston-Intercontinental, TX"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "Indianapolis, IN"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "Los Angeles, CA"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "Memphis, TN"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "Miami, FL"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "Milwaukee, WI"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "Minneapolis/St. Paul, MN"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "Nashville, TN"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "New Orleans, LA"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "Oklahoma City, OK"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "Ontario/LA, CA"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "Philadelphia, PA"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "Phoenix-Sky Harbor, AZ"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "Portland, OR"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "Reno/Tahoe, NV"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "Sacramento, CA"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "Salt Lake City, UT"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "San Antonio, TX"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "San Diego, CA"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "San Francisco, CA"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "San Jose, CA"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "Orange County/Santa Ana, CA"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "Seattle/Tacoma, WA"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "St. Louis, MO"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "Tampa, FL"
+  },
+  {
+    "from": "Las Vegas, NV",
+    "to": "Tucson, AZ"
+  },
+  {
+    "from": "Little Rock, AR",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Little Rock, AR",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Los Angeles, CA",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Los Angeles, CA",
+    "to": "Chicago-O'Hare, IL"
+  },
+  {
+    "from": "Los Angeles, CA",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "Los Angeles, CA",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Los Angeles, CA",
+    "to": "Houston-Intercontinental, TX"
+  },
+  {
+    "from": "Los Angeles, CA",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "Los Angeles, CA",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Los Angeles, CA",
+    "to": "Philadelphia, PA"
+  },
+  {
+    "from": "Los Angeles, CA",
+    "to": "Phoenix-Sky Harbor, AZ"
+  },
+  {
+    "from": "Los Angeles, CA",
+    "to": "Portland, OR"
+  },
+  {
+    "from": "Los Angeles, CA",
+    "to": "Sacramento, CA"
+  },
+  {
+    "from": "Los Angeles, CA",
+    "to": "Salt Lake City, UT"
+  },
+  {
+    "from": "Los Angeles, CA",
+    "to": "San Francisco, CA"
+  },
+  {
+    "from": "Los Angeles, CA",
+    "to": "San Jose, CA"
+  },
+  {
+    "from": "Los Angeles, CA",
+    "to": "Seattle/Tacoma, WA"
+  },
+  {
+    "from": "Madison, WI",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Madison, WI",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Memphis, TN",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Memphis, TN",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Memphis, TN",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "Memphis, TN",
+    "to": "Phoenix-Sky Harbor, AZ"
+  },
+  {
+    "from": "Miami, FL",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Miami, FL",
+    "to": "Baltimore, MD"
+  },
+  {
+    "from": "Miami, FL",
+    "to": "Charlotte, NC"
+  },
+  {
+    "from": "Miami, FL",
+    "to": "Chicago-O'Hare, IL"
+  },
+  {
+    "from": "Miami, FL",
+    "to": "Cincinnati, OH"
+  },
+  {
+    "from": "Miami, FL",
+    "to": "Cleveland, OH"
+  },
+  {
+    "from": "Miami, FL",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "Miami, FL",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Miami, FL",
+    "to": "Detroit, MI"
+  },
+  {
+    "from": "Miami, FL",
+    "to": "Guatemala City, Guatemala"
+  },
+  {
+    "from": "Miami, FL",
+    "to": "Hartford, CT"
+  },
+  {
+    "from": "Miami, FL",
+    "to": "Houston-Intercontinental, TX"
+  },
+  {
+    "from": "Miami, FL",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "Miami, FL",
+    "to": "New York-LaGuardia, NY"
+  },
+  {
+    "from": "Miami, FL",
+    "to": "Philadelphia, PA"
+  },
+  {
+    "from": "Miami, FL",
+    "to": "Punta Cana, Dominican Republic"
+  },
+  {
+    "from": "Miami, FL",
+    "to": "Raleigh/Durham, NC"
+  },
+  {
+    "from": "Miami, FL",
+    "to": "San Juan, Puerto Rico"
+  },
+  {
+    "from": "Miami, FL",
+    "to": "San Pedro Sula, Honduras"
+  },
+  {
+    "from": "Miami, FL",
+    "to": "San Salvador, El Salvador"
+  },
+  {
+    "from": "Miami, FL",
+    "to": "Santo Domingo, Dominican Republic"
+  },
+  {
+    "from": "Miami, FL",
+    "to": "Washington-Dulles, VA"
+  },
+  {
+    "from": "Milwaukee, WI",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Milwaukee, WI",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Milwaukee, WI",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "Milwaukee, WI",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Milwaukee, WI",
+    "to": "Phoenix-Sky Harbor, AZ"
+  },
+  {
+    "from": "Milwaukee, WI",
+    "to": "Tampa, FL"
+  },
+  {
+    "from": "Minneapolis/St. Paul, MN",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Minneapolis/St. Paul, MN",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "Minneapolis/St. Paul, MN",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Minneapolis/St. Paul, MN",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "Minneapolis/St. Paul, MN",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Minneapolis/St. Paul, MN",
+    "to": "Phoenix-Sky Harbor, AZ"
+  },
+  {
+    "from": "Montego Bay, Jamaica",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Montego Bay, Jamaica",
+    "to": "Philadelphia, PA"
+  },
+  {
+    "from": "Myrtle Beach, SC",
+    "to": "Cleveland, OH"
+  },
+  {
+    "from": "Myrtle Beach, SC",
+    "to": "Long Island/Islip, NY"
+  },
+  {
+    "from": "Myrtle Beach, SC",
+    "to": "Philadelphia, PA"
+  },
+  {
+    "from": "Nashville, TN",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "Nashville, TN",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Nashville, TN",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "Nashville, TN",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Nashville, TN",
+    "to": "Philadelphia, PA"
+  },
+  {
+    "from": "Nashville, TN",
+    "to": "Phoenix-Sky Harbor, AZ"
+  },
+  {
+    "from": "Nassau, Bahamas",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "New Orleans, LA",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "New Orleans, LA",
+    "to": "Baltimore, MD"
+  },
+  {
+    "from": "New Orleans, LA",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "New Orleans, LA",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "New Orleans, LA",
+    "to": "Detroit, MI"
+  },
+  {
+    "from": "New Orleans, LA",
+    "to": "Houston-Intercontinental, TX"
+  },
+  {
+    "from": "New Orleans, LA",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "New Orleans, LA",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "New Orleans, LA",
+    "to": "Philadelphia, PA"
+  },
+  {
+    "from": "New York-LaGuardia, NY",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "New York-LaGuardia, NY",
+    "to": "Charlotte, NC"
+  },
+  {
+    "from": "New York-LaGuardia, NY",
+    "to": "Chicago-O'Hare, IL"
+  },
+  {
+    "from": "New York-LaGuardia, NY",
+    "to": "Cleveland, OH"
+  },
+  {
+    "from": "New York-LaGuardia, NY",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "New York-LaGuardia, NY",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "New York-LaGuardia, NY",
+    "to": "Miami, FL"
+  },
+  {
+    "from": "New York-LaGuardia, NY",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "New York-LaGuardia, NY",
+    "to": "Raleigh/Durham, NC"
+  },
+  {
+    "from": "New York-LaGuardia, NY",
+    "to": "San Juan, Puerto Rico"
+  },
+  {
+    "from": "Newark, NJ",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Newark, NJ",
+    "to": "Chicago-O'Hare, IL"
+  },
+  {
+    "from": "Newark, NJ",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "Newark, NJ",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Newark, NJ",
+    "to": "San Juan, Puerto Rico"
+  },
+  {
+    "from": "Norfolk, VA",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Norfolk, VA",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Norfolk, VA",
+    "to": "Tampa, FL"
+  },
+  {
+    "from": "Oklahoma City, OK",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Oklahoma City, OK",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Oklahoma City, OK",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "Oklahoma City, OK",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Omaha, NE",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Omaha, NE",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Omaha, NE",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Omaha, NE",
+    "to": "Phoenix-Sky Harbor, AZ"
+  },
+  {
+    "from": "Ontario/LA, CA",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "Ontario/LA, CA",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Ontario/LA, CA",
+    "to": "Houston-Intercontinental, TX"
+  },
+  {
+    "from": "Ontario/LA, CA",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "Ontario/LA, CA",
+    "to": "Salt Lake City, UT"
+  },
+  {
+    "from": "Ontario/LA, CA",
+    "to": "San Francisco, CA"
+  },
+  {
+    "from": "Ontario/LA, CA",
+    "to": "Seattle/Tacoma, WA"
+  },
+  {
+    "from": "Aruba, Aruba",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Aguadilla, PR"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Austin, TX"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Baltimore, MD"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Boston, MA"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Buffalo, NY"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Cancun, Mexico"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Charlotte, NC"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Chicago-O'Hare, IL"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Cincinnati, OH"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Cleveland, OH"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Columbus, OH"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Des Moines, IA"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Detroit, MI"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Grand Rapids, MI"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Guatemala City, Guatemala"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Harrisburg, PA"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Hartford, CT"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Houston-Intercontinental, TX"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Indianapolis, IN"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Long Island/Islip, NY"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Little Rock, AR"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Los Angeles, CA"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Madison, WI"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Milwaukee, WI"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Minneapolis/St. Paul, MN"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Nashville, TN"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "New Orleans, LA"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "New York-LaGuardia, NY"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Newark, NJ"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Norfolk, VA"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Oklahoma City, OK"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Omaha, NE"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Pensacola, FL"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Philadelphia, PA"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Phoenix-Sky Harbor, AZ"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Pittsburgh, PA"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Ponce, PR"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Punta Cana, Dominican Republic"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Raleigh/Durham, NC"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Richmond, VA"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Salt Lake City, UT"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "San Antonio, TX"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "San Francisco, CA"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "San Jose, Costa Rica"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "San Juan, Puerto Rico"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "San Pedro Sula, Honduras"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "San Salvador, El Salvador"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Santo Domingo, Dominican Republic"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "St. Louis, MO"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Syracuse, NY"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Trenton/Princeton, NJ"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Tulsa, OK"
+  },
+  {
+    "from": "Orlando, FL",
+    "to": "Washington-Dulles, VA"
+  },
+  {
+    "from": "Pensacola, FL",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Pensacola, FL",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Philadelphia, PA",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Philadelphia, PA",
+    "to": "Cancun, Mexico"
+  },
+  {
+    "from": "Philadelphia, PA",
+    "to": "Charleston, SC"
+  },
+  {
+    "from": "Philadelphia, PA",
+    "to": "Charlotte, NC"
+  },
+  {
+    "from": "Philadelphia, PA",
+    "to": "Chicago-O'Hare, IL"
+  },
+  {
+    "from": "Philadelphia, PA",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "Philadelphia, PA",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Philadelphia, PA",
+    "to": "Detroit, MI"
+  },
+  {
+    "from": "Philadelphia, PA",
+    "to": "Fort Lauderdale, FL"
+  },
+  {
+    "from": "Philadelphia, PA",
+    "to": "Fort Myers, FL"
+  },
+  {
+    "from": "Philadelphia, PA",
+    "to": "Houston-Intercontinental, TX"
+  },
+  {
+    "from": "Philadelphia, PA",
+    "to": "Jacksonville, FL"
+  },
+  {
+    "from": "Philadelphia, PA",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "Philadelphia, PA",
+    "to": "Los Angeles, CA"
+  },
+  {
+    "from": "Philadelphia, PA",
+    "to": "Miami, FL"
+  },
+  {
+    "from": "Philadelphia, PA",
+    "to": "Montego Bay, Jamaica"
+  },
+  {
+    "from": "Philadelphia, PA",
+    "to": "Myrtle Beach, SC"
+  },
+  {
+    "from": "Philadelphia, PA",
+    "to": "Nashville, TN"
+  },
+  {
+    "from": "Philadelphia, PA",
+    "to": "New Orleans, LA"
+  },
+  {
+    "from": "Philadelphia, PA",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Philadelphia, PA",
+    "to": "Punta Cana, Dominican Republic"
+  },
+  {
+    "from": "Philadelphia, PA",
+    "to": "Raleigh/Durham, NC"
+  },
+  {
+    "from": "Philadelphia, PA",
+    "to": "San Juan, Puerto Rico"
+  },
+  {
+    "from": "Philadelphia, PA",
+    "to": "Santiago, Dominican Republic"
+  },
+  {
+    "from": "Philadelphia, PA",
+    "to": "Santo Domingo, Dominican Republic"
+  },
+  {
+    "from": "Philadelphia, PA",
+    "to": "Sarasota, FL"
+  },
+  {
+    "from": "Philadelphia, PA",
+    "to": "Tampa, FL"
+  },
+  {
+    "from": "Philadelphia, PA",
+    "to": "Palm Beach, FL"
+  },
+  {
+    "from": "Phoenix-Sky Harbor, AZ",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Phoenix-Sky Harbor, AZ",
+    "to": "Austin, TX"
+  },
+  {
+    "from": "Phoenix-Sky Harbor, AZ",
+    "to": "Chicago-O'Hare, IL"
+  },
+  {
+    "from": "Phoenix-Sky Harbor, AZ",
+    "to": "Cincinnati, OH"
+  },
+  {
+    "from": "Phoenix-Sky Harbor, AZ",
+    "to": "Cleveland, OH"
+  },
+  {
+    "from": "Phoenix-Sky Harbor, AZ",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "Phoenix-Sky Harbor, AZ",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Phoenix-Sky Harbor, AZ",
+    "to": "Des Moines, IA"
+  },
+  {
+    "from": "Phoenix-Sky Harbor, AZ",
+    "to": "Detroit, MI"
+  },
+  {
+    "from": "Phoenix-Sky Harbor, AZ",
+    "to": "Houston-Intercontinental, TX"
+  },
+  {
+    "from": "Phoenix-Sky Harbor, AZ",
+    "to": "Indianapolis, IN"
+  },
+  {
+    "from": "Phoenix-Sky Harbor, AZ",
+    "to": "Kansas City, MO"
+  },
+  {
+    "from": "Phoenix-Sky Harbor, AZ",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "Phoenix-Sky Harbor, AZ",
+    "to": "Los Angeles, CA"
+  },
+  {
+    "from": "Phoenix-Sky Harbor, AZ",
+    "to": "Memphis, TN"
+  },
+  {
+    "from": "Phoenix-Sky Harbor, AZ",
+    "to": "Milwaukee, WI"
+  },
+  {
+    "from": "Phoenix-Sky Harbor, AZ",
+    "to": "Minneapolis/St. Paul, MN"
+  },
+  {
+    "from": "Phoenix-Sky Harbor, AZ",
+    "to": "Nashville, TN"
+  },
+  {
+    "from": "Phoenix-Sky Harbor, AZ",
+    "to": "Omaha, NE"
+  },
+  {
+    "from": "Phoenix-Sky Harbor, AZ",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Phoenix-Sky Harbor, AZ",
+    "to": "Portland, OR"
+  },
+  {
+    "from": "Phoenix-Sky Harbor, AZ",
+    "to": "Reno/Tahoe, NV"
+  },
+  {
+    "from": "Phoenix-Sky Harbor, AZ",
+    "to": "Salt Lake City, UT"
+  },
+  {
+    "from": "Phoenix-Sky Harbor, AZ",
+    "to": "San Antonio, TX"
+  },
+  {
+    "from": "Phoenix-Sky Harbor, AZ",
+    "to": "San Diego, CA"
+  },
+  {
+    "from": "Phoenix-Sky Harbor, AZ",
+    "to": "San Francisco, CA"
+  },
+  {
+    "from": "Phoenix-Sky Harbor, AZ",
+    "to": "Orange County/Santa Ana, CA"
+  },
+  {
+    "from": "Phoenix-Sky Harbor, AZ",
+    "to": "Seattle/Tacoma, WA"
+  },
+  {
+    "from": "Phoenix-Sky Harbor, AZ",
+    "to": "Spokane, WA"
+  },
+  {
+    "from": "Phoenix-Sky Harbor, AZ",
+    "to": "St. Louis, MO"
+  },
+  {
+    "from": "Pittsburgh, PA",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Pittsburgh, PA",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Ponce, PR",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Portland, OR",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Portland, OR",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "Portland, OR",
+    "to": "Los Angeles, CA"
+  },
+  {
+    "from": "Portland, OR",
+    "to": "Phoenix-Sky Harbor, AZ"
+  },
+  {
+    "from": "Providenciales, Turks and Caicos",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Puerto Vallarta, Mexico",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Puerto Vallarta, Mexico",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Punta Cana, Dominican Republic",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Punta Cana, Dominican Republic",
+    "to": "Chicago-O'Hare, IL"
+  },
+  {
+    "from": "Punta Cana, Dominican Republic",
+    "to": "Cincinnati, OH"
+  },
+  {
+    "from": "Punta Cana, Dominican Republic",
+    "to": "Cleveland, OH"
+  },
+  {
+    "from": "Punta Cana, Dominican Republic",
+    "to": "Miami, FL"
+  },
+  {
+    "from": "Punta Cana, Dominican Republic",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Punta Cana, Dominican Republic",
+    "to": "Philadelphia, PA"
+  },
+  {
+    "from": "Punta Cana, Dominican Republic",
+    "to": "San Juan, Puerto Rico"
+  },
+  {
+    "from": "Punta Cana, Dominican Republic",
+    "to": "St. Louis, MO"
+  },
+  {
+    "from": "Punta Cana, Dominican Republic",
+    "to": "Tampa, FL"
+  },
+  {
+    "from": "Raleigh/Durham, NC",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Raleigh/Durham, NC",
+    "to": "Boston, MA"
+  },
+  {
+    "from": "Raleigh/Durham, NC",
+    "to": "Buffalo, NY"
+  },
+  {
+    "from": "Raleigh/Durham, NC",
+    "to": "Cancun, Mexico"
+  },
+  {
+    "from": "Raleigh/Durham, NC",
+    "to": "Chicago-O'Hare, IL"
+  },
+  {
+    "from": "Raleigh/Durham, NC",
+    "to": "Cleveland, OH"
+  },
+  {
+    "from": "Raleigh/Durham, NC",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "Raleigh/Durham, NC",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Raleigh/Durham, NC",
+    "to": "Detroit, MI"
+  },
+  {
+    "from": "Raleigh/Durham, NC",
+    "to": "Fort Lauderdale, FL"
+  },
+  {
+    "from": "Raleigh/Durham, NC",
+    "to": "Houston-Intercontinental, TX"
+  },
+  {
+    "from": "Raleigh/Durham, NC",
+    "to": "Miami, FL"
+  },
+  {
+    "from": "Raleigh/Durham, NC",
+    "to": "New York-LaGuardia, NY"
+  },
+  {
+    "from": "Raleigh/Durham, NC",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Raleigh/Durham, NC",
+    "to": "Philadelphia, PA"
+  },
+  {
+    "from": "Raleigh/Durham, NC",
+    "to": "San Juan, Puerto Rico"
+  },
+  {
+    "from": "Raleigh/Durham, NC",
+    "to": "Tampa, FL"
+  },
+  {
+    "from": "Reno/Tahoe, NV",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "Reno/Tahoe, NV",
+    "to": "Phoenix-Sky Harbor, AZ"
+  },
+  {
+    "from": "Richmond, VA",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Richmond, VA",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Richmond, VA",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Sacramento, CA",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Sacramento, CA",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "Sacramento, CA",
+    "to": "Los Angeles, CA"
+  },
+  {
+    "from": "Salt Lake City, UT",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Salt Lake City, UT",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "Salt Lake City, UT",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Salt Lake City, UT",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "Salt Lake City, UT",
+    "to": "Los Angeles, CA"
+  },
+  {
+    "from": "Salt Lake City, UT",
+    "to": "Ontario/LA, CA"
+  },
+  {
+    "from": "Salt Lake City, UT",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Salt Lake City, UT",
+    "to": "Phoenix-Sky Harbor, AZ"
+  },
+  {
+    "from": "Salt Lake City, UT",
+    "to": "San Diego, CA"
+  },
+  {
+    "from": "Salt Lake City, UT",
+    "to": "San Francisco, CA"
+  },
+  {
+    "from": "Salt Lake City, UT",
+    "to": "Orange County/Santa Ana, CA"
+  },
+  {
+    "from": "Salt Lake City, UT",
+    "to": "Seattle/Tacoma, WA"
+  },
+  {
+    "from": "Salt Lake City, UT",
+    "to": "Tucson, AZ"
+  },
+  {
+    "from": "San Antonio, TX",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "San Antonio, TX",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "San Antonio, TX",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "San Antonio, TX",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "San Antonio, TX",
+    "to": "Phoenix-Sky Harbor, AZ"
+  },
+  {
+    "from": "San Diego, CA",
+    "to": "Austin, TX"
+  },
+  {
+    "from": "San Diego, CA",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "San Diego, CA",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "San Diego, CA",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "San Diego, CA",
+    "to": "Phoenix-Sky Harbor, AZ"
+  },
+  {
+    "from": "San Diego, CA",
+    "to": "Salt Lake City, UT"
+  },
+  {
+    "from": "San Diego, CA",
+    "to": "San Francisco, CA"
+  },
+  {
+    "from": "San Francisco, CA",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "San Francisco, CA",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "San Francisco, CA",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "San Francisco, CA",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "San Francisco, CA",
+    "to": "Los Angeles, CA"
+  },
+  {
+    "from": "San Francisco, CA",
+    "to": "Ontario/LA, CA"
+  },
+  {
+    "from": "San Francisco, CA",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "San Francisco, CA",
+    "to": "Phoenix-Sky Harbor, AZ"
+  },
+  {
+    "from": "San Francisco, CA",
+    "to": "Salt Lake City, UT"
+  },
+  {
+    "from": "San Francisco, CA",
+    "to": "San Diego, CA"
+  },
+  {
+    "from": "San Francisco, CA",
+    "to": "Orange County/Santa Ana, CA"
+  },
+  {
+    "from": "San Jose, CA",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "San Jose, CA",
+    "to": "Los Angeles, CA"
+  },
+  {
+    "from": "San Jose, Costa Rica",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "San Jose, Costa Rica",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "San Juan, Puerto Rico",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "San Juan, Puerto Rico",
+    "to": "Baltimore, MD"
+  },
+  {
+    "from": "San Juan, Puerto Rico",
+    "to": "Boston, MA"
+  },
+  {
+    "from": "San Juan, Puerto Rico",
+    "to": "Charlotte, NC"
+  },
+  {
+    "from": "San Juan, Puerto Rico",
+    "to": "Chicago-O'Hare, IL"
+  },
+  {
+    "from": "San Juan, Puerto Rico",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "San Juan, Puerto Rico",
+    "to": "Fort Lauderdale, FL"
+  },
+  {
+    "from": "San Juan, Puerto Rico",
+    "to": "Hartford, CT"
+  },
+  {
+    "from": "San Juan, Puerto Rico",
+    "to": "Jacksonville, FL"
+  },
+  {
+    "from": "San Juan, Puerto Rico",
+    "to": "Miami, FL"
+  },
+  {
+    "from": "San Juan, Puerto Rico",
+    "to": "New York-LaGuardia, NY"
+  },
+  {
+    "from": "San Juan, Puerto Rico",
+    "to": "Newark, NJ"
+  },
+  {
+    "from": "San Juan, Puerto Rico",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "San Juan, Puerto Rico",
+    "to": "Philadelphia, PA"
+  },
+  {
+    "from": "San Juan, Puerto Rico",
+    "to": "Punta Cana, Dominican Republic"
+  },
+  {
+    "from": "San Juan, Puerto Rico",
+    "to": "Raleigh/Durham, NC"
+  },
+  {
+    "from": "San Juan, Puerto Rico",
+    "to": "Santo Domingo, Dominican Republic"
+  },
+  {
+    "from": "San Juan, Puerto Rico",
+    "to": "St. Maarten, St. Maarten"
+  },
+  {
+    "from": "San Juan, Puerto Rico",
+    "to": "Tampa, FL"
+  },
+  {
+    "from": "San Juan, Puerto Rico",
+    "to": "Washington-Dulles, VA"
+  },
+  {
+    "from": "San Pedro Sula, Honduras",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "San Pedro Sula, Honduras",
+    "to": "Houston-Intercontinental, TX"
+  },
+  {
+    "from": "San Pedro Sula, Honduras",
+    "to": "Miami, FL"
+  },
+  {
+    "from": "San Pedro Sula, Honduras",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "San Salvador, El Salvador",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "San Salvador, El Salvador",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "San Salvador, El Salvador",
+    "to": "Houston-Intercontinental, TX"
+  },
+  {
+    "from": "San Salvador, El Salvador",
+    "to": "Miami, FL"
+  },
+  {
+    "from": "San Salvador, El Salvador",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "San Salvador, El Salvador",
+    "to": "Washington-Dulles, VA"
+  },
+  {
+    "from": "Orange County/Santa Ana, CA",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "Orange County/Santa Ana, CA",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Orange County/Santa Ana, CA",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "Orange County/Santa Ana, CA",
+    "to": "Phoenix-Sky Harbor, AZ"
+  },
+  {
+    "from": "Orange County/Santa Ana, CA",
+    "to": "Salt Lake City, UT"
+  },
+  {
+    "from": "Orange County/Santa Ana, CA",
+    "to": "San Francisco, CA"
+  },
+  {
+    "from": "Santiago, Dominican Republic",
+    "to": "Philadelphia, PA"
+  },
+  {
+    "from": "Santo Domingo, Dominican Republic",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Santo Domingo, Dominican Republic",
+    "to": "Miami, FL"
+  },
+  {
+    "from": "Santo Domingo, Dominican Republic",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Santo Domingo, Dominican Republic",
+    "to": "Philadelphia, PA"
+  },
+  {
+    "from": "Santo Domingo, Dominican Republic",
+    "to": "San Juan, Puerto Rico"
+  },
+  {
+    "from": "Santo Domingo, Dominican Republic",
+    "to": "Tampa, FL"
+  },
+  {
+    "from": "Sarasota, FL",
+    "to": "Cleveland, OH"
+  },
+  {
+    "from": "Sarasota, FL",
+    "to": "Philadelphia, PA"
+  },
+  {
+    "from": "Seattle/Tacoma, WA",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Seattle/Tacoma, WA",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "Seattle/Tacoma, WA",
+    "to": "Los Angeles, CA"
+  },
+  {
+    "from": "Seattle/Tacoma, WA",
+    "to": "Ontario/LA, CA"
+  },
+  {
+    "from": "Seattle/Tacoma, WA",
+    "to": "Phoenix-Sky Harbor, AZ"
+  },
+  {
+    "from": "Seattle/Tacoma, WA",
+    "to": "Salt Lake City, UT"
+  },
+  {
+    "from": "Sioux Falls, SD",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Spokane, WA",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Spokane, WA",
+    "to": "Phoenix-Sky Harbor, AZ"
+  },
+  {
+    "from": "St. Louis, MO",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "St. Louis, MO",
+    "to": "Cancun, Mexico"
+  },
+  {
+    "from": "St. Louis, MO",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "St. Louis, MO",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "St. Louis, MO",
+    "to": "Fort Lauderdale, FL"
+  },
+  {
+    "from": "St. Louis, MO",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "St. Louis, MO",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "St. Louis, MO",
+    "to": "Phoenix-Sky Harbor, AZ"
+  },
+  {
+    "from": "St. Louis, MO",
+    "to": "Punta Cana, Dominican Republic"
+  },
+  {
+    "from": "St. Louis, MO",
+    "to": "Tampa, FL"
+  },
+  {
+    "from": "St. Maarten, St. Maarten",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "St. Maarten, St. Maarten",
+    "to": "San Juan, Puerto Rico"
+  },
+  {
+    "from": "Syracuse, NY",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Tampa, FL",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Tampa, FL",
+    "to": "Baltimore, MD"
+  },
+  {
+    "from": "Tampa, FL",
+    "to": "Buffalo, NY"
+  },
+  {
+    "from": "Tampa, FL",
+    "to": "Charlotte, NC"
+  },
+  {
+    "from": "Tampa, FL",
+    "to": "Chicago-O'Hare, IL"
+  },
+  {
+    "from": "Tampa, FL",
+    "to": "Cincinnati, OH"
+  },
+  {
+    "from": "Tampa, FL",
+    "to": "Cleveland, OH"
+  },
+  {
+    "from": "Tampa, FL",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "Tampa, FL",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Tampa, FL",
+    "to": "Detroit, MI"
+  },
+  {
+    "from": "Tampa, FL",
+    "to": "Grand Rapids, MI"
+  },
+  {
+    "from": "Tampa, FL",
+    "to": "Houston-Intercontinental, TX"
+  },
+  {
+    "from": "Tampa, FL",
+    "to": "Long Island/Islip, NY"
+  },
+  {
+    "from": "Tampa, FL",
+    "to": "Kansas City, MO"
+  },
+  {
+    "from": "Tampa, FL",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "Tampa, FL",
+    "to": "Milwaukee, WI"
+  },
+  {
+    "from": "Tampa, FL",
+    "to": "Norfolk, VA"
+  },
+  {
+    "from": "Tampa, FL",
+    "to": "Philadelphia, PA"
+  },
+  {
+    "from": "Tampa, FL",
+    "to": "Punta Cana, Dominican Republic"
+  },
+  {
+    "from": "Tampa, FL",
+    "to": "Raleigh/Durham, NC"
+  },
+  {
+    "from": "Tampa, FL",
+    "to": "San Juan, Puerto Rico"
+  },
+  {
+    "from": "Tampa, FL",
+    "to": "Santo Domingo, Dominican Republic"
+  },
+  {
+    "from": "Tampa, FL",
+    "to": "St. Louis, MO"
+  },
+  {
+    "from": "Tampa, FL",
+    "to": "Trenton/Princeton, NJ"
+  },
+  {
+    "from": "Tampa, FL",
+    "to": "Washington-Dulles, VA"
+  },
+  {
+    "from": "Trenton/Princeton, NJ",
+    "to": "Fort Lauderdale, FL"
+  },
+  {
+    "from": "Trenton/Princeton, NJ",
+    "to": "Fort Myers, FL"
+  },
+  {
+    "from": "Trenton/Princeton, NJ",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Trenton/Princeton, NJ",
+    "to": "Tampa, FL"
+  },
+  {
+    "from": "Trenton/Princeton, NJ",
+    "to": "Palm Beach, FL"
+  },
+  {
+    "from": "Tucson, AZ",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "Tucson, AZ",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Tucson, AZ",
+    "to": "Las Vegas, NV"
+  },
+  {
+    "from": "Tucson, AZ",
+    "to": "Salt Lake City, UT"
+  },
+  {
+    "from": "Tulsa, OK",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Tulsa, OK",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Washington-Dulles, VA",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Washington-Dulles, VA",
+    "to": "Dallas/Ft. Worth, TX"
+  },
+  {
+    "from": "Washington-Dulles, VA",
+    "to": "Denver, CO"
+  },
+  {
+    "from": "Washington-Dulles, VA",
+    "to": "Fort Lauderdale, FL"
+  },
+  {
+    "from": "Washington-Dulles, VA",
+    "to": "Miami, FL"
+  },
+  {
+    "from": "Washington-Dulles, VA",
+    "to": "Orlando, FL"
+  },
+  {
+    "from": "Washington-Dulles, VA",
+    "to": "San Juan, Puerto Rico"
+  },
+  {
+    "from": "Washington-Dulles, VA",
+    "to": "San Salvador, El Salvador"
+  },
+  {
+    "from": "Washington-Dulles, VA",
+    "to": "Tampa, FL"
+  },
+  {
+    "from": "Palm Beach, FL",
+    "to": "Atlanta, GA"
+  },
+  {
+    "from": "Palm Beach, FL",
+    "to": "Cincinnati, OH"
+  },
+  {
+    "from": "Palm Beach, FL",
+    "to": "Cleveland, OH"
+  },
+  {
+    "from": "Palm Beach, FL",
+    "to": "Long Island/Islip, NY"
+  },
+  {
+    "from": "Palm Beach, FL",
+    "to": "Philadelphia, PA"
+  },
+  {
+    "from": "Palm Beach, FL",
+    "to": "Trenton/Princeton, NJ"
+  }
+]

@@ -26,24 +26,29 @@ export function TopBar({
   onLocationChange: (loc: { lat: number; lng: number } | null) => void;
 }) {
   return (
-    <div className="fixed top-4 left-4 right-4 z-20 flex items-center gap-3 pointer-events-none">
-      <div className="pointer-events-auto shrink-0">
-        <LocationPicker
-          userLocation={userLocation}
-          onLocationChange={onLocationChange}
-        />
-      </div>
-      <div className="pointer-events-auto flex-1 min-w-0">
-        <SearchBar value={search} onChange={onSearchChange} />
-      </div>
-      <div className="pointer-events-auto shrink-0">
-        <DateSelector
-          currentDate={currentDate}
-          availableDates={availableDates}
-          onDateChange={onDateChange}
-          gameCount={gameCount}
-          gameCountByDate={gameCountByDate}
-        />
+    <div className="fixed top-3 left-3 right-3 z-20 pointer-events-none">
+      <div className="pointer-events-auto panel rounded-lg flex flex-col sm:flex-row items-stretch sm:items-center">
+        {/* GPS */}
+        <div className="shrink-0 border-b sm:border-b-0 sm:border-r border-white/5">
+          <LocationPicker
+            userLocation={userLocation}
+            onLocationChange={onLocationChange}
+          />
+        </div>
+        {/* Search */}
+        <div className="flex-1 min-w-0 border-b sm:border-b-0 sm:border-r border-white/5">
+          <SearchBar value={search} onChange={onSearchChange} />
+        </div>
+        {/* Date */}
+        <div className="shrink-0">
+          <DateSelector
+            currentDate={currentDate}
+            availableDates={availableDates}
+            onDateChange={onDateChange}
+            gameCount={gameCount}
+            gameCountByDate={gameCountByDate}
+          />
+        </div>
       </div>
     </div>
   );
