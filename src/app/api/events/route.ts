@@ -17,6 +17,7 @@ interface StadiumEntry {
   lat: number;
   lng: number;
   airports: AirportCoord[];
+  trainStations?: AirportCoord[];
 }
 
 const stadiumAirports: Record<string, StadiumEntry> = stadiumAirportsData as Record<string, StadiumEntry>;
@@ -131,6 +132,7 @@ export async function GET() {
             }
           : null,
         nearbyAirports: [] as AirportWithTimes[],
+        nearbyTrainStations: [] as AirportWithTimes[],
       };
     });
 
@@ -146,15 +148,23 @@ export async function GET() {
       Array.from(venueMap.entries()).map(async ([venueName, venueEvents]) => {
         const first = venueEvents[0];
         const entry = findStadiumEntry(venueName, first.city, first.state);
-        if (!entry || entry.airports.length === 0) return;
+        if (!entry) return;
 
         // Use Ticketmaster lat/lng if available, fallback to JSON
         const venueLat = first.lat ?? entry.lat;
         const venueLng = first.lng ?? entry.lng;
 
-        const airports = await getAirportsWithTravelTimes(venueLat, venueLng, entry.airports);
+        const [airports, trains] = await Promise.all([
+          entry.airports.length > 0
+            ? getAirportsWithTravelTimes(venueLat, venueLng, entry.airports)
+            : [],
+          (entry.trainStations ?? []).length > 0
+            ? getAirportsWithTravelTimes(venueLat, venueLng, entry.trainStations!)
+            : [],
+        ]);
         for (const ev of venueEvents) {
           ev.nearbyAirports = airports;
+          ev.nearbyTrainStations = trains;
           // Backfill venue coords from JSON if Ticketmaster didn't provide them
           if (ev.lat == null) ev.lat = entry.lat;
           if (ev.lng == null) ev.lng = entry.lng;

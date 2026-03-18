@@ -1,277 +1,1302 @@
 {
   "State Farm Arena": {
-    "city": "Atlanta", "state": "GA",
-    "lat": 33.7573, "lng": -84.3963,
+    "city": "Atlanta",
+    "state": "GA",
+    "lat": 33.7573,
+    "lng": -84.3963,
     "airports": [
-      { "code": "ATL", "name": "Hartsfield-Jackson Atlanta Intl", "lat": 33.6407, "lng": -84.4277 }
+      {
+        "code": "ATL",
+        "name": "Hartsfield-Jackson Atlanta Intl",
+        "lat": 33.6407,
+        "lng": -84.4277
+      }
+    ],
+    "trainStations": [
+      {
+        "code": "ATL",
+        "name": "Atlanta",
+        "lat": 33.799445,
+        "lng": -84.392477
+      },
+      {
+        "code": "GNS",
+        "name": "Gainesville Amtrak Station",
+        "lat": 34.288897,
+        "lng": -83.819694
+      }
     ]
   },
   "TD Garden": {
-    "city": "Boston", "state": "MA",
-    "lat": 42.3662, "lng": -71.0621,
+    "city": "Boston",
+    "state": "MA",
+    "lat": 42.3662,
+    "lng": -71.0621,
     "airports": [
-      { "code": "BOS", "name": "Boston Logan Intl", "lat": 42.3656, "lng": -71.0096 }
+      {
+        "code": "BOS",
+        "name": "Boston Logan Intl",
+        "lat": 42.3656,
+        "lng": -71.0096
+      }
+    ],
+    "trainStations": [
+      {
+        "code": "BON",
+        "name": "Boston",
+        "lat": 42.366235,
+        "lng": -71.061122
+      },
+      {
+        "code": "BOS",
+        "name": "Boston",
+        "lat": 42.352311,
+        "lng": -71.055304
+      },
+      {
+        "code": "BBY",
+        "name": "Boston",
+        "lat": 42.347317,
+        "lng": -71.075828
+      }
     ]
   },
   "Barclays Center": {
-    "city": "Brooklyn", "state": "NY",
-    "lat": 40.6826, "lng": -73.9754,
+    "city": "Brooklyn",
+    "state": "NY",
+    "lat": 40.6826,
+    "lng": -73.9754,
     "airports": [
-      { "code": "LGA", "name": "New York LaGuardia", "lat": 40.7769, "lng": -73.8740 },
-      { "code": "JFK", "name": "John F. Kennedy Intl", "lat": 40.6413, "lng": -73.7781 },
-      { "code": "EWR", "name": "Newark Liberty Intl", "lat": 40.6895, "lng": -74.1745 },
-      { "code": "ISP", "name": "Long Island MacArthur", "lat": 40.7952, "lng": -73.1002 }
+      {
+        "code": "LGA",
+        "name": "New York LaGuardia",
+        "lat": 40.7769,
+        "lng": -73.874
+      },
+      {
+        "code": "JFK",
+        "name": "John F. Kennedy Intl",
+        "lat": 40.6413,
+        "lng": -73.7781
+      },
+      {
+        "code": "EWR",
+        "name": "Newark Liberty Intl",
+        "lat": 40.6895,
+        "lng": -74.1745
+      },
+      {
+        "code": "ISP",
+        "name": "Long Island MacArthur",
+        "lat": 40.7952,
+        "lng": -73.1002
+      }
+    ],
+    "trainStations": [
+      {
+        "code": "NYP",
+        "name": "Ny Moynihan Train Hall At Penn Station",
+        "lat": 40.750327,
+        "lng": -73.994459
+      },
+      {
+        "code": "NWK",
+        "name": "Newark",
+        "lat": 40.734706,
+        "lng": -74.16475
+      },
+      {
+        "code": "EWR",
+        "name": "Newark Liberty International Airport",
+        "lat": 40.696618,
+        "lng": -74.18229
+      }
     ]
   },
   "Spectrum Center": {
-    "city": "Charlotte", "state": "NC",
-    "lat": 35.2251, "lng": -80.8392,
+    "city": "Charlotte",
+    "state": "NC",
+    "lat": 35.2251,
+    "lng": -80.8392,
     "airports": [
-      { "code": "CLT", "name": "Charlotte Douglas Intl", "lat": 35.2144, "lng": -80.9473 }
+      {
+        "code": "CLT",
+        "name": "Charlotte Douglas Intl",
+        "lat": 35.2144,
+        "lng": -80.9473
+      }
+    ],
+    "trainStations": [
+      {
+        "code": "CLT",
+        "name": "Charlotte Amtrak Station",
+        "lat": 35.241403,
+        "lng": -80.822812
+      },
+      {
+        "code": "GAS",
+        "name": "Gastonia Amtrak Station",
+        "lat": 35.269186,
+        "lng": -81.162366
+      },
+      {
+        "code": "KAN",
+        "name": "Kannapolis",
+        "lat": 35.496172,
+        "lng": -80.624928
+      }
     ]
   },
   "United Center": {
-    "city": "Chicago", "state": "IL",
-    "lat": 41.8807, "lng": -87.6742,
+    "city": "Chicago",
+    "state": "IL",
+    "lat": 41.8807,
+    "lng": -87.6742,
     "airports": [
-      { "code": "MDW", "name": "Chicago Midway Intl", "lat": 41.7868, "lng": -87.7522 },
-      { "code": "ORD", "name": "Chicago O'Hare Intl", "lat": 41.9742, "lng": -87.9073 }
+      {
+        "code": "MDW",
+        "name": "Chicago Midway Intl",
+        "lat": 41.7868,
+        "lng": -87.7522
+      },
+      {
+        "code": "ORD",
+        "name": "Chicago O'Hare Intl",
+        "lat": 41.9742,
+        "lng": -87.9073
+      }
+    ],
+    "trainStations": [
+      {
+        "code": "CHI",
+        "name": "Chicago Union Station",
+        "lat": 41.878684,
+        "lng": -87.639443
+      },
+      {
+        "code": "SMT",
+        "name": "Summit Amtrak",
+        "lat": 41.794912,
+        "lng": -87.809742
+      },
+      {
+        "code": "LAG",
+        "name": "La Grange Amtrak",
+        "lat": 41.815634,
+        "lng": -87.871545
+      }
     ]
   },
   "Rocket Mortgage FieldHouse": {
-    "city": "Cleveland", "state": "OH",
-    "lat": 41.4965, "lng": -81.6882,
+    "city": "Cleveland",
+    "state": "OH",
+    "lat": 41.4965,
+    "lng": -81.6882,
     "airports": [
-      { "code": "CLE", "name": "Cleveland Hopkins Intl", "lat": 41.4058, "lng": -81.8540 }
+      {
+        "code": "CLE",
+        "name": "Cleveland Hopkins Intl",
+        "lat": 41.4058,
+        "lng": -81.854
+      }
+    ],
+    "trainStations": [
+      {
+        "code": "CLE",
+        "name": "Cleveland",
+        "lat": 41.505787,
+        "lng": -81.696172
+      },
+      {
+        "code": "ELY",
+        "name": "Elyria Amtrak",
+        "lat": 41.370033,
+        "lng": -82.096685
+      },
+      {
+        "code": "ALC",
+        "name": "Alliance Amtrak",
+        "lat": 40.921275,
+        "lng": -81.092904
+      }
     ]
   },
   "American Airlines Center": {
-    "city": "Dallas", "state": "TX",
-    "lat": 32.7905, "lng": -96.8103,
+    "city": "Dallas",
+    "state": "TX",
+    "lat": 32.7905,
+    "lng": -96.8103,
     "airports": [
-      { "code": "DFW", "name": "Dallas/Fort Worth Intl", "lat": 32.8998, "lng": -97.0403 },
-      { "code": "AUS", "name": "Austin-Bergstrom Intl", "lat": 30.1975, "lng": -97.6664 }
+      {
+        "code": "DFW",
+        "name": "Dallas/Fort Worth Intl",
+        "lat": 32.8998,
+        "lng": -97.0403
+      },
+      {
+        "code": "AUS",
+        "name": "Austin-Bergstrom Intl",
+        "lat": 30.1975,
+        "lng": -97.6664
+      }
+    ],
+    "trainStations": [
+      {
+        "code": "DAL",
+        "name": "Dallas",
+        "lat": 32.776094,
+        "lng": -96.807235
+      },
+      {
+        "code": "FTW",
+        "name": "Fort Worth",
+        "lat": 32.7515305,
+        "lng": -97.3257888
+      },
+      {
+        "code": "CBR",
+        "name": "Cleburne Amtrak Station",
+        "lat": 32.349743,
+        "lng": -97.382333
+      }
     ]
   },
   "Ball Arena": {
-    "city": "Denver", "state": "CO",
-    "lat": 39.7487, "lng": -105.0077,
+    "city": "Denver",
+    "state": "CO",
+    "lat": 39.7487,
+    "lng": -105.0077,
     "airports": [
-      { "code": "DEN", "name": "Denver Intl", "lat": 39.8561, "lng": -104.6737 }
+      {
+        "code": "DEN",
+        "name": "Denver Intl",
+        "lat": 39.8561,
+        "lng": -104.6737
+      }
+    ],
+    "trainStations": [
+      {
+        "code": "DEN",
+        "name": "Denver",
+        "lat": 39.752959,
+        "lng": -104.999929
+      },
+      {
+        "code": "WPS",
+        "name": "Winter Park",
+        "lat": 39.88369,
+        "lng": -105.761836
+      },
+      {
+        "code": "WPR",
+        "name": "Winter Park Ski Resort Amtrak Station",
+        "lat": 39.887584,
+        "lng": -105.763245
+      }
     ]
   },
   "Little Caesars Arena": {
-    "city": "Detroit", "state": "MI",
-    "lat": 42.3411, "lng": -83.0553,
+    "city": "Detroit",
+    "state": "MI",
+    "lat": 42.3411,
+    "lng": -83.0553,
     "airports": [
-      { "code": "DTW", "name": "Detroit Metro Wayne County", "lat": 42.2124, "lng": -83.3534 }
+      {
+        "code": "DTW",
+        "name": "Detroit Metro Wayne County",
+        "lat": 42.2124,
+        "lng": -83.3534
+      }
+    ],
+    "trainStations": [
+      {
+        "code": "DET",
+        "name": "Detroit",
+        "lat": 42.368097,
+        "lng": -83.072397
+      },
+      {
+        "code": "DER",
+        "name": "Dearborn",
+        "lat": 42.307167,
+        "lng": -83.235311
+      },
+      {
+        "code": "ROY",
+        "name": "Royal Oak Amtrak",
+        "lat": 42.488439,
+        "lng": -83.14701
+      }
     ]
   },
   "Chase Center": {
-    "city": "San Francisco", "state": "CA",
-    "lat": 37.7680, "lng": -122.3879,
+    "city": "San Francisco",
+    "state": "CA",
+    "lat": 37.768,
+    "lng": -122.3879,
     "airports": [
-      { "code": "SFO", "name": "San Francisco Intl", "lat": 37.6213, "lng": -122.3790 },
-      { "code": "OAK", "name": "Oakland Intl", "lat": 37.7126, "lng": -122.2197 },
-      { "code": "SJC", "name": "San Jose Intl", "lat": 37.3639, "lng": -121.9289 }
+      {
+        "code": "SFO",
+        "name": "San Francisco Intl",
+        "lat": 37.6213,
+        "lng": -122.379
+      },
+      {
+        "code": "OAK",
+        "name": "Oakland Intl",
+        "lat": 37.7126,
+        "lng": -122.2197
+      },
+      {
+        "code": "SJC",
+        "name": "San Jose Intl",
+        "lat": 37.3639,
+        "lng": -121.9289
+      }
+    ],
+    "trainStations": [
+      {
+        "code": "SFC",
+        "name": "San Francisco",
+        "lat": 37.78865,
+        "lng": -122.398867
+      },
+      {
+        "code": "OKJ",
+        "name": "Oakland",
+        "lat": 37.793866,
+        "lng": -122.271667
+      },
+      {
+        "code": "EMY",
+        "name": "Emeryville",
+        "lat": 37.840474,
+        "lng": -122.291615
+      }
     ]
   },
   "Toyota Center": {
-    "city": "Houston", "state": "TX",
-    "lat": 29.7508, "lng": -95.3621,
+    "city": "Houston",
+    "state": "TX",
+    "lat": 29.7508,
+    "lng": -95.3621,
     "airports": [
-      { "code": "IAH", "name": "George Bush Intercontinental", "lat": 29.9902, "lng": -95.3368 }
+      {
+        "code": "IAH",
+        "name": "George Bush Intercontinental",
+        "lat": 29.9902,
+        "lng": -95.3368
+      }
+    ],
+    "trainStations": [
+      {
+        "code": "HOS",
+        "name": "Houston",
+        "lat": 29.767245,
+        "lng": -95.367526
+      }
     ]
   },
   "Gainbridge Fieldhouse": {
-    "city": "Indianapolis", "state": "IN",
-    "lat": 39.7640, "lng": -86.1555,
+    "city": "Indianapolis",
+    "state": "IN",
+    "lat": 39.764,
+    "lng": -86.1555,
     "airports": [
-      { "code": "IND", "name": "Indianapolis Intl", "lat": 39.7173, "lng": -86.2944 }
+      {
+        "code": "IND",
+        "name": "Indianapolis Intl",
+        "lat": 39.7173,
+        "lng": -86.2944
+      }
+    ],
+    "trainStations": [
+      {
+        "code": "IND",
+        "name": "Indianapolis",
+        "lat": 39.761984,
+        "lng": -86.160423
+      },
+      {
+        "code": "CRF",
+        "name": "Crawfordsville Amtrak",
+        "lat": 40.044705,
+        "lng": -86.899187
+      },
+      {
+        "code": "COI",
+        "name": "Connersville Amtrak",
+        "lat": 39.645969,
+        "lng": -85.13338
+      }
     ]
   },
   "Crypto.com Arena": {
-    "city": "Los Angeles", "state": "CA",
-    "lat": 34.0430, "lng": -118.2673,
+    "city": "Los Angeles",
+    "state": "CA",
+    "lat": 34.043,
+    "lng": -118.2673,
     "airports": [
-      { "code": "LAX", "name": "Los Angeles Intl", "lat": 33.9416, "lng": -118.4085 },
-      { "code": "BUR", "name": "Hollywood Burbank", "lat": 34.1975, "lng": -118.3585 },
-      { "code": "SNA", "name": "John Wayne/Orange County", "lat": 33.6757, "lng": -117.8678 },
-      { "code": "ONT", "name": "Ontario Intl", "lat": 34.0560, "lng": -117.6012 }
+      {
+        "code": "LAX",
+        "name": "Los Angeles Intl",
+        "lat": 33.9416,
+        "lng": -118.4085
+      },
+      {
+        "code": "BUR",
+        "name": "Hollywood Burbank",
+        "lat": 34.1975,
+        "lng": -118.3585
+      },
+      {
+        "code": "SNA",
+        "name": "John Wayne/Orange County",
+        "lat": 33.6757,
+        "lng": -117.8678
+      },
+      {
+        "code": "ONT",
+        "name": "Ontario Intl",
+        "lat": 34.056,
+        "lng": -117.6012
+      }
+    ],
+    "trainStations": [
+      {
+        "code": "LAX",
+        "name": "Los Angeles",
+        "lat": 34.056177,
+        "lng": -118.236778
+      },
+      {
+        "code": "GDL",
+        "name": "Glendale Amtrak",
+        "lat": 34.123706,
+        "lng": -118.258868
+      },
+      {
+        "code": "BBK",
+        "name": "Burbank",
+        "lat": 34.178925,
+        "lng": -118.311829
+      }
     ]
   },
   "Intuit Dome": {
-    "city": "Inglewood", "state": "CA",
-    "lat": 33.9517, "lng": -118.3412,
+    "city": "Inglewood",
+    "state": "CA",
+    "lat": 33.9517,
+    "lng": -118.3412,
     "airports": [
-      { "code": "LAX", "name": "Los Angeles Intl", "lat": 33.9416, "lng": -118.4085 },
-      { "code": "BUR", "name": "Hollywood Burbank", "lat": 34.1975, "lng": -118.3585 },
-      { "code": "SNA", "name": "John Wayne/Orange County", "lat": 33.6757, "lng": -117.8678 },
-      { "code": "ONT", "name": "Ontario Intl", "lat": 34.0560, "lng": -117.6012 }
+      {
+        "code": "LAX",
+        "name": "Los Angeles Intl",
+        "lat": 33.9416,
+        "lng": -118.4085
+      },
+      {
+        "code": "BUR",
+        "name": "Hollywood Burbank",
+        "lat": 34.1975,
+        "lng": -118.3585
+      },
+      {
+        "code": "SNA",
+        "name": "John Wayne/Orange County",
+        "lat": 33.6757,
+        "lng": -117.8678
+      },
+      {
+        "code": "ONT",
+        "name": "Ontario Intl",
+        "lat": 34.056,
+        "lng": -117.6012
+      }
+    ],
+    "trainStations": [
+      {
+        "code": "LAX",
+        "name": "Los Angeles",
+        "lat": 34.056177,
+        "lng": -118.236778
+      },
+      {
+        "code": "SMN",
+        "name": "Santa Monica Pier",
+        "lat": 34.012692,
+        "lng": -118.494637
+      },
+      {
+        "code": "WES",
+        "name": "Westwood Ucla Amtrak Bus Stop",
+        "lat": 34.068772,
+        "lng": -118.448979
+      }
     ]
   },
   "FedExForum": {
-    "city": "Memphis", "state": "TN",
-    "lat": 35.1382, "lng": -90.0506,
+    "city": "Memphis",
+    "state": "TN",
+    "lat": 35.1382,
+    "lng": -90.0506,
     "airports": [
-      { "code": "MEM", "name": "Memphis Intl", "lat": 35.0424, "lng": -89.9767 }
+      {
+        "code": "MEM",
+        "name": "Memphis Intl",
+        "lat": 35.0424,
+        "lng": -89.9767
+      }
+    ],
+    "trainStations": [
+      {
+        "code": "MEM",
+        "name": "Memphis",
+        "lat": 35.132458,
+        "lng": -90.059109
+      },
+      {
+        "code": "MKS",
+        "name": "Marks Amtrak",
+        "lat": 34.258227,
+        "lng": -90.272342
+      }
     ]
   },
   "Kaseya Center": {
-    "city": "Miami", "state": "FL",
-    "lat": 25.7814, "lng": -80.1870,
+    "city": "Miami",
+    "state": "FL",
+    "lat": 25.7814,
+    "lng": -80.187,
     "airports": [
-      { "code": "MIA", "name": "Miami Intl", "lat": 25.7959, "lng": -80.2870 },
-      { "code": "FLL", "name": "Fort Lauderdale-Hollywood Intl", "lat": 26.0726, "lng": -80.1527 },
-      { "code": "PBI", "name": "Palm Beach Intl", "lat": 26.6832, "lng": -80.0956 }
+      {
+        "code": "MIA",
+        "name": "Miami Intl",
+        "lat": 25.7959,
+        "lng": -80.287
+      },
+      {
+        "code": "FLL",
+        "name": "Fort Lauderdale-Hollywood Intl",
+        "lat": 26.0726,
+        "lng": -80.1527
+      },
+      {
+        "code": "PBI",
+        "name": "Palm Beach Intl",
+        "lat": 26.6832,
+        "lng": -80.0956
+      }
+    ],
+    "trainStations": [
+      {
+        "code": "MIA",
+        "name": "Miami Amtrak Station",
+        "lat": 25.849554,
+        "lng": -80.257759
+      },
+      {
+        "code": "HOL",
+        "name": "Hollywood Amtrak Station",
+        "lat": 26.011641,
+        "lng": -80.167884
+      },
+      {
+        "code": "FTL",
+        "name": "Fort Lauderdale Amtrak Station",
+        "lat": 26.119256,
+        "lng": -80.17
+      }
     ]
   },
   "Fiserv Forum": {
-    "city": "Milwaukee", "state": "WI",
-    "lat": 43.0451, "lng": -87.9174,
+    "city": "Milwaukee",
+    "state": "WI",
+    "lat": 43.0451,
+    "lng": -87.9174,
     "airports": [
-      { "code": "MKE", "name": "Milwaukee Mitchell Intl", "lat": 42.9472, "lng": -87.8966 }
+      {
+        "code": "MKE",
+        "name": "Milwaukee Mitchell Intl",
+        "lat": 42.9472,
+        "lng": -87.8966
+      }
+    ],
+    "trainStations": [
+      {
+        "code": "MKE",
+        "name": "Milwaukee",
+        "lat": 43.034518,
+        "lng": -87.917104
+      },
+      {
+        "code": "MKA",
+        "name": "General Mitchell Intl. Airport Amtrak Station",
+        "lat": 42.940583,
+        "lng": -87.924359
+      },
+      {
+        "code": "SVT",
+        "name": "Sturtevant Amtrak Station",
+        "lat": 42.718292,
+        "lng": -87.9063
+      }
     ]
   },
   "Target Center": {
-    "city": "Minneapolis", "state": "MN",
-    "lat": 44.9795, "lng": -93.2761,
+    "city": "Minneapolis",
+    "state": "MN",
+    "lat": 44.9795,
+    "lng": -93.2761,
     "airports": [
-      { "code": "MSP", "name": "Minneapolis-St. Paul Intl", "lat": 44.8848, "lng": -93.2223 }
+      {
+        "code": "MSP",
+        "name": "Minneapolis-St. Paul Intl",
+        "lat": 44.8848,
+        "lng": -93.2223
+      }
+    ],
+    "trainStations": [
+      {
+        "code": "MSP",
+        "name": "St. Paul-Minneapolis",
+        "lat": 44.947661,
+        "lng": -93.085355
+      },
+      {
+        "code": "RDW",
+        "name": "Red Wing Amtrak Station",
+        "lat": 44.566214,
+        "lng": -92.537066
+      },
+      {
+        "code": "SCD",
+        "name": "St. Cloud Amtrak Station",
+        "lat": 45.567748,
+        "lng": -94.149093
+      }
     ]
   },
   "Smoothie King Center": {
-    "city": "New Orleans", "state": "LA",
-    "lat": 29.9490, "lng": -90.0821,
+    "city": "New Orleans",
+    "state": "LA",
+    "lat": 29.949,
+    "lng": -90.0821,
     "airports": [
-      { "code": "MSY", "name": "Louis Armstrong New Orleans Intl", "lat": 29.9934, "lng": -90.2580 }
+      {
+        "code": "MSY",
+        "name": "Louis Armstrong New Orleans Intl",
+        "lat": 29.9934,
+        "lng": -90.258
+      }
+    ],
+    "trainStations": [
+      {
+        "code": "NOL",
+        "name": "New Orleans Union Passenger Terminal",
+        "lat": 29.946085,
+        "lng": -90.078291
+      },
+      {
+        "code": "SDL",
+        "name": "Slidell Amtrak Station",
+        "lat": 30.278372,
+        "lng": -89.782565
+      },
+      {
+        "code": "HMD",
+        "name": "Hammond Amtrak Station",
+        "lat": 30.50718,
+        "lng": -90.462169
+      }
     ]
   },
   "Madison Square Garden": {
-    "city": "New York", "state": "NY",
-    "lat": 40.7505, "lng": -73.9934,
+    "city": "New York",
+    "state": "NY",
+    "lat": 40.7505,
+    "lng": -73.9934,
     "airports": [
-      { "code": "EWR", "name": "Newark Liberty Intl", "lat": 40.6895, "lng": -74.1745 },
-      { "code": "LGA", "name": "New York LaGuardia", "lat": 40.7769, "lng": -73.8740 },
-      { "code": "JFK", "name": "John F. Kennedy Intl", "lat": 40.6413, "lng": -73.7781 }
+      {
+        "code": "EWR",
+        "name": "Newark Liberty Intl",
+        "lat": 40.6895,
+        "lng": -74.1745
+      },
+      {
+        "code": "LGA",
+        "name": "New York LaGuardia",
+        "lat": 40.7769,
+        "lng": -73.874
+      },
+      {
+        "code": "JFK",
+        "name": "John F. Kennedy Intl",
+        "lat": 40.6413,
+        "lng": -73.7781
+      }
+    ],
+    "trainStations": [
+      {
+        "code": "NYP",
+        "name": "Ny Moynihan Train Hall At Penn Station",
+        "lat": 40.750327,
+        "lng": -73.994459
+      },
+      {
+        "code": "NWK",
+        "name": "Newark",
+        "lat": 40.734706,
+        "lng": -74.16475
+      },
+      {
+        "code": "EWR",
+        "name": "Newark Liberty International Airport",
+        "lat": 40.696618,
+        "lng": -74.18229
+      }
     ]
   },
   "Paycom Center": {
-    "city": "Oklahoma City", "state": "OK",
-    "lat": 35.4634, "lng": -97.5151,
+    "city": "Oklahoma City",
+    "state": "OK",
+    "lat": 35.4634,
+    "lng": -97.5151,
     "airports": [
-      { "code": "OKC", "name": "Will Rogers World", "lat": 35.3931, "lng": -97.6007 },
-      { "code": "TUL", "name": "Tulsa Intl", "lat": 36.1984, "lng": -95.8881 }
+      {
+        "code": "OKC",
+        "name": "Will Rogers World",
+        "lat": 35.3931,
+        "lng": -97.6007
+      },
+      {
+        "code": "TUL",
+        "name": "Tulsa Intl",
+        "lat": 36.1984,
+        "lng": -95.8881
+      }
+    ],
+    "trainStations": [
+      {
+        "code": "OKC",
+        "name": "Oklahoma City",
+        "lat": 35.46549,
+        "lng": -97.512749
+      },
+      {
+        "code": "NOR",
+        "name": "Norman Amtrak Station",
+        "lat": 35.219963,
+        "lng": -97.443013
+      },
+      {
+        "code": "PUR",
+        "name": "Purcell Amtrak Station",
+        "lat": 35.012033,
+        "lng": -97.357416
+      }
     ]
   },
   "Amway Center": {
-    "city": "Orlando", "state": "FL",
-    "lat": 28.5392, "lng": -81.3839,
+    "city": "Orlando",
+    "state": "FL",
+    "lat": 28.5392,
+    "lng": -81.3839,
     "airports": [
-      { "code": "MCO", "name": "Orlando Intl", "lat": 28.4312, "lng": -81.3081 },
-      { "code": "TPA", "name": "Tampa Intl", "lat": 27.9755, "lng": -82.5332 }
+      {
+        "code": "MCO",
+        "name": "Orlando Intl",
+        "lat": 28.4312,
+        "lng": -81.3081
+      },
+      {
+        "code": "TPA",
+        "name": "Tampa Intl",
+        "lat": 27.9755,
+        "lng": -82.5332
+      }
+    ],
+    "trainStations": [
+      {
+        "code": "ORL",
+        "name": "Orlando",
+        "lat": 28.525926,
+        "lng": -81.381516
+      },
+      {
+        "code": "WPK",
+        "name": "Winter Park Amtrak Station",
+        "lat": 28.597099,
+        "lng": -81.351993
+      },
+      {
+        "code": "KIS",
+        "name": "Kissimmee Amtrak Station",
+        "lat": 28.293835,
+        "lng": -81.404234
+      }
     ]
   },
   "Wells Fargo Center": {
-    "city": "Philadelphia", "state": "PA",
-    "lat": 39.9012, "lng": -75.1720,
+    "city": "Philadelphia",
+    "state": "PA",
+    "lat": 39.9012,
+    "lng": -75.172,
     "airports": [
-      { "code": "PHL", "name": "Philadelphia Intl", "lat": 39.8744, "lng": -75.2424 },
-      { "code": "TTN", "name": "Trenton-Mercer", "lat": 40.2767, "lng": -74.8135 }
+      {
+        "code": "PHL",
+        "name": "Philadelphia Intl",
+        "lat": 39.8744,
+        "lng": -75.2424
+      },
+      {
+        "code": "TTN",
+        "name": "Trenton-Mercer",
+        "lat": 40.2767,
+        "lng": -74.8135
+      }
+    ],
+    "trainStations": [
+      {
+        "code": "PHL",
+        "name": "Philadelphia",
+        "lat": 39.955615,
+        "lng": -75.181041
+      },
+      {
+        "code": "PHN",
+        "name": "North Philadelphia Amtrak Station",
+        "lat": 39.99678,
+        "lng": -75.155114
+      },
+      {
+        "code": "ARD",
+        "name": "Ardmore Amtrak Station",
+        "lat": 40.008278,
+        "lng": -75.290399
+      }
     ]
   },
   "Footprint Center": {
-    "city": "Phoenix", "state": "AZ",
-    "lat": 33.4457, "lng": -112.0712,
+    "city": "Phoenix",
+    "state": "AZ",
+    "lat": 33.4457,
+    "lng": -112.0712,
     "airports": [
-      { "code": "PHX", "name": "Phoenix Sky Harbor Intl", "lat": 33.4373, "lng": -112.0078 }
+      {
+        "code": "PHX",
+        "name": "Phoenix Sky Harbor Intl",
+        "lat": 33.4373,
+        "lng": -112.0078
+      }
+    ],
+    "trainStations": [
+      {
+        "code": "PHA",
+        "name": "Phoenix Sky Harbor Airport Amtrak Station",
+        "lat": 33.43639,
+        "lng": -112.013047
+      },
+      {
+        "code": "TEM",
+        "name": "Tempe Amtrak Bus Stop",
+        "lat": 33.427551,
+        "lng": -111.943154
+      },
+      {
+        "code": "PXN",
+        "name": "North Phoenix Metro Center Transit Station",
+        "lat": 33.639498,
+        "lng": -112.119188
+      }
     ]
   },
   "Moda Center": {
-    "city": "Portland", "state": "OR",
-    "lat": 45.5316, "lng": -122.6668,
+    "city": "Portland",
+    "state": "OR",
+    "lat": 45.5316,
+    "lng": -122.6668,
     "airports": [
-      { "code": "PDX", "name": "Portland Intl", "lat": 45.5898, "lng": -122.5951 }
+      {
+        "code": "PDX",
+        "name": "Portland Intl",
+        "lat": 45.5898,
+        "lng": -122.5951
+      }
+    ],
+    "trainStations": [
+      {
+        "code": "PDX",
+        "name": "Portland",
+        "lat": 45.528724,
+        "lng": -122.676806
+      },
+      {
+        "code": "VAN",
+        "name": "Vancouver",
+        "lat": 45.628901,
+        "lng": -122.686544
+      },
+      {
+        "code": "ORC",
+        "name": "Oregon City Amtrak",
+        "lat": 45.366146,
+        "lng": -122.595925
+      }
     ]
   },
   "Golden 1 Center": {
-    "city": "Sacramento", "state": "CA",
-    "lat": 38.5802, "lng": -121.4997,
+    "city": "Sacramento",
+    "state": "CA",
+    "lat": 38.5802,
+    "lng": -121.4997,
     "airports": [
-      { "code": "SMF", "name": "Sacramento Intl", "lat": 38.6954, "lng": -121.5908 }
+      {
+        "code": "SMF",
+        "name": "Sacramento Intl",
+        "lat": 38.6954,
+        "lng": -121.5908
+      }
+    ],
+    "trainStations": [
+      {
+        "code": "SAC",
+        "name": "Sacramento",
+        "lat": 38.584004,
+        "lng": -121.500704
+      },
+      {
+        "code": "SCS",
+        "name": "Sacramento Amtrak Bus Stop",
+        "lat": 38.576137,
+        "lng": -121.495175
+      },
+      {
+        "code": "EKG",
+        "name": "Elk Grove Amtrak Bus Stop",
+        "lat": 38.424746,
+        "lng": -121.480807
+      }
     ]
   },
   "Frost Bank Center": {
-    "city": "San Antonio", "state": "TX",
-    "lat": 29.4270, "lng": -98.4375,
+    "city": "San Antonio",
+    "state": "TX",
+    "lat": 29.427,
+    "lng": -98.4375,
     "airports": [
-      { "code": "SAT", "name": "San Antonio Intl", "lat": 29.5337, "lng": -98.4698 },
-      { "code": "AUS", "name": "Austin-Bergstrom Intl", "lat": 30.1975, "lng": -97.6664 }
+      {
+        "code": "SAT",
+        "name": "San Antonio Intl",
+        "lat": 29.5337,
+        "lng": -98.4698
+      },
+      {
+        "code": "AUS",
+        "name": "Austin-Bergstrom Intl",
+        "lat": 30.1975,
+        "lng": -97.6664
+      }
+    ],
+    "trainStations": [
+      {
+        "code": "SAS",
+        "name": "San Antonio Amtrak Station",
+        "lat": 29.41935,
+        "lng": -98.478143
+      },
+      {
+        "code": "SMC",
+        "name": "San Marcos Amtrak",
+        "lat": 29.876571,
+        "lng": -97.941049
+      }
     ]
   },
   "AT&T Center": {
-    "city": "San Antonio", "state": "TX",
-    "lat": 29.4269, "lng": -98.4375,
+    "city": "San Antonio",
+    "state": "TX",
+    "lat": 29.4269,
+    "lng": -98.4375,
     "airports": [
-      { "code": "SAT", "name": "San Antonio Intl", "lat": 29.5337, "lng": -98.4698 },
-      { "code": "AUS", "name": "Austin-Bergstrom Intl", "lat": 30.1975, "lng": -97.6664 }
+      {
+        "code": "SAT",
+        "name": "San Antonio Intl",
+        "lat": 29.5337,
+        "lng": -98.4698
+      },
+      {
+        "code": "AUS",
+        "name": "Austin-Bergstrom Intl",
+        "lat": 30.1975,
+        "lng": -97.6664
+      }
+    ],
+    "trainStations": [
+      {
+        "code": "SAS",
+        "name": "San Antonio Amtrak Station",
+        "lat": 29.41935,
+        "lng": -98.478143
+      },
+      {
+        "code": "SMC",
+        "name": "San Marcos Amtrak",
+        "lat": 29.876571,
+        "lng": -97.941049
+      }
     ]
   },
   "Delta Center": {
-    "city": "Salt Lake City", "state": "UT",
-    "lat": 40.7683, "lng": -111.9011,
+    "city": "Salt Lake City",
+    "state": "UT",
+    "lat": 40.7683,
+    "lng": -111.9011,
     "airports": [
-      { "code": "SLC", "name": "Salt Lake City Intl", "lat": 40.7884, "lng": -111.9778 }
+      {
+        "code": "SLC",
+        "name": "Salt Lake City Intl",
+        "lat": 40.7884,
+        "lng": -111.9778
+      }
+    ],
+    "trainStations": [
+      {
+        "code": "SLC",
+        "name": "Salt Lake City",
+        "lat": 40.761661,
+        "lng": -111.908349
+      },
+      {
+        "code": "PRO",
+        "name": "Provo Amtrak",
+        "lat": 40.225957,
+        "lng": -111.664001
+      }
     ]
   },
   "Vivint Arena": {
-    "city": "Salt Lake City", "state": "UT",
-    "lat": 40.7683, "lng": -111.9011,
+    "city": "Salt Lake City",
+    "state": "UT",
+    "lat": 40.7683,
+    "lng": -111.9011,
     "airports": [
-      { "code": "SLC", "name": "Salt Lake City Intl", "lat": 40.7884, "lng": -111.9778 }
+      {
+        "code": "SLC",
+        "name": "Salt Lake City Intl",
+        "lat": 40.7884,
+        "lng": -111.9778
+      }
+    ],
+    "trainStations": [
+      {
+        "code": "SLC",
+        "name": "Salt Lake City",
+        "lat": 40.761661,
+        "lng": -111.908349
+      },
+      {
+        "code": "PRO",
+        "name": "Provo Amtrak",
+        "lat": 40.225957,
+        "lng": -111.664001
+      }
     ]
   },
   "Capital One Arena": {
-    "city": "Washington", "state": "DC",
-    "lat": 38.8982, "lng": -77.0209,
+    "city": "Washington",
+    "state": "DC",
+    "lat": 38.8982,
+    "lng": -77.0209,
     "airports": [
-      { "code": "DCA", "name": "Ronald Reagan Washington National", "lat": 38.8512, "lng": -77.0402 },
-      { "code": "BWI", "name": "Baltimore/Washington Intl", "lat": 39.1754, "lng": -76.6684 },
-      { "code": "IAD", "name": "Washington Dulles Intl", "lat": 38.9531, "lng": -77.4565 }
+      {
+        "code": "DCA",
+        "name": "Ronald Reagan Washington National",
+        "lat": 38.8512,
+        "lng": -77.0402
+      },
+      {
+        "code": "BWI",
+        "name": "Baltimore/Washington Intl",
+        "lat": 39.1754,
+        "lng": -76.6684
+      },
+      {
+        "code": "IAD",
+        "name": "Washington Dulles Intl",
+        "lat": 38.9531,
+        "lng": -77.4565
+      }
+    ],
+    "trainStations": [
+      {
+        "code": "WAS",
+        "name": "Washington Union Station",
+        "lat": 38.896993,
+        "lng": -77.006422
+      },
+      {
+        "code": "ALX",
+        "name": "Alexandria",
+        "lat": 38.806503,
+        "lng": -77.06233
+      },
+      {
+        "code": "NCR",
+        "name": "New Carrollton Amtrak Station",
+        "lat": 38.948098,
+        "lng": -76.871494
+      }
     ]
   },
   "Scotiabank Arena": {
-    "city": "Toronto", "state": "ON",
-    "lat": 43.6435, "lng": -79.3791,
-    "airports": []
+    "city": "Toronto",
+    "state": "ON",
+    "lat": 43.6435,
+    "lng": -79.3791,
+    "airports": [],
+    "trainStations": [
+      {
+        "code": "TWO",
+        "name": "Toronto",
+        "lat": 43.645427,
+        "lng": -79.380762
+      },
+      {
+        "code": "OKL",
+        "name": "Oakville",
+        "lat": 43.455394,
+        "lng": -79.682392
+      },
+      {
+        "code": "GMS",
+        "name": "Grimsby",
+        "lat": 43.195949,
+        "lng": -79.557945
+      }
+    ]
   },
   "Heritage Bank Center": {
-    "city": "Cincinnati", "state": "OH",
-    "lat": 39.0975, "lng": -84.5063,
+    "city": "Cincinnati",
+    "state": "OH",
+    "lat": 39.0975,
+    "lng": -84.5063,
     "airports": [
-      { "code": "CVG", "name": "Cincinnati/Northern Kentucky Intl", "lat": 39.0488, "lng": -84.6678 }
+      {
+        "code": "CVG",
+        "name": "Cincinnati/Northern Kentucky Intl",
+        "lat": 39.0488,
+        "lng": -84.6678
+      }
+    ],
+    "trainStations": [
+      {
+        "code": "CIN",
+        "name": "Cincinnati Union Terminal",
+        "lat": 39.109927,
+        "lng": -84.537061
+      },
+      {
+        "code": "MAY",
+        "name": "Maysville Amtrak Station",
+        "lat": 38.652148,
+        "lng": -83.771074
+      },
+      {
+        "code": "COI",
+        "name": "Connersville Amtrak",
+        "lat": 39.645969,
+        "lng": -85.13338
+      }
     ]
   },
   "T-Mobile Arena": {
-    "city": "Las Vegas", "state": "NV",
-    "lat": 36.1029, "lng": -115.1785,
+    "city": "Las Vegas",
+    "state": "NV",
+    "lat": 36.1029,
+    "lng": -115.1785,
     "airports": [
-      { "code": "LAS", "name": "Harry Reid Intl", "lat": 36.0840, "lng": -115.1537 }
+      {
+        "code": "LAS",
+        "name": "Harry Reid Intl",
+        "lat": 36.084,
+        "lng": -115.1537
+      }
+    ],
+    "trainStations": [
+      {
+        "code": "LAS",
+        "name": "Mccarran International Airport Amtrak Bus Stop",
+        "lat": 36.085973,
+        "lng": -115.148493
+      },
+      {
+        "code": "LVT",
+        "name": "Las Vegas Amtrak Bus Stop",
+        "lat": 36.068464,
+        "lng": -115.163629
+      },
+      {
+        "code": "LVS",
+        "name": "Las Vegas",
+        "lat": 36.164458,
+        "lng": -115.149734
+      }
     ]
   },
   "Arena CDMX": {
-    "city": "Mexico City", "state": "",
-    "lat": 19.4042, "lng": -99.0970,
+    "city": "Mexico City",
+    "state": "",
+    "lat": 19.4042,
+    "lng": -99.097,
     "airports": [
-      { "code": "MEX", "name": "Mexico City Intl", "lat": 19.4363, "lng": -99.0721 },
-      { "code": "NLU", "name": "Felipe Ángeles Intl (AIFA)", "lat": 19.7381, "lng": -99.0148 }
-    ]
+      {
+        "code": "MEX",
+        "name": "Mexico City Intl",
+        "lat": 19.4363,
+        "lng": -99.0721
+      },
+      {
+        "code": "NLU",
+        "name": "Felipe Ángeles Intl (AIFA)",
+        "lat": 19.7381,
+        "lng": -99.0148
+      }
+    ],
+    "trainStations": []
   },
   "Thomas & Mack Center": {
-    "city": "Las Vegas", "state": "NV",
-    "lat": 36.1112, "lng": -115.1478,
+    "city": "Las Vegas",
+    "state": "NV",
+    "lat": 36.1112,
+    "lng": -115.1478,
     "airports": [
-      { "code": "LAS", "name": "Harry Reid Intl", "lat": 36.0840, "lng": -115.1537 }
+      {
+        "code": "LAS",
+        "name": "Harry Reid Intl",
+        "lat": 36.084,
+        "lng": -115.1537
+      }
+    ],
+    "trainStations": [
+      {
+        "code": "LAS",
+        "name": "Mccarran International Airport Amtrak Bus Stop",
+        "lat": 36.085973,
+        "lng": -115.148493
+      },
+      {
+        "code": "LVT",
+        "name": "Las Vegas Amtrak Bus Stop",
+        "lat": 36.068464,
+        "lng": -115.163629
+      },
+      {
+        "code": "LVS",
+        "name": "Las Vegas",
+        "lat": 36.164458,
+        "lng": -115.149734
+      }
     ]
   }
 }
