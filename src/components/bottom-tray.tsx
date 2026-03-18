@@ -56,6 +56,10 @@ function formatDriveTime(minutes: number): string {
   return m > 0 ? `${h}h${m}m` : `${h}h`;
 }
 
+function gmapsUrl(fromLat: number, fromLng: number, toLat: number, toLng: number, mode: "driving" | "transit") {
+  return `https://www.google.com/maps/dir/?api=1&origin=${fromLat},${fromLng}&destination=${toLat},${toLng}&travelmode=${mode}`;
+}
+
 function formatDateHeading(dateStr: string) {
   const [y, m, d] = dateStr.split("-").map(Number);
   const date = new Date(y, m - 1, d);
@@ -115,6 +119,21 @@ export function BottomTray({
       });
     }
   }, [enriched, enriching]);
+
+  const enrichAllOfType = useCallback(async (type: "airports" | "trains" | "buses") => {
+    const field = type === "airports" ? "nearbyAirports" : type === "trains" ? "nearbyTrainStations" : "nearbyBusStations";
+    const stops: { vLat: number; vLng: number; stop: TransitStop }[] = [];
+    for (const event of games) {
+      if (event.lat == null || event.lng == null) continue;
+      for (const s of event[field] ?? []) {
+        const key = enrichKey(event.lat!, event.lng!, s.lat, s.lng);
+        if (!enriched[key] && !enriching.has(key) && !stops.some((x) => enrichKey(x.vLat, x.vLng, x.stop.lat, x.stop.lng) === key)) {
+          stops.push({ vLat: event.lat!, vLng: event.lng!, stop: s });
+        }
+      }
+    }
+    await Promise.all(stops.map((s) => handleEnrich(s.vLat, s.vLng, s.stop)));
+  }, [games, enriched, enriching, handleEnrich]);
 
   // Track tray state changes → disable hover during animation
   useEffect(() => {
@@ -197,9 +216,30 @@ export function BottomTray({
                   <th className="text-left py-2 px-2 font-medium">Game</th>
                   <th className="text-left py-2 px-2 font-medium">Time</th>
                   <th className="text-left py-2 px-2 font-medium">Venue</th>
-                  <th className="text-left py-2 px-2 font-medium">Airports</th>
-                  <th className="text-left py-2 px-2 font-medium">Trains</th>
-                  <th className="text-left py-2 px-2 font-medium">Buses</th>
+                  <th className="text-left py-2 px-2 font-medium">
+                    <span className="flex items-center gap-1">
+                      Airports
+                      <button onClick={() => enrichAllOfType("airports")} title="Enrich all airports" className="text-gray-400 hover:text-gray-600">
+                        <RefreshCw className="size-2.5" />
+                      </button>
+                    </span>
+                  </th>
+                  <th className="text-left py-2 px-2 font-medium">
+                    <span className="flex items-center gap-1">
+                      Trains
+                      <button onClick={() => enrichAllOfType("trains")} title="Enrich all trains" className="text-gray-400 hover:text-gray-600">
+                        <RefreshCw className="size-2.5" />
+                      </button>
+                    </span>
+                  </th>
+                  <th className="text-left py-2 px-2 font-medium">
+                    <span className="flex items-center gap-1">
+                      Buses
+                      <button onClick={() => enrichAllOfType("buses")} title="Enrich all buses" className="text-gray-400 hover:text-gray-600">
+                        <RefreshCw className="size-2.5" />
+                      </button>
+                    </span>
+                  </th>
                   <th className="text-left py-2 px-2 font-medium">Links</th>
                 </tr>
               </thead>
@@ -224,6 +264,12 @@ export function BottomTray({
                       }`}
                       onClick={() => {
                         if (event.lat != null && event.lng != null) {
+                          const vLat = event.lat!;
+                          const vLng = event.lng!;
+                          // Enrich all transport for this venue
+                          for (const s of [...airports, ...trains, ...buses]) {
+                            handleEnrich(vLat, vLng, s);
+                          }
                           // Build venue info from this event row
                           const venueGames = games.filter(
                             (g) => g.venue === event.venue
@@ -232,8 +278,8 @@ export function BottomTray({
                             venue: event.venue,
                             city: event.city,
                             state: event.state,
-                            lat: event.lat!,
-                            lng: event.lng!,
+                            lat: vLat,
+                            lng: vLng,
                             games: venueGames.map((g) => ({
                               id: g.id,
                               name: g.name,
@@ -315,17 +361,19 @@ export function BottomTray({
                                   </a>
                                   {times ? (
                                     <span
-                                      className="flex items-center gap-1 cursor-default"
+                                      className="flex items-center gap-1"
                                       onMouseEnter={() => !isAnimating && baseFocus && onRouteFocus(baseFocus)}
                                       onMouseLeave={() => !isAnimating && onRouteFocus(null)}
                                     >
-                                      <Car className="size-2.5" />
-                                      {formatDriveTime(times.driveMinutes)}
+                                      <a href={gmapsUrl(vLat, vLng, apt.lat, apt.lng, "driving")} target="_blank" rel="noopener noreferrer" className="flex items-center gap-0.5 hover:underline">
+                                        <Car className="size-2.5" />
+                                        {formatDriveTime(times.driveMinutes)}
+                                      </a>
                                       {times.transitMinutes != null && (
-                                        <>
-                                          <Bus className="size-2.5 text-blue-500" />
-                                          <span className="text-blue-500">{formatDriveTime(times.transitMinutes)}</span>
-                                        </>
+                                        <a href={gmapsUrl(vLat, vLng, apt.lat, apt.lng, "transit")} target="_blank" rel="noopener noreferrer" className="flex items-center gap-0.5 text-blue-500 hover:underline">
+                                          <Bus className="size-2.5" />
+                                          {formatDriveTime(times.transitMinutes)}
+                                        </a>
                                       )}
                                     </span>
                                   ) : (
@@ -372,17 +420,19 @@ export function BottomTray({
                                   </a>
                                   {times ? (
                                     <span
-                                      className="flex items-center gap-1 cursor-default"
+                                      className="flex items-center gap-1"
                                       onMouseEnter={() => !isAnimating && baseFocus && onRouteFocus(baseFocus)}
                                       onMouseLeave={() => !isAnimating && onRouteFocus(null)}
                                     >
-                                      <Car className="size-2.5" />
-                                      {formatDriveTime(times.driveMinutes)}
+                                      <a href={gmapsUrl(vLat, vLng, stn.lat, stn.lng, "driving")} target="_blank" rel="noopener noreferrer" className="flex items-center gap-0.5 hover:underline">
+                                        <Car className="size-2.5" />
+                                        {formatDriveTime(times.driveMinutes)}
+                                      </a>
                                       {times.transitMinutes != null && (
-                                        <>
-                                          <Bus className="size-2.5 text-blue-500" />
-                                          <span className="text-blue-500">{formatDriveTime(times.transitMinutes)}</span>
-                                        </>
+                                        <a href={gmapsUrl(vLat, vLng, stn.lat, stn.lng, "transit")} target="_blank" rel="noopener noreferrer" className="flex items-center gap-0.5 text-blue-500 hover:underline">
+                                          <Bus className="size-2.5" />
+                                          {formatDriveTime(times.transitMinutes)}
+                                        </a>
                                       )}
                                     </span>
                                   ) : (
@@ -426,17 +476,19 @@ export function BottomTray({
                                   </span>
                                   {times ? (
                                     <span
-                                      className="flex items-center gap-1 cursor-default"
+                                      className="flex items-center gap-1"
                                       onMouseEnter={() => !isAnimating && baseFocus && onRouteFocus(baseFocus)}
                                       onMouseLeave={() => !isAnimating && onRouteFocus(null)}
                                     >
-                                      <Car className="size-2.5" />
-                                      {formatDriveTime(times.driveMinutes)}
+                                      <a href={gmapsUrl(vLat, vLng, bus.lat, bus.lng, "driving")} target="_blank" rel="noopener noreferrer" className="flex items-center gap-0.5 hover:underline">
+                                        <Car className="size-2.5" />
+                                        {formatDriveTime(times.driveMinutes)}
+                                      </a>
                                       {times.transitMinutes != null && (
-                                        <>
-                                          <Bus className="size-2.5 text-blue-500" />
-                                          <span className="text-blue-500">{formatDriveTime(times.transitMinutes)}</span>
-                                        </>
+                                        <a href={gmapsUrl(vLat, vLng, bus.lat, bus.lng, "transit")} target="_blank" rel="noopener noreferrer" className="flex items-center gap-0.5 text-blue-500 hover:underline">
+                                          <Bus className="size-2.5" />
+                                          {formatDriveTime(times.transitMinutes)}
+                                        </a>
                                       )}
                                     </span>
                                   ) : (
