@@ -12,6 +12,7 @@ function ensureMaps(): Promise<void> {
       importLibrary("maps"),
       importLibrary("marker"),
       importLibrary("routes"),
+      importLibrary("places"),
     ]).then(() => {});
   }
   return mapsReady;
@@ -46,6 +47,7 @@ export interface RouteFocus {
   airportLng: number;
   airportCode: string;
   venueName: string;
+  pinOnly?: boolean;
 }
 
 export interface VenueInfo {
@@ -323,21 +325,23 @@ export function GameMap({
     bounds.extend(airportPos);
     map.fitBounds(bounds, { top: 50, left: 50, right: 50, bottom: 50 + bottomPadding });
 
-    const cacheKey = `${routeFocus.venueLat},${routeFocus.venueLng};${routeFocus.airportLat},${routeFocus.airportLng}`;
-    const cached = directionsCache.get(cacheKey);
-    if (cached) {
-      directionsRendererRef.current?.setDirections(cached);
-    } else {
-      const svc = new google.maps.DirectionsService();
-      svc.route(
-        { origin: venuePos, destination: airportPos, travelMode: google.maps.TravelMode.DRIVING },
-        (result, status) => {
-          if (status === "OK" && result) {
-            directionsCache.set(cacheKey, result);
-            directionsRendererRef.current?.setDirections(result);
+    if (!routeFocus.pinOnly) {
+      const cacheKey = `${routeFocus.venueLat},${routeFocus.venueLng};${routeFocus.airportLat},${routeFocus.airportLng}`;
+      const cached = directionsCache.get(cacheKey);
+      if (cached) {
+        directionsRendererRef.current?.setDirections(cached);
+      } else {
+        const svc = new google.maps.DirectionsService();
+        svc.route(
+          { origin: venuePos, destination: airportPos, travelMode: google.maps.TravelMode.DRIVING },
+          (result, status) => {
+            if (status === "OK" && result) {
+              directionsCache.set(cacheKey, result);
+              directionsRendererRef.current?.setDirections(result);
+            }
           }
-        }
-      );
+        );
+      }
     }
   }, [routeFocus, mapReady, bottomPadding]);
 
