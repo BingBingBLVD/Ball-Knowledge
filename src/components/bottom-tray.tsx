@@ -661,6 +661,29 @@ export function BottomTray({
                               colorClass="text-[--color-flight]"
                             />
                           )}
+                          {airports.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 pl-1">
+                              {airports.map((apt) => (
+                                <span key={apt.code} className="inline-flex items-center gap-0">
+                                  <a
+                                    href={`https://www.google.com/travel/flights?q=flights+from+${nearestUserAirport ?? ""}+to+${apt.code}+on+${date}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-[11px] font-mono text-[--color-flight]/70 hover:text-[--color-flight] underline inline-flex items-center gap-0.5"
+                                  >
+                                    <Plane className="size-2.5" /> {nearestUserAirport ?? "?"} → {apt.code}
+                                  </a>
+                                  <a
+                                    href={`/flights?to=${apt.code}${nearestUserAirport ? `&from=${nearestUserAirport}` : ""}&date=${date}`}
+                                    className="ml-0.5 inline-flex items-center justify-center w-4 h-4 rounded bg-emerald-400/20 text-emerald-400 text-[8px] font-black hover:bg-emerald-400/30 transition-colors leading-none"
+                                    title="Frontier flights"
+                                  >
+                                    F
+                                  </a>
+                                </span>
+                              ))}
+                            </div>
+                          )}
                           {trains.length > 0 && (
                             <TransitCards
                               stops={trains}
@@ -719,25 +742,6 @@ export function BottomTray({
                           <a href={`https://www.espn.com/nba/scoreboard/_/date/${date.replace(/-/g, "")}`} target="_blank" rel="noopener noreferrer" className="text-[--color-dim] hover:text-foreground underline inline-flex items-center gap-0.5">
                             ESPN <ArrowUpRight className="size-2.5" />
                           </a>
-                          {airports.map((apt) => (
-                            <span key={apt.code} className="inline-flex items-center gap-0">
-                              <a
-                                href={`https://www.google.com/travel/flights?q=flights+from+${nearestUserAirport ?? ""}+to+${apt.code}+on+${date}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-[--color-flight]/70 hover:text-[--color-flight] underline inline-flex items-center gap-0.5"
-                              >
-                                <Plane className="size-2.5" /> {apt.code}
-                              </a>
-                              <a
-                                href={`/flights?to=${apt.code}${nearestUserAirport ? `&from=${nearestUserAirport}` : ""}&date=${date}`}
-                                className="ml-0.5 inline-flex items-center justify-center w-4 h-4 rounded bg-emerald-400/20 text-emerald-400 text-[8px] font-black hover:bg-emerald-400/30 transition-colors leading-none"
-                                title="Frontier flights"
-                              >
-                                F
-                              </a>
-                            </span>
-                          ))}
                         </div>
                       </div>
 
