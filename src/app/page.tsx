@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,7 +23,6 @@ import {
   Clock,
   Ticket,
   Trophy,
-  Loader2,
 } from "lucide-react";
 
 const GameMap = dynamic(
@@ -183,7 +182,7 @@ const DateCard = memo(function DateCard({ group }: { group: DateGroup }) {
                 <TableCell>
                   {event.odds ? (
                     <a
-                      href={`https://kalshi.com/markets/${event.odds.kalshi_event}`}
+                      href={`https://kalshi.com/markets/KXNBAGAME/${event.odds.kalshi_event}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="block hover:opacity-80"
@@ -242,7 +241,7 @@ const DateCard = memo(function DateCard({ group }: { group: DateGroup }) {
                     </a>
                     {event.odds ? (
                       <a
-                        href={`https://kalshi.com/markets/${event.odds.kalshi_event}`}
+                        href={`https://kalshi.com/markets/KXNBAGAME/${event.odds.kalshi_event}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         title="Trade on Kalshi"
@@ -279,7 +278,6 @@ export default function Home() {
   const [search, setSearch] = useState("");
   const [visibleDays, setVisibleDays] = useState(DAYS_PER_BATCH);
   const estNow = useESTClock();
-  const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch("/api/events")
@@ -327,23 +325,9 @@ export default function Home() {
     setVisibleDays(DAYS_PER_BATCH);
   }, [search]);
 
-  // IntersectionObserver to auto-load more days on scroll
   const loadMore = useCallback(() => {
     setVisibleDays((v) => v + DAYS_PER_BATCH);
   }, []);
-
-  useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el || !hasMore) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) loadMore();
-      },
-      { rootMargin: "400px" }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [hasMore, loadMore]);
 
   return (
     <main className="min-h-screen bg-background">
@@ -449,16 +433,13 @@ export default function Home() {
                 <DateCard key={group.date} group={group} />
               ))}
 
-              {/* Lazy load sentinel */}
               {hasMore && (
-                <div ref={sentinelRef} className="flex justify-center py-6">
+                <div className="flex justify-center py-6">
                   <Button
                     variant="outline"
                     onClick={loadMore}
-                    className="gap-2"
                   >
-                    <Loader2 className="size-4 animate-spin" />
-                    Loading more days...
+                    Show more days ({totalFiltered - visibleDays} remaining)
                   </Button>
                 </div>
               )}
