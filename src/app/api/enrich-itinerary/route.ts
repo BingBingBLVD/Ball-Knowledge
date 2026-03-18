@@ -17,6 +17,8 @@ interface EnrichRequest {
     fromLng: number;
     toLat: number;
     toLng: number;
+    arriveBy?: string;   // ISO string — transit must arrive by this time
+    departAfter?: string; // ISO string — transit must depart after this time
   }[];
 }
 
@@ -42,16 +44,27 @@ export async function POST(req: NextRequest) {
         ) {
           return null;
         }
+        // Build transit time constraint from ISO strings
+        const transitConstraint: { arriveBy?: number; departAfter?: number } | undefined =
+          leg.arriveBy || leg.departAfter
+            ? {
+                ...(leg.arriveBy ? { arriveBy: Math.floor(new Date(leg.arriveBy).getTime() / 1000) } : {}),
+                ...(leg.departAfter ? { departAfter: Math.floor(new Date(leg.departAfter).getTime() / 1000) } : {}),
+              }
+            : undefined;
         const times = await getTravelTimes(
           leg.fromLat,
           leg.fromLng,
           leg.toLat,
-          leg.toLng
+          leg.toLng,
+          transitConstraint
         );
         return {
           driveMinutes: times.driveMinutes,
           transitMinutes: times.transitMinutes,
-          transitFare: times.transitFare, // only if Google returns it
+          transitFare: times.transitFare,
+          transitDepartureTime: times.transitDepartureTime,
+          transitArrivalTime: times.transitArrivalTime,
           uberEstimate: times.uberEstimate,
           lyftEstimate: times.lyftEstimate,
         };

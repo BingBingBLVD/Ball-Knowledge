@@ -4,6 +4,8 @@ interface TravelTimes {
   driveMinutes: number;
   transitMinutes: number | null;
   transitFare: string | null;
+  transitDepartureTime: string | null; // ISO string from Google
+  transitArrivalTime: string | null;   // ISO string from Google
   uberEstimate: string | null;
   lyftEstimate: string | null;
 }
@@ -45,23 +47,38 @@ function estimateDriveMinutes(
 async function fetchGoogleDirections(
   fromLat: number, fromLng: number,
   toLat: number, toLng: number,
-  mode: "driving" | "transit"
-): Promise<{ minutes: number; fareUsd: string | null } | null> {
+  mode: "driving" | "transit",
+  timeConstraint?: { arriveBy?: number; departAfter?: number } // Unix seconds
+): Promise<{
+  minutes: number;
+  fareUsd: string | null;
+  departureTime: number | null; // Unix seconds
+  arrivalTime: number | null;   // Unix seconds
+} | null> {
   if (!GOOGLE_API_KEY) return null;
   try {
-    const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${fromLat},${fromLng}&destination=${toLat},${toLng}&mode=${mode}&key=${GOOGLE_API_KEY}`;
+    let url = `https://maps.googleapis.com/maps/api/directions/json?origin=${fromLat},${fromLng}&destination=${toLat},${toLng}&mode=${mode}&key=${GOOGLE_API_KEY}`;
+    if (mode === "transit" && timeConstraint?.arriveBy) {
+      url += `&arrival_time=${timeConstraint.arriveBy}`;
+    } else if (mode === "transit" && timeConstraint?.departAfter) {
+      url += `&departure_time=${timeConstraint.departAfter}`;
+    }
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000);
     const res = await fetch(url, { signal: controller.signal });
     clearTimeout(timeout);
     if (!res.ok) return null;
     const data = await res.json();
-    const seconds = data?.routes?.[0]?.legs?.[0]?.duration?.value;
+    const leg = data?.routes?.[0]?.legs?.[0];
+    const seconds = leg?.duration?.value;
     if (seconds == null) return null;
     // Extract fare if available and in USD
     const fare = data?.routes?.[0]?.fare;
     const fareUsd = fare && fare.currency === "USD" ? fare.text : null;
-    return { minutes: Math.round(seconds / 60), fareUsd };
+    // Extract transit departure/arrival times (Unix seconds)
+    const departureTime: number | null = leg?.departure_time?.value ?? null;
+    const arrivalTime: number | null = leg?.arrival_time?.value ?? null;
+    return { minutes: Math.round(seconds / 60), fareUsd, departureTime, arrivalTime };
   } catch {
     return null;
   }
@@ -93,16 +110,22 @@ function estimateRides(
 
 export async function getTravelTimes(
   fromLat: number, fromLng: number,
-  toLat: number, toLng: number
+  toLat: number, toLng: number,
+  transitConstraint?: { arriveBy?: number; departAfter?: number }
 ): Promise<TravelTimes> {
-  const key = cacheKey(fromLat, fromLng, toLat, toLng);
+  const constraintSuffix = transitConstraint?.arriveBy
+    ? `:a${transitConstraint.arriveBy}`
+    : transitConstraint?.departAfter
+      ? `:d${transitConstraint.departAfter}`
+      : "";
+  const key = cacheKey(fromLat, fromLng, toLat, toLng) + constraintSuffix;
   const cached = cache.get(key);
   if (cached) return cached;
 
   // Fetch driving and transit in parallel
   const [driveResult, transitResult] = await Promise.all([
     fetchGoogleDirections(fromLat, fromLng, toLat, toLng, "driving"),
-    fetchGoogleDirections(fromLat, fromLng, toLat, toLng, "transit"),
+    fetchGoogleDirections(fromLat, fromLng, toLat, toLng, "transit", transitConstraint),
   ]);
 
   const driveMin = driveResult?.minutes ?? estimateDriveMinutes(fromLat, fromLng, toLat, toLng);
@@ -112,6 +135,12 @@ export async function getTravelTimes(
     driveMinutes: driveMin,
     transitMinutes: transitResult?.minutes ?? null,
     transitFare: transitResult?.fareUsd ?? null,
+    transitDepartureTime: transitResult?.departureTime
+      ? new Date(transitResult.departureTime * 1000).toISOString()
+      : null,
+    transitArrivalTime: transitResult?.arrivalTime
+      ? new Date(transitResult.arrivalTime * 1000).toISOString()
+      : null,
     uberEstimate: rides.uber,
     lyftEstimate: rides.lyft,
   };

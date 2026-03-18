@@ -57,9 +57,13 @@ interface EnrichResult {
   driveMinutes: number;
   transitMinutes: number | null;
   transitFare: string | null;
+  transitDepartureTime: string | null; // ISO from Google Directions
+  transitArrivalTime: string | null;   // ISO from Google Directions
   uberEstimate: string | null;
   lyftEstimate: string | null;
 }
+
+const BUFFER_MINUTES = 20;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -456,12 +460,20 @@ function TakeMePage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            legs: enrichableLegs.map(({ leg }) => ({
-              fromLat: leg.fromLat,
-              fromLng: leg.fromLng,
-              toLat: leg.toLat,
-              toLng: leg.toLng,
-            })),
+            legs: enrichableLegs.map(({ leg, idx }) => {
+              const nextLeg = idx < it.legs.length - 1 ? it.legs[idx + 1] : null;
+              const prevLeg = idx > 0 ? it.legs[idx - 1] : null;
+              return {
+                fromLat: leg.fromLat,
+                fromLng: leg.fromLng,
+                toLat: leg.toLat,
+                toLng: leg.toLng,
+                // Transit should arrive with buffer before next leg departs
+                ...(nextLeg ? { arriveBy: new Date(new Date(nextLeg.depart).getTime() - BUFFER_MINUTES * 60000).toISOString() } : {}),
+                // Or depart with buffer after previous leg arrives (only if no next leg)
+                ...(!nextLeg && prevLeg ? { departAfter: new Date(new Date(prevLeg.arrive).getTime() + BUFFER_MINUTES * 60000).toISOString() } : {}),
+              };
+            }),
           }),
         });
         if (res.ok) {
@@ -917,25 +929,40 @@ function TakeMePage() {
               // Compute enriched totals for collapsed header
               let displayTotalMinutes = it.totalMinutes;
               let displayArrivalTime = it.arrivalTime;
-              let displayTotalCost = it.totalCost;
+              let displayTotalCost: number | null = null;
               if (itEnrichments) {
                 let minutesDelta = 0;
+                let costSum = 0;
+                let hasCost = false;
                 it.legs.forEach((leg, i) => {
                   const ed = itEnrichments[i];
+                  const sk = `${it.id}:${i}`;
+                  const sw = swappedToTransit.has(sk);
                   if (ed) {
-                    const sk = `${it.id}:${i}`;
-                    const sw = swappedToTransit.has(sk);
                     const newMin =
                       sw && ed.transitMinutes != null
                         ? ed.transitMinutes
                         : ed.driveMinutes;
                     minutesDelta += newMin - leg.minutes;
+                    // Cost: swapped = transit fare, else uber upper bound
+                    if (sw && ed.transitFare) {
+                      const fare = parseFloat(ed.transitFare.replace(/[^0-9.]/g, ""));
+                      if (!isNaN(fare)) { costSum += fare; hasCost = true; }
+                    } else if (!sw && ed.uberEstimate) {
+                      const upper = parseFloat(extractUpperBound(ed.uberEstimate).replace(/[^0-9.]/g, ""));
+                      if (!isNaN(upper)) { costSum += upper; hasCost = true; }
+                    } else if (leg.cost != null) {
+                      costSum += leg.cost; hasCost = true;
+                    }
+                  } else if (leg.cost != null) {
+                    costSum += leg.cost; hasCost = true;
                   }
                 });
                 displayTotalMinutes = Math.max(0, it.totalMinutes + minutesDelta);
                 displayArrivalTime = new Date(
                   new Date(it.departureTime).getTime() + displayTotalMinutes * 60000
                 ).toISOString();
+                if (hasCost) displayTotalCost = Math.round(costSum);
               }
 
               return (
@@ -968,16 +995,14 @@ function TakeMePage() {
                           <span>{formatTime(displayArrivalTime)}</span>
                         </div>
                         <div className="flex items-center gap-2 text-xs font-mono text-[--color-dim] mt-0.5">
-                          <span>{formatDuration(displayTotalMinutes)}</span>
-                          <span>·</span>
-                          {(() => {
-                            const cost = it.totalCost ?? it.legs.reduce((s, l) => s + (l.cost ?? 0), 0);
-                            return (
-                              <span className="text-emerald-400 font-semibold">
-                                ~&lt;${cost}
-                              </span>
-                            );
-                          })()}
+                          <span>
+                            {formatDuration(displayTotalMinutes)}
+                            {" ("}
+                            <span className="text-emerald-400 font-semibold">
+                              ~&lt;${displayTotalCost ?? it.totalCost ?? it.legs.reduce((s, l) => s + (l.cost ?? 0), 0)}
+                            </span>
+                            {")"}
+                          </span>
                           {it.legs.length > 1 && (
                             <>
                               <span>·</span>
@@ -1052,15 +1077,6 @@ function TakeMePage() {
 
                       <div className="mt-3 space-y-0">
                         {it.legs.map((leg, i) => {
-                          const prevLeg = i > 0 ? it.legs[i - 1] : null;
-                          const gap = prevLeg
-                            ? Math.round(
-                                (new Date(leg.depart).getTime() -
-                                  new Date(prevLeg.arrive).getTime()) /
-                                  60000
-                              )
-                            : 0;
-
                           const enrichData = itEnrichments?.[i];
                           const swapKey = `${it.id}:${i}`;
                           const isSwapped = swappedToTransit.has(swapKey);
@@ -1077,31 +1093,62 @@ function TakeMePage() {
                                 ? enrichData.transitMinutes
                                 : leg.minutes;
 
-                          // Compute display times: when swapped to transit,
-                          // arrive by next leg's departure or depart after previous leg's arrival
+                          // Compute display times using real Google transit times when available
                           let displayDepart = leg.depart;
                           let displayArrive = leg.arrive;
                           if (isSwapped && enrichData?.transitMinutes != null) {
-                            const nextLeg = i < it.legs.length - 1 ? it.legs[i + 1] : null;
-                            const prevLeg = i > 0 ? it.legs[i - 1] : null;
-                            if (nextLeg) {
-                              // Must arrive by next leg's departure
-                              const arriveBy = new Date(nextLeg.depart).getTime();
-                              displayArrive = new Date(arriveBy).toISOString();
-                              displayDepart = new Date(arriveBy - enrichData.transitMinutes * 60000).toISOString();
-                            } else if (prevLeg) {
-                              // Depart after previous leg's arrival
-                              const departAfter = new Date(prevLeg.arrive).getTime();
-                              displayDepart = new Date(departAfter).toISOString();
-                              displayArrive = new Date(departAfter + enrichData.transitMinutes * 60000).toISOString();
+                            if (enrichData.transitDepartureTime && enrichData.transitArrivalTime) {
+                              // Use real Google Directions times (already constrained by arriveBy/departAfter)
+                              displayDepart = enrichData.transitDepartureTime;
+                              displayArrive = enrichData.transitArrivalTime;
                             } else {
-                              // No adjacent legs, keep original depart, adjust arrive
-                              displayDepart = leg.depart;
-                              displayArrive = new Date(new Date(leg.depart).getTime() + enrichData.transitMinutes * 60000).toISOString();
+                              // Fallback: compute from adjacent legs with buffer
+                              const nextLeg = i < it.legs.length - 1 ? it.legs[i + 1] : null;
+                              const prevLegRef = i > 0 ? it.legs[i - 1] : null;
+                              if (nextLeg) {
+                                const arriveBy = new Date(nextLeg.depart).getTime() - BUFFER_MINUTES * 60000;
+                                displayArrive = new Date(arriveBy).toISOString();
+                                displayDepart = new Date(arriveBy - enrichData.transitMinutes * 60000).toISOString();
+                              } else if (prevLegRef) {
+                                const departAfter = new Date(prevLegRef.arrive).getTime() + BUFFER_MINUTES * 60000;
+                                displayDepart = new Date(departAfter).toISOString();
+                                displayArrive = new Date(departAfter + enrichData.transitMinutes * 60000).toISOString();
+                              } else {
+                                displayArrive = new Date(new Date(leg.depart).getTime() + enrichData.transitMinutes * 60000).toISOString();
+                              }
                             }
                           } else if (enrichData && !isSwapped) {
                             // Enriched drive: adjust arrive based on live drive time
                             displayArrive = new Date(new Date(leg.depart).getTime() + enrichData.driveMinutes * 60000).toISOString();
+                          }
+
+                          // Compute layover gap using display times (accounts for swaps)
+                          let gap = 0;
+                          if (i > 0) {
+                            const prevLeg = it.legs[i - 1];
+                            const prevEnrich = itEnrichments?.[i - 1];
+                            const prevSwapKey = `${it.id}:${i - 1}`;
+                            const prevIsSwapped = swappedToTransit.has(prevSwapKey);
+                            let prevArrive = prevLeg.arrive;
+                            if (prevIsSwapped && prevEnrich?.transitMinutes != null) {
+                              if (prevEnrich.transitDepartureTime && prevEnrich.transitArrivalTime) {
+                                prevArrive = prevEnrich.transitArrivalTime;
+                              } else {
+                                // Fallback estimate for prev leg transit arrive
+                                const prevPrevLeg = i > 1 ? it.legs[i - 2] : null;
+                                if (prevPrevLeg) {
+                                  const dep = new Date(prevPrevLeg.arrive).getTime() + BUFFER_MINUTES * 60000;
+                                  prevArrive = new Date(dep + prevEnrich.transitMinutes * 60000).toISOString();
+                                } else {
+                                  prevArrive = new Date(new Date(prevLeg.depart).getTime() + prevEnrich.transitMinutes * 60000).toISOString();
+                                }
+                              }
+                            } else if (prevEnrich && !prevIsSwapped) {
+                              prevArrive = new Date(new Date(prevLeg.depart).getTime() + prevEnrich.driveMinutes * 60000).toISOString();
+                            }
+                            gap = Math.round(
+                              (new Date(displayDepart).getTime() - new Date(prevArrive).getTime()) / 60000
+                            );
                           }
 
                           return (
