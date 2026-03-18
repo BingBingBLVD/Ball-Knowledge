@@ -79,6 +79,8 @@ export interface VenueInfo {
       home_win: number;
       kalshi_event: string;
     } | null;
+    away_record?: string | null;
+    home_record?: string | null;
   }[];
   airports: TransitStop[];
   trains: TransitStop[];

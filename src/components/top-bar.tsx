@@ -27,17 +27,16 @@ export function TopBar({
 }) {
   return (
     <div className="fixed top-4 left-4 right-4 z-20 flex items-center gap-3 pointer-events-none">
-      <div className="pointer-events-auto">
-        <SearchBar value={search} onChange={onSearchChange} />
-      </div>
-      <div className="pointer-events-auto">
+      <div className="pointer-events-auto shrink-0">
         <LocationPicker
           userLocation={userLocation}
           onLocationChange={onLocationChange}
         />
       </div>
-      <div className="flex-1" />
-      <div className="pointer-events-auto">
+      <div className="pointer-events-auto flex-1 min-w-0">
+        <SearchBar value={search} onChange={onSearchChange} />
+      </div>
+      <div className="pointer-events-auto shrink-0">
         <DateSelector
           currentDate={currentDate}
           availableDates={availableDates}

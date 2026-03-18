@@ -39,6 +39,8 @@ interface GameEvent {
     home_win: number;
     kalshi_event: string;
   } | null;
+  away_record?: string | null;
+  home_record?: string | null;
   nearbyAirports?: TransitStop[];
   nearbyTrainStations?: TransitStop[];
   nearbyBusStations?: TransitStop[];
@@ -341,8 +343,9 @@ export function BottomTray({
               <tbody>
                 {sortedGames.map((event) => {
                   const parts = event.name.split(/\s+(?:vs?\.?|VS\.?)\s+/);
-                  const away = parts[0];
-                  const home = parts.length > 1 ? parts.slice(1).join(" vs ") : null;
+                  // TM names are "Home vs Away" (home team listed first, since the event is at their venue)
+                  const home = parts[0];
+                  const away = parts.length > 1 ? parts.slice(1).join(" vs ") : null;
                   const isSelected = selectedVenue === event.venue;
                   const airports = event.nearbyAirports ?? [];
                   const trains = event.nearbyTrainStations ?? [];
@@ -382,6 +385,8 @@ export function BottomTray({
                               est_time: g.est_time,
                               min_price: g.min_price,
                               odds: g.odds,
+                              away_record: g.away_record,
+                              home_record: g.home_record,
                             })),
                             airports: event.nearbyAirports ?? [],
                             trains: event.nearbyTrainStations ?? [],
@@ -393,11 +398,11 @@ export function BottomTray({
                       <td className="py-2 px-2 text-xs font-mono">
                         {event.odds ? (
                           <>
-                            <div className={event.odds.home_win > event.odds.away_win ? "text-emerald-600" : "text-gray-500"}>
-                              H {event.odds.home_win}%
-                            </div>
                             <div className={event.odds.away_win > event.odds.home_win ? "text-emerald-600" : "text-gray-500"}>
                               A {event.odds.away_win}%
+                            </div>
+                            <div className={event.odds.home_win > event.odds.away_win ? "text-emerald-600" : "text-gray-500"}>
+                              H {event.odds.home_win}%
                             </div>
                           </>
                         ) : (
@@ -405,10 +410,10 @@ export function BottomTray({
                         )}
                       </td>
                       <td className="py-2 px-2">
-                        {home ? (
+                        {away ? (
                           <>
-                            <div>{away}</div>
-                            <div className="text-gray-500">@ {home}</div>
+                            <div>{away}{event.away_record && <span className="text-gray-400 text-xs ml-1">[{event.away_record}]</span>}</div>
+                            <div className="text-gray-500">@ {home}{event.home_record && <span className="text-gray-400 text-xs ml-1">[{event.home_record}]</span>}</div>
                           </>
                         ) : (
                           event.name
@@ -620,7 +625,7 @@ export function BottomTray({
                             Ticketmaster
                             <ArrowUpRight className="size-3" />
                           </a>
-                          {home && (
+                          {away && (
                             <a
                               href={stubhubUrl(home)}
                               target="_blank"
@@ -644,6 +649,16 @@ export function BottomTray({
                               <ArrowUpRight className="size-3" />
                             </a>
                           )}
+                          <a
+                            href={`https://www.espn.com/nba/scoreboard/_/date/${date.replace(/-/g, "")}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-0.5 text-gray-500 hover:text-gray-800"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            ESPN
+                            <ArrowUpRight className="size-3" />
+                          </a>
                         </div>
                       </td>
                     </tr>

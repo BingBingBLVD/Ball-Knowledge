@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { fetchNBAEvents, type TMEvent } from "@/lib/ticketmaster";
-import { fetchNBAOdds, matchOddsToEvent } from "@/lib/kalshi";
+import { fetchNBAOdds, matchOddsToEvent, findTeamCode } from "@/lib/kalshi";
+import { fetchNBAStandings } from "@/lib/espn";
 import stadiumAirportsData from "../../../../data/stadium-airports.json";
 
 interface AirportCoord {
@@ -67,10 +68,11 @@ function toEST(utcDateTime: string): { date: string; time: string } {
 
 export async function GET() {
   try {
-    // Fetch TM events and Kalshi odds in parallel
-    const [events, odds] = await Promise.all([
+    // Fetch TM events, Kalshi odds, and ESPN standings in parallel
+    const [events, odds, standings] = await Promise.all([
       fetchNBAEvents(),
       fetchNBAOdds().catch(() => []), // don't fail if Kalshi is down
+      fetchNBAStandings().catch(() => ({}) as Record<string, import("@/lib/espn").TeamRecord>), // don't fail if ESPN is down
     ]);
 
     const now = new Date();
@@ -109,6 +111,21 @@ export async function GET() {
       // Match Kalshi odds
       const matched = matchOddsToEvent(event.name, estDate, odds);
 
+      // Determine team abbreviations for records
+      // TM names are "Home vs Away" (home team listed first)
+      let awayCode: string | null = matched?.away_team ?? null;
+      let homeCode: string | null = matched?.home_team ?? null;
+      if (!awayCode || !homeCode) {
+        const parts = event.name.split(/\s+(?:vs?\.?|VS\.?)\s+/);
+        if (parts.length >= 2) {
+          homeCode = homeCode ?? findTeamCode(parts[0]);
+          awayCode = awayCode ?? findTeamCode(parts[1]);
+        }
+      }
+
+      const awayRec = awayCode ? standings[awayCode] : null;
+      const homeRec = homeCode ? standings[homeCode] : null;
+
       return {
         id: event.id,
         name: event.name,
@@ -131,6 +148,8 @@ export async function GET() {
               kalshi_event: matched.event_ticker,
             }
           : null,
+        away_record: awayRec ? `${awayRec.wins}-${awayRec.losses}` : null,
+        home_record: homeRec ? `${homeRec.wins}-${homeRec.losses}` : null,
         nearbyAirports: [] as AirportCoord[],
         nearbyTrainStations: [] as AirportCoord[],
         nearbyBusStations: [] as AirportCoord[],

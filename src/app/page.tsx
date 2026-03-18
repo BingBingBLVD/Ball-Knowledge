@@ -33,6 +33,8 @@ interface GameEvent {
     home_win: number;
     kalshi_event: string;
   } | null;
+  away_record?: string | null;
+  home_record?: string | null;
   nearbyAirports?: { code: string; name: string; lat: number; lng: number; driveMinutes: number; transitMinutes: number | null }[];
   nearbyTrainStations?: { code: string; name: string; lat: number; lng: number; driveMinutes: number; transitMinutes: number | null }[];
 }

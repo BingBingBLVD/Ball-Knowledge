@@ -79,8 +79,9 @@ export function StadiumCard({
         <div className="space-y-2.5">
           {venue.games.map((game) => {
             const parts = game.name.split(/\s+(?:vs?\.?|VS\.?)\s+/);
-            const away = parts[0];
-            const home = parts.length > 1 ? parts.slice(1).join(" vs ") : null;
+            // TM names are "Home vs Away"
+            const home = parts[0];
+            const away = parts.length > 1 ? parts.slice(1).join(" vs ") : null;
             const price = formatPrice(game.min_price);
             const kalshiUrl = game.odds
               ? `https://kalshi.com/markets/KXNBAGAME/${game.odds.kalshi_event}`
@@ -90,7 +91,13 @@ export function StadiumCard({
               <div key={game.id} className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
                   <p className="font-medium text-sm truncate text-gray-900">
-                    {home ? `${away} @ ${home}` : game.name}
+                    {away ? (
+                      <>
+                        {away}{game.away_record && <span className="text-gray-400 text-xs font-normal ml-1">[{game.away_record}]</span>}
+                        {" @ "}
+                        {home}{game.home_record && <span className="text-gray-400 text-xs font-normal ml-1">[{game.home_record}]</span>}
+                      </>
+                    ) : game.name}
                   </p>
                   <div className="flex items-center gap-2 text-xs text-gray-400">
                     <Clock className="size-3" />
@@ -110,10 +117,10 @@ export function StadiumCard({
                       rel="noopener noreferrer"
                       className="text-xs font-mono text-emerald-600 hover:underline"
                     >
-                      {game.odds.home_win}%-{game.odds.away_win}%
+                      {game.odds.away_win}%-{game.odds.home_win}%
                     </a>
                   )}
-                  {home && (
+                  {away && (
                     <a
                       href={stubhubUrl(home)}
                       target="_blank"
@@ -123,6 +130,14 @@ export function StadiumCard({
                       StubHub <ExternalLink className="size-3" />
                     </a>
                   )}
+                  <a
+                    href="https://www.espn.com/nba/scoreboard"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-xs text-blue-500 hover:underline"
+                  >
+                    ESPN <ExternalLink className="size-3" />
+                  </a>
                   <a
                     href={game.url}
                     target="_blank"

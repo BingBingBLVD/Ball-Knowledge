@@ -103,7 +103,7 @@ export async function fetchNBAOdds(): Promise<KalshiGameOdds[]> {
 }
 
 // Team abbreviation mapping: Kalshi code -> common name fragments for matching
-const TEAM_NAMES: Record<string, string[]> = {
+export const TEAM_NAMES: Record<string, string[]> = {
   ATL: ["atlanta", "hawks"],
   BOS: ["boston", "celtics"],
   BKN: ["brooklyn", "nets"],
@@ -137,11 +137,20 @@ const TEAM_NAMES: Record<string, string[]> = {
 };
 
 /** Check if a TM event name contains a team */
-function nameMatchesTeam(eventName: string, teamCode: string): boolean {
+export function nameMatchesTeam(eventName: string, teamCode: string): boolean {
   const lower = eventName.toLowerCase();
   const names = TEAM_NAMES[teamCode];
   if (!names) return false;
   return names.some((n) => lower.includes(n));
+}
+
+/** Reverse-look up a team name fragment to its Kalshi abbreviation */
+export function findTeamCode(fragment: string): string | null {
+  const lower = fragment.toLowerCase();
+  for (const [code, names] of Object.entries(TEAM_NAMES)) {
+    if (names.some((n) => lower.includes(n))) return code;
+  }
+  return null;
 }
 
 /**
