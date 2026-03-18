@@ -168,7 +168,7 @@ export function BottomTray({
 
         {/* Scrollable game list */}
         {trayState === "half" && (
-          <div className={`flex-1 overflow-y-auto px-3 pb-3 ${isAnimating ? "pointer-events-none" : ""}`}>
+          <div className={`flex-1 overflow-y-auto no-scrollbar px-3 pb-3 ${isAnimating ? "pointer-events-none" : ""}`}>
             <table className="w-full text-sm">
               <thead className="sticky top-0 glass">
                 <tr className="text-xs text-white/50 border-b border-white/10">

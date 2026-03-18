@@ -116,7 +116,7 @@ export function DateSelector({
 
       {/* Dropdown date picker */}
       {open && (
-        <div className="absolute top-full right-0 mt-2 glass rounded-xl p-2 max-h-[60vh] overflow-y-auto min-w-[200px] z-50">
+        <div className="absolute top-full right-0 mt-2 glass rounded-xl p-2 max-h-[60vh] overflow-y-auto no-scrollbar min-w-[200px] z-50">
           {availableDates.map((date) => {
             const count = gameCountByDate[date] ?? 0;
             const isActive = date === currentDate;

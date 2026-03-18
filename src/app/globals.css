@@ -181,3 +181,12 @@
 .slide-up {
   animation: slide-up 300ms cubic-bezier(0.32, 0.72, 0, 1) forwards;
 }
+
+/* Hide scrollbars but keep scrolling */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
