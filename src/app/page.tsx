@@ -1,7 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { RouteFocus, VenueFocus } from "@/components/game-map";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,7 +24,15 @@ import {
   Clock,
   Ticket,
   Trophy,
+  Plane,
 } from "lucide-react";
+
+function formatDriveTime(minutes: number): string {
+  if (minutes < 60) return `${minutes} min`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m > 0 ? `${h}h ${m}m` : `${h}h`;
+}
 
 const GameMap = dynamic(
   () => import("@/components/game-map").then((m) => m.GameMap),
@@ -55,6 +64,7 @@ interface GameEvent {
     home_win: number;
     kalshi_event: string;
   } | null;
+  nearbyAirports?: { code: string; name: string; lat: number; lng: number; driveMinutes: number; transitMinutes: number | null }[];
 }
 
 interface DateGroup {
@@ -122,7 +132,37 @@ function useESTClock() {
   return now;
 }
 
-const DateCard = memo(function DateCard({ group }: { group: DateGroup }) {
+interface DateCardProps {
+  group: DateGroup;
+}
+
+const DateCard = memo(function DateCard({
+  group,
+}: DateCardProps) {
+  const [routeFocus, setRouteFocus] = useState<RouteFocus | null>(null);
+  const [venueFocus, setVenueFocus] = useState<VenueFocus | null>(null);
+  const hoverTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleAirportHover = useCallback((focus: RouteFocus | null) => {
+    if (hoverTimeout.current) clearTimeout(hoverTimeout.current);
+    if (focus) {
+      setVenueFocus(null);
+      setRouteFocus(focus);
+    } else {
+      hoverTimeout.current = setTimeout(() => setRouteFocus(null), 150);
+    }
+  }, []);
+
+  const handleVenueHover = useCallback((focus: VenueFocus | null) => {
+    if (hoverTimeout.current) clearTimeout(hoverTimeout.current);
+    if (focus) {
+      setRouteFocus(null);
+      setVenueFocus(focus);
+    } else {
+      hoverTimeout.current = setTimeout(() => setVenueFocus(null), 150);
+    }
+  }, []);
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -137,131 +177,137 @@ const DateCard = memo(function DateCard({ group }: { group: DateGroup }) {
       </CardHeader>
       <CardContent className="px-0">
         <div className="mb-4 px-4">
-          <GameMap events={group.events} />
+          <GameMap events={group.events} routeFocus={routeFocus} venueFocus={venueFocus} />
         </div>
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[80px]">Price</TableHead>
               <TableHead>Game</TableHead>
               <TableHead>Time</TableHead>
               <TableHead>Venue</TableHead>
-              <TableHead>Kalshi Odds</TableHead>
-              <TableHead className="text-right">Links</TableHead>
+              <TableHead>Nearby Airports</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {group.events.map((event) => (
-              <TableRow key={event.id}>
-                <TableCell className="font-medium">
-                  <a
-                    href={event.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:underline"
+            {group.events.map((event) => {
+              const airports = event.nearbyAirports ?? [];
+              return (
+                <TableRow key={event.id}>
+                  <TableCell className="font-mono text-sm text-muted-foreground">
+                    {event.min_price ? formatPrice(event.min_price) : "--"}
+                  </TableCell>
+                  <TableCell className="font-medium">
+                    {(() => {
+                      const parts = event.name.split(/\s+(?:vs?\.?|VS\.?)\s+/);
+                      if (parts.length < 2) return <a href={event.url} target="_blank" rel="noopener noreferrer" className="hover:underline">{event.name}</a>;
+                      const away = parts[0];
+                      const home = parts.slice(1).join(" vs ");
+                      const kalshiUrl = event.odds ? `https://kalshi.com/markets/KXNBAGAME/${event.odds.kalshi_event}` : null;
+                      return (
+                        <>
+                          <span className="flex items-center justify-between gap-2">
+                            <a href={event.url} target="_blank" rel="noopener noreferrer" className="hover:underline">{away}</a>
+                            {event.odds && kalshiUrl && (
+                              <a href={kalshiUrl} target="_blank" rel="noopener noreferrer" className={`text-xs font-mono hover:underline ${event.odds.away_win > event.odds.home_win ? "font-semibold text-green-500" : "text-muted-foreground"}`}>
+                                {event.odds.away_win}%
+                              </a>
+                            )}
+                          </span>
+                          <span className="flex items-center justify-between gap-2">
+                            <a href={event.url} target="_blank" rel="noopener noreferrer" className="hover:underline">{home}</a>
+                            {event.odds && kalshiUrl && (
+                              <a href={kalshiUrl} target="_blank" rel="noopener noreferrer" className={`text-xs font-mono hover:underline ${event.odds.home_win > event.odds.away_win ? "font-semibold text-green-500" : "text-muted-foreground"}`}>
+                                {event.odds.home_win}%
+                              </a>
+                            )}
+                          </span>
+                        </>
+                      );
+                    })()}
+                  </TableCell>
+                  <TableCell>
+                    <span className="flex items-center gap-1.5 text-muted-foreground">
+                      <Clock className="size-3.5" />
+                      {formatTimeEST(event.est_time)}
+                    </span>
+                  </TableCell>
+                  <TableCell
+                    onMouseEnter={() => event.lat != null && event.lng != null ? handleVenueHover({ lat: event.lat, lng: event.lng, name: event.venue }) : undefined}
+                    onMouseLeave={() => handleVenueHover(null)}
                   >
-                    {event.name}
-                  </a>
-                </TableCell>
-                <TableCell>
-                  <span className="flex items-center gap-1.5 text-muted-foreground">
-                    <Clock className="size-3.5" />
-                    {formatTimeEST(event.est_time)}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <a
-                    href={event.lat && event.lng ? `https://www.google.com/maps/?q=${event.lat},${event.lng}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${event.venue}, ${event.city}, ${event.state}`)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground hover:underline"
-                  >
-                    <MapPin className="size-3.5 shrink-0" />
-                    {event.venue} — {event.city}, {event.state}
-                  </a>
-                </TableCell>
-                <TableCell>
-                  {event.odds ? (
                     <a
-                      href={`https://kalshi.com/markets/KXNBAGAME/${event.odds.kalshi_event}`}
+                      href={event.lat && event.lng ? `https://www.google.com/maps/?q=${event.lat},${event.lng}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${event.venue}, ${event.city}, ${event.state}`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block hover:opacity-80"
+                      className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground hover:underline"
                     >
-                      <div className="flex flex-col gap-0.5 text-sm">
-                        <div className="flex items-center justify-between gap-3">
-                          <span className="font-mono text-muted-foreground">
-                            {event.odds.away_team}
-                          </span>
-                          <span
-                            className={
-                              event.odds.away_win > event.odds.home_win
-                                ? "font-semibold text-green-500"
-                                : "text-muted-foreground"
-                            }
-                          >
-                            {event.odds.away_win}%
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between gap-3">
-                          <span className="font-mono text-muted-foreground">
-                            {event.odds.home_team}
-                          </span>
-                          <span
-                            className={
-                              event.odds.home_win > event.odds.away_win
-                                ? "font-semibold text-green-500"
-                                : "text-muted-foreground"
-                            }
-                          >
-                            {event.odds.home_win}%
-                          </span>
-                        </div>
+                      <MapPin className="size-3.5 shrink-0" />
+                      {event.venue} — {event.city}, {event.state}
+                    </a>
+                  </TableCell>
+                  <TableCell>
+                    {airports.length > 0 ? (
+                      <div className="flex flex-col gap-1 text-sm">
+                        {airports.map((apt) => {
+                          const hasCoords = event.lat != null && event.lng != null && apt.lat != null && apt.lng != null;
+                          const mapsUrl = hasCoords
+                            ? `https://www.google.com/maps/dir/${event.lat},${event.lng}/${apt.lat},${apt.lng}`
+                            : null;
+                          const focus: RouteFocus | null = hasCoords ? {
+                            venueLat: event.lat!,
+                            venueLng: event.lng!,
+                            airportLat: apt.lat!,
+                            airportLng: apt.lng!,
+                            airportCode: apt.code,
+                            venueName: event.venue,
+                          } : null;
+                          return (
+                            <div
+                              key={apt.code}
+                              className="flex items-center gap-1.5 text-muted-foreground"
+                              onMouseEnter={() => handleAirportHover(focus)}
+                              onMouseLeave={() => handleAirportHover(null)}
+                            >
+                              <Plane className="size-3 shrink-0" />
+                              <span className="font-mono font-semibold">{apt.code}</span>
+                              {mapsUrl ? (
+                                <a
+                                  href={mapsUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs hover:text-foreground hover:underline"
+                                >
+                                  ~{formatDriveTime(apt.driveMinutes)} drive
+                                </a>
+                              ) : (
+                                <span className="text-xs">~{formatDriveTime(apt.driveMinutes)} drive</span>
+                              )}
+                              {apt.transitMinutes != null && (
+                                hasCoords ? (
+                                  <a
+                                    href={`https://www.google.com/maps/dir/${event.lat},${event.lng}/${apt.lat},${apt.lng}/data=!4m2!4m1!3e3`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-xs text-blue-400 hover:text-blue-300 hover:underline"
+                                  >
+                                    ~{formatDriveTime(apt.transitMinutes)} transit
+                                  </a>
+                                ) : (
+                                  <span className="text-xs text-blue-400">~{formatDriveTime(apt.transitMinutes)} transit</span>
+                                )
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
-                    </a>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">—</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center justify-end gap-2">
-                    <a
-                      href={event.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      title="Buy on Ticketmaster"
-                      className="rounded-md p-1.5 transition-colors hover:bg-muted"
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src="/ticketmaster.svg"
-                        alt="Ticketmaster"
-                        width={24}
-                        height={24}
-                      />
-                    </a>
-                    {event.odds ? (
-                      <a
-                        href={`https://kalshi.com/markets/KXNBAGAME/${event.odds.kalshi_event}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title="Trade on Kalshi"
-                        className="rounded-md p-1.5 transition-colors hover:bg-muted"
-                      >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src="/kalshi.svg"
-                          alt="Kalshi"
-                          width={24}
-                          height={24}
-                        />
-                      </a>
                     ) : (
-                      <span className="inline-block size-[24px] p-1.5" />
+                      <span className="text-xs text-muted-foreground">—</span>
                     )}
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </CardContent>
@@ -430,7 +476,10 @@ export default function Home() {
             {/* Game listings */}
             <div className="space-y-6">
               {visible?.map((group) => (
-                <DateCard key={group.date} group={group} />
+                <DateCard
+                  key={group.date}
+                  group={group}
+                />
               ))}
 
               {hasMore && (

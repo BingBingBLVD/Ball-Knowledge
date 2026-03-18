@@ -1,6 +1,38 @@
 import { NextResponse } from "next/server";
 import { fetchNBAEvents, type TMEvent } from "@/lib/ticketmaster";
 import { fetchNBAOdds, matchOddsToEvent } from "@/lib/kalshi";
+import { getAirportsWithTravelTimes, type AirportWithTimes } from "@/lib/driving";
+import stadiumAirportsData from "../../../../data/stadium-airports.json";
+
+interface AirportCoord {
+  code: string;
+  name: string;
+  lat: number;
+  lng: number;
+}
+
+interface StadiumEntry {
+  city: string;
+  state: string;
+  lat: number;
+  lng: number;
+  airports: AirportCoord[];
+}
+
+const stadiumAirports: Record<string, StadiumEntry> = stadiumAirportsData as Record<string, StadiumEntry>;
+
+function findStadiumEntry(venue: string, city: string, state: string): StadiumEntry | null {
+  if (stadiumAirports[venue]) return stadiumAirports[venue];
+  for (const entry of Object.values(stadiumAirports)) {
+    if (
+      entry.city.toLowerCase() === city.toLowerCase() &&
+      entry.state.toLowerCase() === state.toLowerCase()
+    ) {
+      return entry;
+    }
+  }
+  return null;
+}
 
 export const revalidate = 60; // revalidate every minute for fresh odds
 
@@ -98,8 +130,37 @@ export async function GET() {
               kalshi_event: matched.event_ticker,
             }
           : null,
+        nearbyAirports: [] as AirportWithTimes[],
       };
     });
+
+    // Enrich events with live drive times, deduplicated by venue
+    const venueMap = new Map<string, typeof mapped[number][]>();
+    for (const event of mapped) {
+      const key = event.venue;
+      if (!venueMap.has(key)) venueMap.set(key, []);
+      venueMap.get(key)!.push(event);
+    }
+
+    await Promise.all(
+      Array.from(venueMap.entries()).map(async ([venueName, venueEvents]) => {
+        const first = venueEvents[0];
+        const entry = findStadiumEntry(venueName, first.city, first.state);
+        if (!entry || entry.airports.length === 0) return;
+
+        // Use Ticketmaster lat/lng if available, fallback to JSON
+        const venueLat = first.lat ?? entry.lat;
+        const venueLng = first.lng ?? entry.lng;
+
+        const airports = await getAirportsWithTravelTimes(venueLat, venueLng, entry.airports);
+        for (const ev of venueEvents) {
+          ev.nearbyAirports = airports;
+          // Backfill venue coords from JSON if Ticketmaster didn't provide them
+          if (ev.lat == null) ev.lat = entry.lat;
+          if (ev.lng == null) ev.lng = entry.lng;
+        }
+      })
+    );
 
     mapped.sort(
       (a, b) =>
