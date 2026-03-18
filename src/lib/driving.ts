@@ -1,7 +1,4 @@
 const GOOGLE_API_KEY = process.env.GOOGLE_MAPS_API_KEY ?? "";
-const UBER_SERVER_TOKEN = process.env.UBER_SERVER_TOKEN ?? "";
-const LYFT_CLIENT_ID = process.env.LYFT_CLIENT_ID ?? "";
-const LYFT_CLIENT_SECRET = process.env.LYFT_CLIENT_SECRET ?? "";
 
 interface TravelTimes {
   driveMinutes: number;
@@ -70,67 +67,28 @@ async function fetchGoogleDirections(
   }
 }
 
-async function fetchUberEstimate(
-  fromLat: number, fromLng: number,
-  toLat: number, toLng: number
-): Promise<string | null> {
-  if (!UBER_SERVER_TOKEN) return null;
-  try {
-    const url = `https://api.uber.com/v1.2/estimates/price?start_latitude=${fromLat}&start_longitude=${fromLng}&end_latitude=${toLat}&end_longitude=${toLng}`;
-    const res = await fetch(url, {
-      headers: { Authorization: `Token ${UBER_SERVER_TOKEN}` },
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    const uberX = data.prices?.find((p: any) => p.display_name === "UberX");
-    if (!uberX) return data.prices?.[0]?.estimate ?? null;
-    return uberX.estimate;
-  } catch { return null; }
+/** Math-based ride-share estimate from distance + time */
+function estimateRideFare(
+  miles: number, minutes: number,
+  baseFare: number, perMile: number, perMinute: number, minFare: number
+): string {
+  const low = Math.max(minFare, Math.round(baseFare + perMile * miles + perMinute * minutes));
+  const high = Math.round(low * 1.3); // surge / variability buffer
+  return low === high ? `~$${low}` : `~$${low}\u2013${high}`;
 }
 
-let lyftToken: { token: string; expires: number } | null = null;
-
-async function getLyftToken(): Promise<string | null> {
-  if (lyftToken && Date.now() < lyftToken.expires) return lyftToken.token;
-  if (!LYFT_CLIENT_ID || !LYFT_CLIENT_SECRET) return null;
-  try {
-    const res = await fetch("https://api.lyft.com/oauth/token", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Basic ${Buffer.from(`${LYFT_CLIENT_ID}:${LYFT_CLIENT_SECRET}`).toString("base64")}`,
-      },
-      body: JSON.stringify({ grant_type: "client_credentials", scope: "public" }),
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    lyftToken = { token: data.access_token, expires: Date.now() + (data.expires_in - 60) * 1000 };
-    return data.access_token;
-  } catch { return null; }
-}
-
-async function fetchLyftEstimate(
+function estimateRides(
   fromLat: number, fromLng: number,
-  toLat: number, toLng: number
-): Promise<string | null> {
-  const token = await getLyftToken();
-  if (!token) return null;
-  try {
-    const url = `https://api.lyft.com/v1/cost?start_lat=${fromLat}&start_lng=${fromLng}&end_lat=${toLat}&end_lng=${toLng}`;
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}` },
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    const lyft = data.cost_estimates?.find((c: any) => c.ride_type === "lyft");
-    const est = lyft ?? data.cost_estimates?.[0];
-    if (!est) return null;
-    const low = Math.round(est.estimated_cost_cents_min / 100);
-    const high = Math.round(est.estimated_cost_cents_max / 100);
-    return `$${low}\u2013${high}`;
-  } catch { return null; }
+  toLat: number, toLng: number,
+  driveMinutes: number
+): { uber: string; lyft: string } {
+  const miles = haversineKm(fromLat, fromLng, toLat, toLng) * 0.6214 * 1.4; // road-adjusted
+  return {
+    // UberX: $2.50 base + $1.50/mi + $0.25/min, $7 min
+    uber: estimateRideFare(miles, driveMinutes, 2.5, 1.5, 0.25, 7),
+    // Lyft: $2.00 base + $1.35/mi + $0.20/min, $6 min
+    lyft: estimateRideFare(miles, driveMinutes, 2.0, 1.35, 0.20, 6),
+  };
 }
 
 export async function getTravelTimes(
@@ -141,20 +99,21 @@ export async function getTravelTimes(
   const cached = cache.get(key);
   if (cached) return cached;
 
-  // Fetch driving, transit, Uber, and Lyft in parallel
-  const [driveResult, transitResult, uberEst, lyftEst] = await Promise.all([
+  // Fetch driving and transit in parallel
+  const [driveResult, transitResult] = await Promise.all([
     fetchGoogleDirections(fromLat, fromLng, toLat, toLng, "driving"),
     fetchGoogleDirections(fromLat, fromLng, toLat, toLng, "transit"),
-    fetchUberEstimate(fromLat, fromLng, toLat, toLng),
-    fetchLyftEstimate(fromLat, fromLng, toLat, toLng),
   ]);
 
+  const driveMin = driveResult?.minutes ?? estimateDriveMinutes(fromLat, fromLng, toLat, toLng);
+  const rides = estimateRides(fromLat, fromLng, toLat, toLng, driveMin);
+
   const result: TravelTimes = {
-    driveMinutes: driveResult?.minutes ?? estimateDriveMinutes(fromLat, fromLng, toLat, toLng),
+    driveMinutes: driveMin,
     transitMinutes: transitResult?.minutes ?? null,
     transitFare: transitResult?.fareUsd ?? null,
-    uberEstimate: uberEst,
-    lyftEstimate: lyftEst,
+    uberEstimate: rides.uber,
+    lyftEstimate: rides.lyft,
   };
 
   cache.set(key, result);

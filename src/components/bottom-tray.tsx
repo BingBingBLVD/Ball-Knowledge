@@ -130,6 +130,10 @@ export function BottomTray({
   const [sortKey, setSortKey] = useState<SortKey>(null);
   const [sortDir, setSortDir] = useState<SortDir>("asc");
 
+  const [showAirports, setShowAirports] = useState(true);
+  const [showTrains, setShowTrains] = useState(true);
+  const [showBuses, setShowBuses] = useState(true);
+
   // Precompute distances
   const distanceMap = useMemo(() => {
     const map: Record<string, number> = {};
@@ -300,6 +304,16 @@ export function BottomTray({
               {games.length} game{games.length !== 1 ? "s" : ""} &middot;{" "}
               {formatDateHeading(date)}
             </span>
+            {trayState === "half" && (
+              <span className="flex items-center gap-1 ml-2" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
+                <span className="text-gray-300">&middot;</span>
+                <button onClick={() => setShowAirports((v) => !v)} className={`px-1 rounded ${showAirports ? "text-gray-600" : "text-gray-300 line-through"}`}>Airports</button>
+                <span className="text-gray-300">&middot;</span>
+                <button onClick={() => setShowTrains((v) => !v)} className={`px-1 rounded ${showTrains ? "text-gray-600" : "text-gray-300 line-through"}`}>Trains</button>
+                <span className="text-gray-300">&middot;</span>
+                <button onClick={() => setShowBuses((v) => !v)} className={`px-1 rounded ${showBuses ? "text-gray-600" : "text-gray-300 line-through"}`}>Buses</button>
+              </span>
+            )}
             <span className="flex-1" />
             {trayState === "collapsed" ? (
               <ChevronUp className="size-3.5" />
@@ -345,30 +359,36 @@ export function BottomTray({
                       {sortKey === "distance" ? (sortDir === "asc" ? <ArrowUp className="size-2.5" /> : <ArrowDown className="size-2.5" />) : <ArrowUpDown className="size-2.5" />}
                     </button>
                   </th>
-                  <th className="text-left py-2 px-2 font-medium">
-                    <span className="flex items-center gap-1">
-                      Airports
-                      <button onClick={() => enrichAllOfType("airports")} title="Enrich all airports" className="text-gray-400 hover:text-gray-600">
-                        <RefreshCw className="size-2.5" />
-                      </button>
-                    </span>
-                  </th>
-                  <th className="text-left py-2 px-2 font-medium">
-                    <span className="flex items-center gap-1">
-                      Trains
-                      <button onClick={() => enrichAllOfType("trains")} title="Enrich all trains" className="text-gray-400 hover:text-gray-600">
-                        <RefreshCw className="size-2.5" />
-                      </button>
-                    </span>
-                  </th>
-                  <th className="text-left py-2 px-2 font-medium">
-                    <span className="flex items-center gap-1">
-                      Buses
-                      <button onClick={() => enrichAllOfType("buses")} title="Enrich all buses" className="text-gray-400 hover:text-gray-600">
-                        <RefreshCw className="size-2.5" />
-                      </button>
-                    </span>
-                  </th>
+                  {showAirports && (
+                    <th className="text-left py-2 px-2 font-medium">
+                      <span className="flex items-center gap-1">
+                        Airports
+                        <button onClick={() => enrichAllOfType("airports")} title="Enrich all airports" className="text-gray-400 hover:text-gray-600">
+                          <RefreshCw className="size-2.5" />
+                        </button>
+                      </span>
+                    </th>
+                  )}
+                  {showTrains && (
+                    <th className="text-left py-2 px-2 font-medium">
+                      <span className="flex items-center gap-1">
+                        Trains
+                        <button onClick={() => enrichAllOfType("trains")} title="Enrich all trains" className="text-gray-400 hover:text-gray-600">
+                          <RefreshCw className="size-2.5" />
+                        </button>
+                      </span>
+                    </th>
+                  )}
+                  {showBuses && (
+                    <th className="text-left py-2 px-2 font-medium">
+                      <span className="flex items-center gap-1">
+                        Buses
+                        <button onClick={() => enrichAllOfType("buses")} title="Enrich all buses" className="text-gray-400 hover:text-gray-600">
+                          <RefreshCw className="size-2.5" />
+                        </button>
+                      </span>
+                    </th>
+                  )}
                   <th className="text-left py-2 px-2 font-medium">Links</th>
                 </tr>
               </thead>
@@ -492,7 +512,7 @@ export function BottomTray({
                           {event.city}, {event.state}
                         </span>
                       </td>
-                      <td className="py-2 px-2">
+                      {showAirports && <td className="py-2 px-2">
                         {airports.length > 0 ? (
                           <div className="flex flex-col gap-0.5 text-xs text-gray-500">
                             {airports.map((apt) => {
@@ -561,8 +581,8 @@ export function BottomTray({
                         ) : (
                           <span className="text-xs text-gray-300">--</span>
                         )}
-                      </td>
-                      <td className="py-2 px-2">
+                      </td>}
+                      {showTrains && <td className="py-2 px-2">
                         {trains.length > 0 ? (
                           <div className="flex flex-col gap-0.5 text-xs text-gray-500">
                             {trains.map((stn) => {
@@ -631,8 +651,8 @@ export function BottomTray({
                         ) : (
                           <span className="text-xs text-gray-300">--</span>
                         )}
-                      </td>
-                      <td className="py-2 px-2">
+                      </td>}
+                      {showBuses && <td className="py-2 px-2">
                         {buses.length > 0 ? (
                           <div className="flex flex-col gap-0.5 text-xs text-gray-500">
                             {buses.map((bus) => {
@@ -698,7 +718,7 @@ export function BottomTray({
                         ) : (
                           <span className="text-xs text-gray-300">--</span>
                         )}
-                      </td>
+                      </td>}
                       <td className="py-2 px-2">
                         <div className="flex flex-col gap-0.5 text-xs">
                           <a
