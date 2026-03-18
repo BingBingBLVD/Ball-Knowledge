@@ -6,6 +6,7 @@ import {
   Plane,
   TrainFront,
   BusFront,
+  Bus,
   Car,
   Clock,
   MapPin,
@@ -21,7 +22,7 @@ import Link from "next/link";
 // ── Types ──────────────────────────────────────────────────────────────────
 
 interface Leg {
-  mode: "bus" | "train" | "flight" | "drive" | "rideshare" | "walk";
+  mode: "bus" | "train" | "flight" | "drive" | "rideshare" | "walk" | "transit";
   carrier?: string;
   routeName?: string;
   from: string;
@@ -48,7 +49,7 @@ interface Itinerary {
   legs: Leg[];
 }
 
-type Preference = "balanced" | "cheapest" | "fastest" | "prefer_bus" | "prefer_train" | "prefer_plane";
+type Preference = "balanced" | "cheapest" | "fastest";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -71,6 +72,7 @@ function modeIcon(mode: string) {
     case "bus": return <BusFront className="size-4" />;
     case "drive": return <Car className="size-4" />;
     case "rideshare": return <Car className="size-4" />;
+    case "transit": return <Bus className="size-4" />;
     default: return <Navigation className="size-4" />;
   }
 }
@@ -82,6 +84,7 @@ function modeColor(mode: string): string {
     case "flight": return "text-violet-600";
     case "drive": return "text-gray-600";
     case "rideshare": return "text-gray-600";
+    case "transit": return "text-teal-600";
     default: return "text-gray-500";
   }
 }
@@ -93,6 +96,7 @@ function modeBgColor(mode: string): string {
     case "flight": return "bg-violet-50 text-violet-700";
     case "drive": return "bg-gray-100 text-gray-700";
     case "rideshare": return "bg-gray-100 text-gray-700";
+    case "transit": return "bg-teal-50 text-teal-700";
     default: return "bg-gray-50 text-gray-600";
   }
 }
@@ -104,6 +108,7 @@ function modeLabel(mode: string): string {
     case "flight": return "Flight";
     case "drive": return "Drive";
     case "rideshare": return "Drive";
+    case "transit": return "Transit";
     case "walk": return "Walk";
     default: return mode;
   }
@@ -143,8 +148,9 @@ function TakeMePage() {
   const time = searchParams.get("time") ?? "";
   const game = searchParams.get("game") ?? "";
 
-  const [preference, setPreference] = useState<Preference>("balanced");
+  const [preference, setPreference] = useState<Preference>("cheapest");
   const [maxTransfers, setMaxTransfers] = useState(1);
+  const [resultLimit, setResultLimit] = useState(3);
   const [itineraries, setItineraries] = useState<Itinerary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -158,6 +164,7 @@ function TakeMePage() {
       const params = new URLSearchParams({
         originLat, originLng, venue, venueLat, venueLng, date, time,
         preference, maxTransfers: String(maxTransfers),
+        limit: String(resultLimit),
       });
       const res = await fetch(`/api/take-me?${params}`);
       if (!res.ok) throw new Error(`API error: ${res.status}`);
@@ -168,7 +175,7 @@ function TakeMePage() {
     } finally {
       setLoading(false);
     }
-  }, [originLat, originLng, venue, venueLat, venueLng, date, time, preference, maxTransfers]);
+  }, [originLat, originLng, venue, venueLat, venueLng, date, time, preference, maxTransfers, resultLimit]);
 
   useEffect(() => { fetchItineraries(); }, [fetchItineraries]);
 
@@ -181,12 +188,9 @@ function TakeMePage() {
   })() : "";
 
   const prefs: { value: Preference; label: string }[] = [
-    { value: "balanced", label: "Balanced" },
     { value: "cheapest", label: "Cheapest" },
+    { value: "balanced", label: "Balanced" },
     { value: "fastest", label: "Fastest" },
-    { value: "prefer_bus", label: "Prefer Bus" },
-    { value: "prefer_train", label: "Prefer Train" },
-    { value: "prefer_plane", label: "Prefer Plane" },
   ];
 
   const transferOpts = [
@@ -200,7 +204,7 @@ function TakeMePage() {
     [...new Set(it.legs.filter((l) => l.mode !== "walk").map((l) => l.mode === "rideshare" ? "drive" : l.mode))];
 
   const getTransferCount = (it: Itinerary) =>
-    Math.max(0, it.legs.filter((l) => l.mode !== "rideshare" && l.mode !== "walk").length - 1);
+    Math.max(0, it.legs.filter((l) => l.mode !== "rideshare" && l.mode !== "walk" && l.mode !== "transit").length - 1);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -395,7 +399,19 @@ function TakeMePage() {
                                     </div>
                                   </div>
 
-                                  {(leg.mode === "drive" || leg.mode === "rideshare") ? (
+                                  {leg.mode === "transit" ? (
+                                    <div className="flex gap-1.5 mt-1.5">
+                                      <a
+                                        href={leg.bookingUrl || `https://www.google.com/maps/dir/?api=1&origin=${leg.fromLat},${leg.fromLng}&destination=${leg.toLat},${leg.toLng}&travelmode=transit`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-teal-50 text-teal-700 hover:opacity-80 transition-opacity"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        Directions <ArrowRight className="size-3" />
+                                      </a>
+                                    </div>
+                                  ) : (leg.mode === "drive" || leg.mode === "rideshare") ? (
                                     <div className="flex gap-1.5 mt-1.5">
                                       <a
                                         href={uberUrl(leg.fromLat, leg.fromLng, leg.toLat, leg.toLng)}
@@ -479,6 +495,12 @@ function TakeMePage() {
                 </div>
               );
             })}
+            <button
+              onClick={() => setResultLimit((l) => l + 5)}
+              className="w-full mt-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors"
+            >
+              Request More
+            </button>
           </div>
         )}
       </main>

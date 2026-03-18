@@ -14,6 +14,7 @@ export async function GET(req: NextRequest) {
   const time = sp.get("time") ?? "";
   const preference = (sp.get("preference") ?? "balanced") as Preference;
   const maxTransfers = parseInt(sp.get("maxTransfers") ?? "1", 10);
+  const limit = parseInt(sp.get("limit") ?? "5", 10);
 
   if ([originLat, originLng, venueLat, venueLng].some(isNaN) || !venue || !date || !time) {
     return NextResponse.json({ error: "Missing or invalid parameters" }, { status: 400 });
@@ -35,6 +36,7 @@ export async function GET(req: NextRequest) {
       gameTime: time,
       preference,
       maxTransfers: Math.min(maxTransfers, 2),
+      limit: Math.min(Math.max(limit, 1), 20),
     });
     console.log("[take-me] Found", results.length, "itineraries");
     return NextResponse.json({ itineraries: results });

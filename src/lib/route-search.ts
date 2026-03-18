@@ -10,6 +10,7 @@ import {
   parseGtfsTime,
   gtfsTimeToEst,
 } from "./gtfs";
+import { getTravelTimes } from "./driving";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -23,12 +24,13 @@ export interface SearchParams {
   gameTime: string; // HH:MM (EST)
   preference: Preference;
   maxTransfers: number; // 0, 1, or 2
+  limit?: number; // max results to return (default 5)
 }
 
 export type Preference = "balanced" | "cheapest" | "fastest" | "prefer_bus" | "prefer_train" | "prefer_plane";
 
 export interface Leg {
-  mode: "bus" | "train" | "flight" | "drive" | "rideshare" | "walk";
+  mode: "bus" | "train" | "flight" | "drive" | "rideshare" | "walk" | "transit";
   carrier?: string;
   routeName?: string;
   from: string;
@@ -99,6 +101,18 @@ function estimateDriveCost(miles: number): number {
 function estimateRideFare(miles: number, minutes: number): number {
   // Base fare + booking/service fee + per-mile + per-minute
   return Math.max(10, Math.round(2.50 + 3.50 + 1.20 * miles + 0.35 * minutes));
+}
+
+function estimateTransitCost(miles: number): number {
+  // Local transit fare: base $2.75, extra for longer trips
+  if (miles <= 15) return 3;
+  if (miles <= 40) return Math.round(3 + (miles - 15) * 0.08);
+  return Math.round(5 + (miles - 40) * 0.05);
+}
+
+function estimateTransitMinutes(driveMinutes: number): number {
+  // Transit is roughly 1.8-2.2x slower than driving
+  return Math.round(driveMinutes * 2);
 }
 
 function estimateDriveMinutes(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -645,18 +659,20 @@ export async function searchRoutes(params: SearchParams): Promise<Itinerary[]> {
     }
   }
 
-  // ── Phase F: Drive-only itinerary ──
+  // ── Phase F: Drive-only + Transit-only itineraries (real Google Maps data) ──
 
   {
     const driveMiles = haversineMiles(originLat, originLng, venueLat, venueLng);
     const roadMiles = driveMiles * 1.4;
-    const driveMin = estimateDriveMinutes(originLat, originLng, venueLat, venueLng);
+
+    // Fetch real driving and transit times from Google Maps
+    const realTimes = await getTravelTimes(originLat, originLng, venueLat, venueLng);
+    const driveMin = realTimes.driveMinutes;
     const driveCost = estimateDriveCost(roadMiles);
 
     const arriveEst = arrivalDeadline;
     const departEst = arriveEst - driveMin;
 
-    // Only add drive option if departure is not in the past
     if (departEst >= earliestDepartEst) {
       const gmapsLink = `https://www.google.com/maps/dir/?api=1&origin=${originLat},${originLng}&destination=${venueLat},${venueLng}&travelmode=driving`;
 
@@ -679,11 +695,127 @@ export async function searchRoutes(params: SearchParams): Promise<Itinerary[]> {
         }],
       });
     }
+
+    // Transit-only itinerary using real Google Maps transit data
+    if (realTimes.transitMinutes != null) {
+      const transitMin = realTimes.transitMinutes;
+      const transitCost = realTimes.transitFare ? parseInt(realTimes.transitFare.replace(/[^0-9]/g, ""), 10) || 3 : estimateTransitCost(roadMiles);
+      const transitDepartEst = arriveEst - transitMin;
+
+      if (transitDepartEst >= earliestDepartEst && transitDepartEst >= 0) {
+        const gmapsTransit = `https://www.google.com/maps/dir/?api=1&origin=${originLat},${originLng}&destination=${venueLat},${venueLng}&travelmode=transit`;
+
+        itineraries.push({
+          id: `transit-direct-${idCounter++}`,
+          totalMinutes: transitMin,
+          totalCost: transitCost,
+          departureTime: toIso(gameDateYMD, transitDepartEst),
+          arrivalTime: toIso(gameDateYMD, arriveEst),
+          bufferMinutes: gameMinutesEst - arriveEst,
+          legs: [{
+            mode: "transit",
+            carrier: "Public Transit",
+            from: "Your location", fromLat: originLat, fromLng: originLng,
+            to: venueName, toLat: venueLat, toLng: venueLng,
+            depart: toIso(gameDateYMD, transitDepartEst),
+            arrive: toIso(gameDateYMD, arriveEst),
+            minutes: transitMin, cost: transitCost,
+            bookingUrl: gmapsTransit,
+            miles: Math.round(roadMiles),
+          }],
+        });
+      }
+    }
   }
 
-  // ── Phase G: Score & rank ──
+  // ── Phase G: Transit variants ──
+  // For itineraries with rideshare first/last mile, create a variant using real transit data
 
-  return rankItineraries(itineraries, params.preference);
+  const transitVariants: Itinerary[] = [];
+  for (const it of itineraries) {
+    // Skip itineraries that already use transit or are transit-direct
+    if (it.id.startsWith("transit-direct")) continue;
+    const rideLegs = it.legs.filter((l) => l.mode === "rideshare");
+    if (rideLegs.length === 0) continue;
+
+    // Fetch real transit times for each rideshare leg in parallel
+    const realTimesMap = new Map<number, Awaited<ReturnType<typeof getTravelTimes>>>();
+    await Promise.all(
+      it.legs.map(async (leg, i) => {
+        if (leg.mode === "rideshare") {
+          realTimesMap.set(i, await getTravelTimes(leg.fromLat, leg.fromLng, leg.toLat, leg.toLng));
+        }
+      })
+    );
+
+    // Only create variant if at least one leg has real transit data
+    const hasTransitData = [...realTimesMap.values()].some((t) => t.transitMinutes != null);
+    if (!hasTransitData) continue;
+
+    const newLegs: Leg[] = [];
+    let totalShift = 0;
+
+    for (let i = 0; i < it.legs.length; i++) {
+      const leg = it.legs[i];
+      const real = realTimesMap.get(i);
+
+      if (leg.mode === "rideshare" && real && real.transitMinutes != null) {
+        const transitMin = real.transitMinutes;
+        const extraMin = transitMin - leg.minutes;
+        const transitCost = real.transitFare ? parseInt(real.transitFare.replace(/[^0-9]/g, ""), 10) || 3 : estimateTransitCost(leg.miles);
+        const gmapsTransit = `https://www.google.com/maps/dir/?api=1&origin=${leg.fromLat},${leg.fromLng}&destination=${leg.toLat},${leg.toLng}&travelmode=transit`;
+
+        const origDepart = new Date(leg.depart).getTime();
+        const newDepart = new Date(origDepart - Math.max(0, extraMin) * 60000).toISOString();
+
+        newLegs.push({
+          ...leg,
+          mode: "transit",
+          carrier: "Public Transit",
+          minutes: transitMin,
+          cost: transitCost,
+          depart: newDepart,
+          bookingUrl: gmapsTransit,
+        });
+        totalShift += Math.max(0, extraMin);
+      } else {
+        newLegs.push({ ...leg });
+      }
+    }
+
+    const totalMinutes = it.totalMinutes + totalShift;
+    const totalCost = newLegs.reduce((s, l) => s + l.cost, 0);
+    const departureTime = new Date(new Date(it.departureTime).getTime() - totalShift * 60000).toISOString();
+
+    // Validate chronological ordering: each leg must depart after the previous leg arrives
+    let chronoValid = true;
+    for (let j = 1; j < newLegs.length; j++) {
+      if (new Date(newLegs[j].depart).getTime() < new Date(newLegs[j - 1].arrive).getTime()) {
+        chronoValid = false;
+        break;
+      }
+    }
+    if (!chronoValid) continue;
+
+    const departHour = new Date(departureTime).getHours();
+    if (totalMinutes > 0 && totalMinutes <= 2880 && departHour >= 4) {
+      transitVariants.push({
+        id: `transit-${idCounter++}`,
+        totalMinutes,
+        totalCost,
+        departureTime,
+        arrivalTime: it.arrivalTime,
+        bufferMinutes: it.bufferMinutes,
+        legs: newLegs,
+      });
+    }
+  }
+
+  itineraries.push(...transitVariants);
+
+  // ── Phase H: Score & rank ──
+
+  return rankItineraries(itineraries, params.preference, params.limit ?? 5);
 }
 
 // ── Scoring ────────────────────────────────────────────────────────────────
@@ -697,7 +829,7 @@ const WEIGHTS: Record<Preference, { time: number; cost: number; transfers: numbe
   prefer_plane:  { time: 0.25, cost: 0.30, transfers: 0.20, modeBonus: "flight" },
 };
 
-function rankItineraries(itineraries: Itinerary[], preference: Preference): Itinerary[] {
+function rankItineraries(itineraries: Itinerary[], preference: Preference, limit: number = 5): Itinerary[] {
   if (itineraries.length === 0) return [];
 
   const w = WEIGHTS[preference];
@@ -705,7 +837,7 @@ function rankItineraries(itineraries: Itinerary[], preference: Preference): Itin
   // Compute min/max for normalization
   const times = itineraries.map((i) => i.totalMinutes);
   const costs = itineraries.map((i) => i.totalCost);
-  const transfers = itineraries.map((i) => Math.max(0, i.legs.filter((l) => l.mode !== "rideshare" && l.mode !== "walk").length - 1));
+  const transfers = itineraries.map((i) => Math.max(0, i.legs.filter((l) => l.mode !== "rideshare" && l.mode !== "walk" && l.mode !== "transit").length - 1));
 
   const minTime = Math.min(...times), maxTime = Math.max(...times);
   const minCost = Math.min(...costs), maxCost = Math.max(...costs);
@@ -726,18 +858,22 @@ function rankItineraries(itineraries: Itinerary[], preference: Preference): Itin
       if (!hasMode) score += 0.3;
     }
 
+    // Boost itineraries that include public transit legs (lower score = better)
+    const hasTransit = it.legs.some((l) => l.mode === "transit");
+    if (hasTransit) score -= 0.1;
+
     return { it, score };
   });
 
   scored.sort((a, b) => a.score - b.score);
 
-  // Ensure mode diversity: at least 1 of each available mode in top 10
+  // Ensure mode diversity: at least 1 of each available mode in top 5
   const top: Itinerary[] = [];
   const modes = new Set<string>();
   const usedIds = new Set<string>();
 
   // First, pick one of each mode
-  for (const mode of ["drive", "bus", "train", "flight"]) {
+  for (const mode of ["drive", "transit", "bus", "train", "flight"]) {
     const entry = scored.find((s) => !usedIds.has(s.it.id) && s.it.legs.some((l) => l.mode === mode));
     if (entry) {
       top.push(entry.it);
@@ -748,7 +884,7 @@ function rankItineraries(itineraries: Itinerary[], preference: Preference): Itin
 
   // Fill remaining from scored order
   for (const entry of scored) {
-    if (top.length >= 10) break;
+    if (top.length >= limit) break;
     if (usedIds.has(entry.it.id)) continue;
     top.push(entry.it);
     usedIds.add(entry.it.id);

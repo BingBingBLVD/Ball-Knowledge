@@ -470,7 +470,7 @@ export function BottomTray({
           <div ref={scrollRef} className={`flex-1 overflow-y-auto no-scrollbar px-3 pb-3 ${isAnimating ? "pointer-events-none" : ""}`}>
             <table className="w-full text-sm">
               <thead className="sticky top-0 glass">
-                <tr className="text-xs text-gray-400 border-b border-gray-200">
+                <tr className="text-xs text-gray-400">
                   {showOdds && <th className="text-left py-2 px-2 font-medium">
                     <button onClick={() => handleSort("spread")} className="flex items-center gap-0.5 hover:text-gray-600">
                       Odds
@@ -554,7 +554,7 @@ export function BottomTray({
                     <tr
                       key={event.id}
                       data-venue={event.venue}
-                      className={`border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors ${
+                      className={`hover:bg-gray-50 cursor-pointer transition-colors ${
                         isSelected ? "bg-blue-50" : ""
                       }`}
                       onClick={() => {
