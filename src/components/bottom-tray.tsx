@@ -18,10 +18,18 @@ import {
   Loader2,
   SlidersHorizontal,
   Map,
+  Zap,
+  MapPin,
+  ArrowRight,
+  Circle,
+  CheckCircle2,
 } from "lucide-react";
 import type { VenuePolicy } from "@/lib/venue-policies";
 import { SearchBar } from "./search-bar";
 import { DateSelector } from "./date-selector";
+import { useRampage, type SelectedGame } from "@/lib/rampage-context";
+import { RampageLocationInput } from "./rampage-location-input";
+import { useRouter } from "next/navigation";
 
 type TrayState = "collapsed" | "peek" | "expanded";
 
@@ -773,7 +781,7 @@ export function BottomTray({
                       {visibleColumns.has("stadium") && (
                         <div className="flex-1 min-w-0 flex flex-col gap-0.5">
                           <span className="text-[11px] text-[--color-dim] font-mono truncate">{event.venue}</span>
-                          <span className="text-[10px] text-[--color-dim] font-mono truncate">{event.city}, {event.state}</span>
+                          <span className="text-[10px] text-[--color-dim] font-mono truncate">{event.city}, {event.state}{dist != null ? ` · ${Math.round(dist)}mi` : ""}</span>
                         </div>
                       )}
                       {/* Col: Time */}

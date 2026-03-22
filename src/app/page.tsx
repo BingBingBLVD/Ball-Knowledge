@@ -4,6 +4,8 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { RouteFocus, VenueInfo } from "@/components/game-map";
 import { BottomTray } from "@/components/bottom-tray";
+import { LocationButton } from "@/components/location-button";
+import { RampageProvider, useRampage } from "@/lib/rampage-context";
 
 const GameMap = dynamic(
   () => import("@/components/game-map").then((m) => m.GameMap),
@@ -79,6 +81,15 @@ function saveState(patch: Record<string, unknown>) {
 }
 
 export default function Home() {
+  return (
+    <RampageProvider>
+      <HomeInner />
+    </RampageProvider>
+  );
+}
+
+function HomeInner() {
+  const rampage = useRampage();
   const [data, setData] = useState<EventsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -218,7 +229,14 @@ export default function Home() {
         hoveredVenue={hoveredVenue}
         userLocation={userLocation}
         bottomPadding={bottomPadding}
+        rampageActive={rampage.active}
+        rampageGames={rampage.sortedGames}
+        rampageStart={rampage.startLocation}
+        rampageEnd={rampage.endLocation}
       />
+
+      {/* Location button — floating top right */}
+      <LocationButton userLocation={userLocation} onLocationChange={setUserLocation} />
 
       {/* Bottom tray — intel panel */}
       {data && (
