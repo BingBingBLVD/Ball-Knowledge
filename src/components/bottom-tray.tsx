@@ -186,10 +186,11 @@ function TransitRows({
                 {stop.code}
               </a>
             </span>
-            <span className="text-[10px] text-[--color-dim] shrink-0">({Math.round(haversineMiles(vLat, vLng, stop.lat, stop.lng))}mi)</span>
+            <span className="text-[10px] text-[--color-dim] shrink-0">{Math.round(haversineMiles(vLat, vLng, stop.lat, stop.lng))}mi</span>
             {/* Transport options inline */}
             {times ? (
               <div className="flex items-center gap-1.5 flex-wrap text-[10px]">
+                <span className="text-white/10">|</span>
                 <a
                   href={gmapsUrl(vLat, vLng, stop.lat, stop.lng, "driving")}
                   target="_blank"
@@ -778,7 +779,7 @@ export function BottomTray({
                             <span className={`font-mono text-sm font-semibold ${price < 30 ? "text-emerald-400" : price < 80 ? "text-emerald-300/80" : "text-foreground"}`}>${price}</span>
                           )}
                           {event.espn_price?.available != null && event.espn_price.available > 0 && (
-                            <span className="font-mono text-[10px] text-[--color-dim]">{event.espn_price.available}<br/>available</span>
+                            <span className={`font-mono text-[10px] ${event.espn_price.available < 1000 ? "text-[#facc15]" : "text-[--color-dim]"}`}>{event.espn_price.available}<br/>available</span>
                           )}
                         </div>
                       )}
@@ -822,7 +823,7 @@ export function BottomTray({
                       {visibleColumns.has("stadium") && (
                         <div className="flex-1 min-w-0 flex flex-col gap-0.5">
                           <span className="text-[11px] text-[--color-dim] font-mono truncate">{event.venue}</span>
-                          <span className="text-[10px] text-[--color-dim] font-mono truncate">{event.city}, {event.state}{dist != null ? ` · ${Math.round(dist)}mi` : ""}</span>
+                          <span className={`text-[10px] font-mono truncate ${dist != null && dist < 250 ? "text-[#facc15]" : "text-[--color-dim]"}`}>{event.city}, {event.state}{dist != null ? ` · ${Math.round(dist)}mi` : ""}</span>
                         </div>
                       )}
                       {/* Col: Time */}
