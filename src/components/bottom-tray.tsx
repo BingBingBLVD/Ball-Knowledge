@@ -658,7 +658,7 @@ export function BottomTray({
               const away = parts.length > 1 ? parts.slice(1).join(" vs ").replace(/\s*\(.*?\)/g, "").trim() : null;
               const isRampageSelected = rampage.active && event.est_date && rampage.selectedGames.has(event.est_date) && rampage.selectedGames.get(event.est_date)!.id === event.id;
               const isSelected = !rampage.active && selectedVenue === event.venue;
-              const isHovered = !rampage.active && hoveredVenue === event.venue;
+              const isHovered = hoveredVenue === event.venue;
               const isExpanded = !rampage.active && expandedCardId === event.id;
               const airports = event.nearbyAirports ?? [];
               const trains = event.nearbyTrainStations ?? [];
@@ -694,7 +694,7 @@ export function BottomTray({
                         ? "panel shadow-lg"
                         : "panel hover:bg-white/[0.04]"
                   }`}
-                  style={isSelected || isHovered ? { borderColor: "white" } : undefined}
+                  style={isHovered && !isSelected && !isRampageSelected ? { borderColor: "white" } : undefined}
                   onClick={() => {
                     // RAMPAGE mode: toggle game selection
                     if (rampage.active && event.lat != null && event.lng != null && event.est_date) {
