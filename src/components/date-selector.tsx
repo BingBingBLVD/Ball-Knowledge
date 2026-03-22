@@ -167,72 +167,107 @@ export function DateSelector({
         </div>
       </div>
 
-      {/* Calendar dropdown */}
+      {/* Calendar dropdown — centered overlay */}
       {open && (
-        <div className="absolute top-full right-0 mt-2 panel-elevated rounded-lg p-3 z-50 min-w-[280px]">
-          {/* Month nav */}
-          <div className="flex items-center justify-between mb-2">
-            <button onClick={prevMonth} className="p-1 rounded hover:bg-white/5 transition-colors">
-              <ChevronLeft className="size-4 text-[--color-dim]" />
-            </button>
-            <span className="text-sm font-semibold text-foreground">{monthLabel}</span>
-            <button onClick={nextMonth} className="p-1 rounded hover:bg-white/5 transition-colors">
-              <ChevronRight className="size-4 text-[--color-dim]" />
-            </button>
-          </div>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          onClick={() => setOpen(false)}
+        >
+          <div
+            className="panel-elevated rounded-xl p-4 shadow-2xl min-w-[300px]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Month nav */}
+            <div className="flex items-center justify-between mb-3">
+              <button onClick={prevMonth} className="p-1.5 rounded-md hover:bg-white/[0.06] transition-all">
+                <ChevronLeft className="size-4 text-[--color-dim]" />
+              </button>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-foreground font-mono tracking-wide">{monthLabel}</span>
+                {(() => {
+                  const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+                  const todayAvailable = availableSet.has(today);
+                  const isAlreadyToday = currentDate === today;
+                  return (
+                    <button
+                      onClick={() => {
+                        if (todayAvailable) {
+                          onDateChange(today);
+                          setOpen(false);
+                        }
+                      }}
+                      disabled={!todayAvailable || isAlreadyToday}
+                      className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold tracking-wide transition-all ${
+                        isAlreadyToday
+                          ? "bg-[--primary]/20 text-[--primary] cursor-default"
+                          : todayAvailable
+                            ? "bg-[--primary] text-[--primary-foreground] hover:brightness-110 cursor-pointer"
+                            : "bg-white/[0.04] text-[--color-dim]/50 cursor-not-allowed"
+                      }`}
+                    >
+                      TDY
+                    </button>
+                  );
+                })()}
+              </div>
+              <button onClick={nextMonth} className="p-1.5 rounded-md hover:bg-white/[0.06] transition-all">
+                <ChevronRight className="size-4 text-[--color-dim]" />
+              </button>
+            </div>
 
-          {/* Day headers */}
-          <div className="grid grid-cols-7 mb-1">
-            {DAY_NAMES.map((d) => (
-              <div key={d} className="text-center text-[10px] font-mono font-semibold text-[--color-dim] py-1">{d}</div>
-            ))}
-          </div>
+            {/* Day headers */}
+            <div className="grid grid-cols-7 mb-1">
+              {DAY_NAMES.map((d) => (
+                <div key={d} className="text-center text-[10px] font-mono font-semibold text-[--color-dim] py-1">{d}</div>
+              ))}
+            </div>
 
-          {/* Calendar grid */}
-          <div className="grid grid-cols-7">
-            {calendarDays.flat().map((dateStr, i) => {
-              if (!dateStr) {
-                return <div key={`blank-${i}`} className="h-9" />;
-              }
-              const dayNum = parseInt(dateStr.split("-")[2]);
-              const hasGames = availableSet.has(dateStr);
-              const count = gameCountByDate[dateStr] ?? 0;
-              const isSelected = dateStr === currentDate;
-              const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
-              const isToday = dateStr === today;
-              const hasRampageGame = rampage.active && rampage.selectedGames.has(dateStr);
+            {/* Calendar grid */}
+            <div className="grid grid-cols-7 gap-0.5">
+              {calendarDays.flat().map((dateStr, i) => {
+                if (!dateStr) {
+                  return <div key={`blank-${i}`} className="h-10" />;
+                }
+                const dayNum = parseInt(dateStr.split("-")[2]);
+                const hasGames = availableSet.has(dateStr);
+                const count = gameCountByDate[dateStr] ?? 0;
+                const isSelected = dateStr === currentDate;
+                const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+                const isToday = dateStr === today;
+                const hasRampageGame = rampage.active && rampage.selectedGames.has(dateStr);
 
-              return (
-                <button
-                  key={dateStr}
-                  onClick={() => {
-                    if (hasGames) {
-                      onDateChange(dateStr);
-                      setOpen(false);
-                    }
-                  }}
-                  disabled={!hasGames}
-                  className={`relative h-9 flex flex-col items-center justify-center rounded text-xs font-mono transition-colors ${
-                    isSelected
-                      ? "bg-[--primary] text-[--primary-foreground] font-bold"
-                      : hasGames
-                        ? "text-foreground font-medium hover:bg-white/5 cursor-pointer"
-                        : "text-[--color-dim]/40 cursor-default"
-                  } ${isToday && !isSelected ? "ring-1 ring-[--primary]/50" : ""} ${hasRampageGame && !isSelected ? "ring-1 ring-[--color-rampage]" : ""}`}
-                >
-                  <span className="leading-none">{dayNum}</span>
-                  {hasRampageGame ? (
-                    <span className={`text-[8px] leading-none mt-0.5 ${isSelected ? "text-[--primary-foreground]/70" : "text-[--color-rampage]"}`}>
-                      ●
-                    </span>
-                  ) : hasGames && count > 0 ? (
-                    <span className={`text-[8px] leading-none mt-0.5 ${isSelected ? "text-[--primary-foreground]/70" : "text-green-400"}`}>
-                      {count}
-                    </span>
-                  ) : null}
-                </button>
-              );
-            })}
+                return (
+                  <button
+                    key={dateStr}
+                    onClick={() => {
+                      if (hasGames) {
+                        onDateChange(dateStr);
+                        setOpen(false);
+                      }
+                    }}
+                    disabled={!hasGames}
+                    className={`relative h-10 flex flex-col items-center justify-center rounded-md text-xs font-mono transition-all ${
+                      isSelected
+                        ? "bg-[--primary] text-[--primary-foreground] font-bold shadow-md shadow-[--primary]/25"
+                        : hasGames
+                          ? "text-foreground font-medium hover:bg-white/[0.06] cursor-pointer"
+                          : "text-[--color-dim]/40 cursor-default"
+                    } ${isToday && !isSelected ? "ring-1 ring-[--primary]/50" : ""} ${hasRampageGame && !isSelected ? "ring-1 ring-[--color-rampage]" : ""}`}
+                  >
+                    <span className="leading-none">{dayNum}</span>
+                    {hasRampageGame ? (
+                      <span className={`text-[8px] leading-none mt-0.5 ${isSelected ? "text-[--primary-foreground]/70" : "text-[--color-rampage]"}`}>
+                        ●
+                      </span>
+                    ) : hasGames && count > 0 ? (
+                      <span className={`text-[8px] leading-none mt-0.5 ${isSelected ? "text-[--primary-foreground]/70" : "text-green-400"}`}>
+                        {count}
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}

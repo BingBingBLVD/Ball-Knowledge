@@ -69,10 +69,29 @@ export interface GTFSItinerary {
   totalTransitMinutes: number;
 }
 
+// ── RAPTOR data structures ──────────────────────────────────────────────
+
+interface RoutePattern {
+  stops: string[]; // ordered stop IDs
+  tripIndices: number[]; // indices into d.trips, sorted by dep at first stop
+}
+
+interface Label {
+  arriveMin: number;
+  tripIdx: number;
+  boardPos: number; // position in pattern where boarded
+  alightPos: number; // position in pattern where alighted
+  patternIdx: number;
+  offset: number; // 0 or -1440 (service day)
+  prevLabel: Label | null; // chain for multi-leg reconstruction
+  round: number;
+}
+
 // ── Singleton loader ──────────────────────────────────────────────────────
 
 let data: RawSchedule | null = null;
-let stopIndex: Map<string, { ti: number; si: number }[]> | null = null;
+let patterns: RoutePattern[] = [];
+let stopRoutes: Map<string, { pi: number; pos: number }[]> = new Map();
 
 function load(): RawSchedule {
   if (data) return data;
@@ -82,16 +101,34 @@ function load(): RawSchedule {
   );
   data = JSON.parse(raw) as RawSchedule;
 
-  // Build stop → trip index
-  stopIndex = new Map();
+  // ── Build route patterns: group trips by stop sequence ──
+  const patternMap = new Map<string, number[]>();
   for (let ti = 0; ti < data.trips.length; ti++) {
-    const trip = data.trips[ti];
-    for (let si = 0; si < trip.st.length; si++) {
-      const sid = trip.st[si][0];
-      if (!stopIndex.has(sid)) stopIndex.set(sid, []);
-      stopIndex.get(sid)!.push({ ti, si });
+    const key = data.trips[ti].st.map((s) => s[0]).join("|");
+    if (!patternMap.has(key)) patternMap.set(key, []);
+    patternMap.get(key)!.push(ti);
+  }
+
+  patterns = [];
+  for (const [key, tripIndices] of patternMap) {
+    // Sort trips by departure at first stop (ascending)
+    tripIndices.sort(
+      (a, b) => data!.trips[a].st[0][2] - data!.trips[b].st[0][2]
+    );
+    patterns.push({ stops: key.split("|"), tripIndices });
+  }
+
+  // ── Build stop → patterns index ──
+  stopRoutes = new Map();
+  for (let pi = 0; pi < patterns.length; pi++) {
+    const pat = patterns[pi];
+    for (let pos = 0; pos < pat.stops.length; pos++) {
+      const sid = pat.stops[pos];
+      if (!stopRoutes.has(sid)) stopRoutes.set(sid, []);
+      stopRoutes.get(sid)!.push({ pi, pos });
     }
   }
+
   return data;
 }
 
@@ -179,8 +216,69 @@ function prevDateInt(dateInt: number): number {
 
 export type ModeFilter = "all" | "bus" | "train";
 
+// ── RAPTOR journey reconstruction ────────────────────────────────────────
+
+function reconstructJourney(
+  label: Label,
+  d: RawSchedule
+): GTFSItinerary | null {
+  // Walk label chain to collect legs in reverse order
+  const chain: Label[] = [];
+  let cur: Label | null = label;
+  while (cur) {
+    chain.push(cur);
+    cur = cur.prevLabel;
+  }
+  chain.reverse(); // first leg first
+
+  const legs: GTFSLeg[] = [];
+  for (const lab of chain) {
+    const trip = d.trips[lab.tripIdx];
+    const pat = patterns[lab.patternIdx];
+    const fromStopId = pat.stops[lab.boardPos];
+    const toStopId = pat.stops[lab.alightPos];
+    const fromStop = d.stops[fromStopId];
+    const toStop = d.stops[toStopId];
+    const departMinutes = trip.st[lab.boardPos][2] + lab.offset;
+    const arriveMinutes = trip.st[lab.alightPos][1] + lab.offset;
+
+    legs.push({
+      carrier: trip.c,
+      routeName: trip.h || trip.r,
+      mode: trip.t === 2 ? "train" : "bus",
+      fromStopId,
+      fromStopName: fromStop.n,
+      fromLat: fromStop.lat,
+      fromLng: fromStop.lng,
+      toStopId,
+      toStopName: toStop.n,
+      toLat: toStop.lat,
+      toLng: toStop.lng,
+      departMinutes,
+      arriveMinutes,
+      durationMinutes: arriveMinutes - departMinutes,
+      miles: Math.round(
+        haversineMi(fromStop.lat, fromStop.lng, toStop.lat, toStop.lng)
+      ),
+    });
+  }
+
+  if (legs.length === 0) return null;
+
+  return {
+    legs,
+    boardStopId: legs[0].fromStopId,
+    alightStopId: legs[legs.length - 1].toStopId,
+    departMinutes: legs[0].departMinutes,
+    arriveMinutes: legs[legs.length - 1].arriveMinutes,
+    totalTransitMinutes:
+      legs[legs.length - 1].arriveMinutes - legs[0].departMinutes,
+  };
+}
+
 /**
- * Search for bus/train itineraries between two areas on a given date.
+ * Search for bus/train itineraries between two areas on a given date
+ * using the RAPTOR (Round-based Public Transit Optimized Router) algorithm.
  *
  * Handles overnight trips: checks trips starting the day before whose
  * stop_times > 1440 (24h) land on the game day.
@@ -199,15 +297,12 @@ export function searchGTFS(
   modeFilter: ModeFilter = "all"
 ): GTFSItinerary[] {
   const d = load();
-  const si = stopIndex!;
 
   const dateInt = parseInt(dateYMD.replace(/-/g, ""), 10);
   const prevDate = prevDateInt(dateInt);
 
   // Service days to check: [dateInt, offset] pairs
   // offset = minutes to add to stop_times so they're on the game-day timeline
-  // - Same-day trips: offset = 0 (stop_times 0–1440 are on game day)
-  // - Previous-day trips: offset = -1440 (stop_times 1440–2880 map to game-day 0–1440)
   const serviceDays: { svcDate: number; offset: number }[] = [
     { svcDate: dateInt, offset: 0 },
     { svcDate: prevDate, offset: -1440 },
@@ -224,275 +319,213 @@ export function searchGTFS(
   if (originStops.length === 0 || destStops.length === 0) return [];
 
   const destStopSet = new Set(destStops.map((s) => s.id));
-  const results: GTFSItinerary[] = [];
+  const directDist = haversineMi(originLat, originLng, destLat, destLng);
 
-  // Check which trips are active for each service day (filtered by mode)
+  // Precompute active trips per service day (with mode filter)
   const wantType = modeFilter === "bus" ? 3 : modeFilter === "train" ? 2 : 0;
-  const activeTripSets = new Map<number, Set<number>>(); // svcDate → set of trip indices
-  for (const { svcDate } of serviceDays) {
+  const activeSets: Set<number>[] = serviceDays.map(({ svcDate }) => {
     const active = new Set<number>();
     for (let ti = 0; ti < d.trips.length; ti++) {
       const trip = d.trips[ti];
-      if (wantType && trip.t !== wantType) continue; // mode filter
-      if (isServiceActive(trip.sv, svcDate)) {
-        active.add(ti);
-      }
+      if (wantType && trip.t !== wantType) continue;
+      if (isServiceActive(trip.sv, svcDate)) active.add(ti);
     }
-    activeTripSets.set(svcDate, active);
-  }
+    return active;
+  });
 
-  // ── Direct trips ────────────────────────────────────────────────────
+  // ── RAPTOR state ──────────────────────────────────────────────────────
 
-  for (const oStop of originStops) {
-    const entries = si.get(oStop.id);
-    if (!entries) continue;
-
-    for (const { ti, si: boardIdx } of entries) {
-      const trip = d.trips[ti];
-
-      for (const { svcDate, offset } of serviceDays) {
-        if (!activeTripSets.get(svcDate)!.has(ti)) continue;
-
-        const boardDep = trip.st[boardIdx][2] + offset; // game-day minutes
-        if (boardDep < -120) continue; // way too early (previous day)
-
-        // Check subsequent stops for a dest match
-        for (let ai = boardIdx + 1; ai < trip.st.length; ai++) {
-          const alightStopId = trip.st[ai][0];
-          if (!destStopSet.has(alightStopId)) continue;
-
-          const alightArr = trip.st[ai][1] + offset; // game-day minutes
-          if (alightArr > deadlineMin) continue; // too late
-          if (alightArr < 0) continue; // arrives before game day
-
-          const oStopData = d.stops[oStop.id];
-          const dStopData = d.stops[alightStopId];
-          const miles = haversineMi(
-            oStopData.lat,
-            oStopData.lng,
-            dStopData.lat,
-            dStopData.lng
-          );
-
-          results.push({
-            legs: [
-              {
-                carrier: trip.c,
-                routeName: trip.h || trip.r,
-                mode: trip.t === 2 ? "train" : "bus",
-                fromStopId: oStop.id,
-                fromStopName: oStopData.n,
-                fromLat: oStopData.lat,
-                fromLng: oStopData.lng,
-                toStopId: alightStopId,
-                toStopName: dStopData.n,
-                toLat: dStopData.lat,
-                toLng: dStopData.lng,
-                departMinutes: boardDep,
-                arriveMinutes: alightArr,
-                durationMinutes: alightArr - boardDep,
-                miles: Math.round(miles),
-              },
-            ],
-            boardStopId: oStop.id,
-            alightStopId,
-            departMinutes: boardDep,
-            arriveMinutes: alightArr,
-            totalTransitMinutes: alightArr - boardDep,
-          });
-          break; // take earliest dest stop on this trip
-        }
-      }
-    }
-  }
-
-  // ── 1-transfer trips ────────────────────────────────────────────────
-
-  // Phase 1: forward reachability from origin stops
-  const forwardReach = new Map<
-    string,
-    { ti: number; boardIdx: number; alightIdx: number; arriveMin: number; boardStopId: string; offset: number }[]
-  >();
-
-  for (const oStop of originStops) {
-    const entries = si.get(oStop.id);
-    if (!entries) continue;
-
-    for (const { ti, si: boardIdx } of entries) {
-      const trip = d.trips[ti];
-
-      for (const { svcDate, offset } of serviceDays) {
-        if (!activeTripSets.get(svcDate)!.has(ti)) continue;
-
-        for (let ai = boardIdx + 1; ai < trip.st.length; ai++) {
-          const midStopId = trip.st[ai][0];
-          const arriveMin = trip.st[ai][1] + offset;
-          // Need time for transfer + 2nd leg before deadline
-          if (arriveMin > deadlineMin - 30) continue;
-          if (arriveMin < -120) continue;
-
-          if (!forwardReach.has(midStopId))
-            forwardReach.set(midStopId, []);
-          forwardReach.get(midStopId)!.push({
-            ti,
-            boardIdx,
-            alightIdx: ai,
-            arriveMin,
-            boardStopId: oStop.id,
-            offset,
-          });
-        }
-      }
-    }
-  }
-
-  // Phase 2: backward reachability from dest stops
-  const backwardReach = new Map<
-    string,
-    { ti: number; boardIdx: number; alightIdx: number; departMin: number; arriveMin: number; alightStopId: string; offset: number }[]
-  >();
-
-  for (const dStop of destStops) {
-    const entries = si.get(dStop.id);
-    if (!entries) continue;
-
-    for (const { ti, si: alightIdx } of entries) {
-      const trip = d.trips[ti];
-
-      for (const { svcDate, offset } of serviceDays) {
-        if (!activeTripSets.get(svcDate)!.has(ti)) continue;
-
-        const alightArr = trip.st[alightIdx][1] + offset;
-        if (alightArr > deadlineMin) continue;
-        if (alightArr < 0) continue;
-
-        for (let bi = 0; bi < alightIdx; bi++) {
-          const midStopId = trip.st[bi][0];
-          const departMin = trip.st[bi][2] + offset;
-
-          if (!backwardReach.has(midStopId))
-            backwardReach.set(midStopId, []);
-          backwardReach.get(midStopId)!.push({
-            ti,
-            boardIdx: bi,
-            alightIdx,
-            departMin,
-            arriveMin: alightArr,
-            alightStopId: dStop.id,
-            offset,
-          });
-        }
-      }
-    }
-  }
-
-  // Phase 3: match forward → backward at transfer points
   const TRANSFER_BUFFER = 30; // minutes minimum layover
-  const seen = new Set<string>();
-  const directDist = haversineMi(originLat, originLng, destLat, destLng);
+  const MAX_ROUNDS = 3; // round 1=direct, 2=1-transfer, 3=2-transfer
 
-  for (const [midStop, fwdList] of forwardReach) {
-    const candidateStops = [midStop, ...(d.transfers[midStop] ?? [])];
+  // bestArrival[stopId] = earliest known arrival time at this stop
+  const bestArrival = new Map<string, number>();
+  // labels at each stop for journey reconstruction (only Pareto-best)
+  const allLabels = new Map<string, Label[]>();
+  // collected destination arrivals (for variety — not just Pareto-best)
+  const destArrivals: Label[] = [];
 
-    for (const candStop of candidateStops) {
-      const bwdList = backwardReach.get(candStop);
-      if (!bwdList) continue;
+  let markedStops = new Set<string>();
 
-      for (const fwd of fwdList) {
-        for (const bwd of bwdList) {
-          if (fwd.ti === bwd.ti) continue;
-          if (fwd.arriveMin + TRANSFER_BUFFER > bwd.departMin) continue;
-          if (bwd.arriveMin > deadlineMin) continue;
+  // Initialize: origin stops are reachable (sentinel = earliest possible time)
+  for (const oStop of originStops) {
+    bestArrival.set(oStop.id, -1440);
+    markedStops.add(oStop.id);
+  }
 
-          // Geographic sanity: prevent backtracking itineraries
-          const midGeo = d.stops[midStop];
-          const midToDestMi = haversineMi(midGeo.lat, midGeo.lng, destLat, destLng);
-          // Transfer point must not be further from dest than origin (20% tolerance for hubs)
-          if (midToDestMi > directDist * 1.2) continue;
-          // Total leg distance must not exceed 2.5× direct distance
-          const fwdFrom = d.stops[fwd.boardStopId];
-          const bwdTo = d.stops[bwd.alightStopId];
-          const leg1Mi = haversineMi(fwdFrom.lat, fwdFrom.lng, midGeo.lat, midGeo.lng);
-          const candGeo = d.stops[candStop];
-          const leg2Mi = haversineMi(candGeo.lat, candGeo.lng, bwdTo.lat, bwdTo.lng);
-          if (leg1Mi + leg2Mi > directDist * 2.5) continue;
+  // ── RAPTOR rounds ─────────────────────────────────────────────────────
 
-          const key = `${fwd.ti}:${fwd.boardIdx}:${fwd.offset}-${bwd.ti}:${bwd.alightIdx}:${bwd.offset}`;
-          if (seen.has(key)) continue;
-          seen.add(key);
-
-          const trip1 = d.trips[fwd.ti];
-          const trip2 = d.trips[bwd.ti];
-          const leg1From = d.stops[trip1.st[fwd.boardIdx][0]];
-          const leg1To = d.stops[midStop];
-          const leg2From = d.stops[candStop];
-          const leg2To = d.stops[trip2.st[bwd.alightIdx][0]];
-
-          const leg1Dep = trip1.st[fwd.boardIdx][2] + fwd.offset;
-          const leg1Arr = fwd.arriveMin;
-          const leg2Dep = bwd.departMin;
-          const leg2Arr = bwd.arriveMin;
-
-          results.push({
-            legs: [
-              {
-                carrier: trip1.c,
-                routeName: trip1.h || trip1.r,
-                mode: trip1.t === 2 ? "train" : "bus",
-                fromStopId: fwd.boardStopId,
-                fromStopName: leg1From.n,
-                fromLat: leg1From.lat,
-                fromLng: leg1From.lng,
-                toStopId: midStop,
-                toStopName: leg1To.n,
-                toLat: leg1To.lat,
-                toLng: leg1To.lng,
-                departMinutes: leg1Dep,
-                arriveMinutes: leg1Arr,
-                durationMinutes: leg1Arr - leg1Dep,
-                miles: Math.round(
-                  haversineMi(
-                    leg1From.lat,
-                    leg1From.lng,
-                    leg1To.lat,
-                    leg1To.lng
-                  )
-                ),
-              },
-              {
-                carrier: trip2.c,
-                routeName: trip2.h || trip2.r,
-                mode: trip2.t === 2 ? "train" : "bus",
-                fromStopId: candStop,
-                fromStopName: leg2From.n,
-                fromLat: leg2From.lat,
-                fromLng: leg2From.lng,
-                toStopId: bwd.alightStopId,
-                toStopName: leg2To.n,
-                toLat: leg2To.lat,
-                toLng: leg2To.lng,
-                departMinutes: leg2Dep,
-                arriveMinutes: leg2Arr,
-                durationMinutes: leg2Arr - leg2Dep,
-                miles: Math.round(
-                  haversineMi(
-                    leg2From.lat,
-                    leg2From.lng,
-                    leg2To.lat,
-                    leg2To.lng
-                  )
-                ),
-              },
-            ],
-            boardStopId: fwd.boardStopId,
-            alightStopId: bwd.alightStopId,
-            departMinutes: leg1Dep,
-            arriveMinutes: leg2Arr,
-            totalTransitMinutes: leg2Arr - leg1Dep,
-          });
+  for (let round = 1; round <= MAX_ROUNDS; round++) {
+    // Build queue: for each marked stop, find patterns and earliest position
+    const Q = new Map<number, number>(); // patternIdx → earliest scan position
+    for (const sid of markedStops) {
+      const routes = stopRoutes.get(sid);
+      if (!routes) continue;
+      for (const { pi, pos } of routes) {
+        const existing = Q.get(pi);
+        if (existing === undefined || pos < existing) {
+          Q.set(pi, pos);
         }
       }
     }
+
+    const newMarked = new Set<string>();
+
+    // Process each queued pattern
+    for (const [pi, startPos] of Q) {
+      const pattern = patterns[pi];
+
+      // Try each service day
+      for (let sdIdx = 0; sdIdx < serviceDays.length; sdIdx++) {
+        const { offset } = serviceDays[sdIdx];
+        const activeSet = activeSets[sdIdx];
+
+        // Iterate all active trips in this pattern
+        for (const ti of pattern.tripIndices) {
+          if (!activeSet.has(ti)) continue;
+          const trip = d.trips[ti];
+
+          let boarded = false;
+          let boardPos = -1;
+          let boardLabel: Label | null = null;
+
+          // Scan positions from startPos to end of pattern
+          for (let p = startPos; p < pattern.stops.length; p++) {
+            const sid = pattern.stops[p];
+            const depAtP = trip.st[p][2] + offset;
+            const arrAtP = trip.st[p][1] + offset;
+
+            // Try to board at this position
+            if (!boarded) {
+              const reachTime = bestArrival.get(sid);
+              if (reachTime !== undefined) {
+                const minDep =
+                  round === 1 ? reachTime : reachTime + TRANSFER_BUFFER;
+
+                if (depAtP >= minDep && depAtP >= -120) {
+                  boarded = true;
+                  boardPos = p;
+
+                  // Find parent label for reconstruction (round > 1)
+                  if (round > 1) {
+                    const prevLabels = allLabels.get(sid);
+                    if (prevLabels && prevLabels.length > 0) {
+                      boardLabel = prevLabels.reduce((best, l) =>
+                        l.arriveMin < best.arriveMin ? l : best
+                      );
+                    }
+                  }
+                }
+              }
+              continue; // boarding stop itself isn't a downstream arrival
+            }
+
+            // Boarded, check downstream stop
+            if (arrAtP > deadlineMin) break; // past deadline
+            if (arrAtP < 0) continue; // before game day
+
+            const label: Label = {
+              arriveMin: arrAtP,
+              tripIdx: ti,
+              boardPos,
+              alightPos: p,
+              patternIdx: pi,
+              offset,
+              prevLabel: boardLabel,
+              round,
+            };
+
+            // Collect at destination stops (always, for variety)
+            if (destStopSet.has(sid)) {
+              destArrivals.push(label);
+            }
+
+            // Update bestArrival for RAPTOR pruning
+            const currentBest = bestArrival.get(sid);
+            if (currentBest === undefined || arrAtP < currentBest) {
+              bestArrival.set(sid, arrAtP);
+              newMarked.add(sid);
+
+              // Store label for future round reconstruction
+              if (!allLabels.has(sid)) allLabels.set(sid, []);
+              allLabels.get(sid)!.push(label);
+            }
+          }
+        }
+      }
+    }
+
+    // ── Footpath transfers ──
+    const transferMarked = new Set<string>();
+    for (const sid of newMarked) {
+      const partners = d.transfers[sid];
+      if (!partners) continue;
+      const myArrival = bestArrival.get(sid)!;
+      for (const partnerId of partners) {
+        const partnerBest = bestArrival.get(partnerId);
+        if (partnerBest === undefined || myArrival < partnerBest) {
+          bestArrival.set(partnerId, myArrival);
+          transferMarked.add(partnerId);
+
+          // Propagate labels to transfer partner
+          const myLabels = allLabels.get(sid);
+          if (myLabels) {
+            if (!allLabels.has(partnerId)) allLabels.set(partnerId, []);
+            for (const lab of myLabels) {
+              allLabels.get(partnerId)!.push(lab);
+            }
+          }
+        }
+      }
+    }
+
+    markedStops = new Set([...newMarked, ...transferMarked]);
+    if (markedStops.size === 0) break; // no improvements, done early
+  }
+
+  // ── Reconstruct journeys ──────────────────────────────────────────────
+
+  const results: GTFSItinerary[] = [];
+  const seen = new Set<string>();
+
+  for (const label of destArrivals) {
+    const itin = reconstructJourney(label, d);
+    if (!itin) continue;
+
+    // Dedup by exact leg sequence
+    const key = itin.legs
+      .map(
+        (l) =>
+          `${l.fromStopId}:${l.departMinutes}:${l.toStopId}:${l.arriveMinutes}`
+      )
+      .join("-");
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    // Geographic sanity for multi-leg itineraries
+    if (itin.legs.length > 1) {
+      let sane = true;
+      let totalLegMi = 0;
+      for (let i = 0; i < itin.legs.length; i++) {
+        totalLegMi += itin.legs[i].miles;
+        // Transfer points must not be further from dest than origin (20% tolerance)
+        if (i < itin.legs.length - 1) {
+          const midToDestMi = haversineMi(
+            itin.legs[i].toLat,
+            itin.legs[i].toLng,
+            destLat,
+            destLng
+          );
+          if (midToDestMi > directDist * 1.2) {
+            sane = false;
+            break;
+          }
+        }
+      }
+      if (!sane || totalLegMi > directDist * 2.5) continue;
+    }
+
+    results.push(itin);
   }
 
   // Sort by total transit time (shortest first), then by arrival time
@@ -502,12 +535,11 @@ export function searchGTFS(
       a.arriveMinutes - b.arriveMinutes
   );
 
-  // Aggressive deduplication: bucket by rounded departure time (30-min windows)
-  // and same number of legs. Keep only the shortest per bucket.
+  // Aggressive deduplication: bucket by rounded departure time (15-min windows)
+  // and same number of legs + carriers. Keep only the shortest per bucket.
   const deduped: GTFSItinerary[] = [];
   const dedupKeys = new Set<string>();
   for (const it of results) {
-    // Round departure to nearest 15 min
     const depBucket = Math.round(it.departMinutes / 15) * 15;
     const carriers = it.legs.map((l) => l.carrier).join("+");
     const key = `${it.legs.length}|${carriers}|${depBucket}`;

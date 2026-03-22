@@ -155,7 +155,7 @@ export function SearchBar({
       </div>
 
       {suggestions.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-1 panel-elevated rounded-lg py-1 z-50">
+        <div className="absolute top-full left-0 right-0 mt-1 panel-elevated rounded-lg py-1 z-50 shadow-2xl">
           <div className="px-3 py-1 text-[10px] font-mono text-[--color-dim] tracking-widest uppercase">
             Set Location
           </div>

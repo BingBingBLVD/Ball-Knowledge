@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { searchRoutes, type Itinerary } from "@/lib/route-search";
+import { searchRoutes, type Itinerary, type Leg } from "@/lib/route-search";
 
 interface RampageGame {
   venue: string;
@@ -8,6 +8,8 @@ interface RampageGame {
   date: string;
   time: string;
   name?: string;
+  min_price?: { amount: number; currency: string } | null;
+  espn_price?: { amount: number } | null;
 }
 
 interface RampageLeg {
@@ -34,6 +36,52 @@ const PRICE_LEVEL_MAP: Record<number, string> = {
   3: "$150-250/night",
   4: "$250+/night",
 };
+
+function haversineMiles(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const R = 3958.8;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+/** Generate a simple drive-only itinerary as fallback */
+function driveFallback(
+  from: { name: string; lat: number; lng: number },
+  to: { name: string; lat: number; lng: number },
+  date: string,
+): Itinerary {
+  const miles = haversineMiles(from.lat, from.lng, to.lat, to.lng);
+  const roadMiles = Math.round(miles * 1.3);
+  const driveMin = Math.max(5, Math.round((miles * 1.3 * 60) / 50));
+  const gmapsLink = `https://www.google.com/maps/dir/?api=1&origin=${from.lat},${from.lng}&destination=${to.lat},${to.lng}&travelmode=driving`;
+
+  return {
+    id: "drive-fallback",
+    totalMinutes: driveMin,
+    totalCost: null,
+    departureTime: `${date}T12:00:00.000Z`,
+    arrivalTime: `${date}T12:00:00.000Z`,
+    bufferMinutes: 0,
+    legs: [{
+      mode: "drive" as const,
+      from: from.name,
+      fromLat: from.lat,
+      fromLng: from.lng,
+      to: to.name,
+      toLat: to.lat,
+      toLng: to.lng,
+      depart: `${date}T12:00:00.000Z`,
+      arrive: `${date}T12:00:00.000Z`,
+      minutes: driveMin,
+      cost: null,
+      bookingUrl: gmapsLink,
+      miles: roadMiles,
+      enrichable: true,
+    }],
+  };
+}
 
 async function searchHotelsNearVenue(
   venueLat: number,
@@ -105,10 +153,12 @@ export async function POST(req: NextRequest) {
 
     // Between games
     for (let i = 0; i < sorted.length - 1; i++) {
+      // For inter-stadium legs, use the day AFTER the current game (travel the next morning)
+      const travelDate = sorted[i + 1].date;
       legParams.push({
         from: { name: sorted[i].venue, lat: sorted[i].lat, lng: sorted[i].lng },
         to: { name: sorted[i + 1].venue, lat: sorted[i + 1].lat, lng: sorted[i + 1].lng },
-        date: sorted[i + 1].date,
+        date: travelDate,
         time: sorted[i + 1].time || "19:00",
       });
     }
@@ -117,11 +167,12 @@ export async function POST(req: NextRequest) {
     const lastGame = sorted[sorted.length - 1];
     const dayAfterLast = new Date(lastGame.date + "T12:00:00");
     dayAfterLast.setDate(dayAfterLast.getDate() + 1);
+    const returnDate = dayAfterLast.toISOString().split("T")[0];
     legParams.push({
       from: { name: lastGame.venue, lat: lastGame.lat, lng: lastGame.lng },
       to: { name: "End", lat: endLocation.lat, lng: endLocation.lng },
-      date: dayAfterLast.toISOString().split("T")[0],
-      time: "12:00",
+      date: returnDate,
+      time: "18:00",
     });
 
     // Search routes for all legs in parallel
@@ -138,11 +189,17 @@ export async function POST(req: NextRequest) {
             gameTime: leg.time,
             limit: 5,
           });
+
+          // If searchRoutes returns nothing (past dates, etc), add a drive fallback
+          const itineraries = result.itineraries.length > 0
+            ? result.itineraries
+            : [driveFallback(leg.from, leg.to, leg.date)];
+
           return {
             from: leg.from,
             to: leg.to,
             date: leg.date,
-            itineraries: result.itineraries,
+            itineraries,
           };
         } catch (err) {
           console.error(`[rampage] Route search failed for ${leg.from.name} → ${leg.to.name}:`, err);
@@ -150,7 +207,7 @@ export async function POST(req: NextRequest) {
             from: leg.from,
             to: leg.to,
             date: leg.date,
-            itineraries: [],
+            itineraries: [driveFallback(leg.from, leg.to, leg.date)],
           };
         }
       })
@@ -168,21 +225,29 @@ export async function POST(req: NextRequest) {
       })
     );
 
-    // Summary: sum cheapest itinerary cost per leg
-    let totalCost: number | null = 0;
+    // Summary: sum cheapest transport cost + ticket costs
+    let transportCost: number | null = 0;
     let totalMinutes = 0;
+    let ticketCost = 0;
+
     for (const leg of legResults) {
       if (leg.itineraries.length > 0) {
         const cheapest = leg.itineraries.reduce((a, b) =>
           (a.totalCost ?? Infinity) < (b.totalCost ?? Infinity) ? a : b
         );
-        if (cheapest.totalCost != null && totalCost != null) {
-          totalCost += cheapest.totalCost;
+        if (cheapest.totalCost != null && transportCost != null) {
+          transportCost += cheapest.totalCost;
         } else {
-          totalCost = null;
+          transportCost = null;
         }
         totalMinutes += cheapest.totalMinutes;
       }
+    }
+
+    // Sum ticket prices from games
+    for (const game of sorted) {
+      const price = game.espn_price?.amount ?? game.min_price?.amount;
+      if (price) ticketCost += price;
     }
 
     return NextResponse.json({
@@ -190,7 +255,9 @@ export async function POST(req: NextRequest) {
       hotels: hotelResults,
       games: sorted,
       summary: {
-        totalCost,
+        transportCost,
+        ticketCost,
+        totalCost: transportCost != null ? transportCost + ticketCost : null,
         totalMinutes,
         gameCount: sorted.length,
       },

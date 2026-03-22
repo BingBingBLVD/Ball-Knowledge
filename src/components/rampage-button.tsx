@@ -168,11 +168,12 @@ export function RampageButton({
       <div className="flex items-center gap-1.5">
         <button
           onClick={handleToggle}
-          className={`flex items-center gap-1.5 px-2.5 py-2 rounded-lg shadow-lg backdrop-blur-md transition-colors ${
+          className={`flex items-center gap-1.5 px-2.5 py-2 rounded-xl shadow-lg transition-all ${
             rampage.active
-              ? "bg-[#0a0a0f]/80 border border-[--color-rampage]/50 text-[--color-rampage] rampage-glow"
-              : "bg-[#0a0a0f]/80 border border-white/10 text-[--color-dim] hover:text-[--color-rampage] hover:border-[--color-rampage]/30"
+              ? "border border-[--color-rampage]/50 text-[--color-rampage] rampage-glow shadow-[--color-rampage]/10"
+              : "border border-white/10 text-[--color-dim] hover:text-[--color-rampage] hover:border-[--color-rampage]/30 hover:shadow-[--color-rampage]/5"
           }`}
+          style={{ background: "rgba(10,10,15,0.65)", backdropFilter: "blur(20px) saturate(1.5)", WebkitBackdropFilter: "blur(20px) saturate(1.5)" }}
         >
           <Zap className="size-4" />
           {rampage.active && (
@@ -184,7 +185,8 @@ export function RampageButton({
         {rampage.active && gameCount >= 2 && (
           <button
             onClick={handlePlanRampage}
-            className="flex items-center gap-1 px-3 py-2 rounded-lg shadow-lg backdrop-blur-md bg-[--color-rampage] text-white font-mono text-[11px] font-semibold tracking-wider hover:bg-[--color-rampage-bright] transition-colors"
+            className="flex items-center gap-1 px-3 py-2 rounded-xl shadow-lg shadow-[--color-rampage]/20 bg-[--color-rampage] text-white font-mono text-[11px] font-semibold tracking-wider hover:brightness-110 transition-all"
+            style={{ backdropFilter: "blur(20px) saturate(1.5)", WebkitBackdropFilter: "blur(20px) saturate(1.5)" }}
           >
             PLAN
             <ArrowRight className="size-3.5" />
@@ -194,7 +196,7 @@ export function RampageButton({
 
       {/* Dropdown */}
       {open && rampage.active && (
-        <div className="absolute top-full left-0 mt-2 w-80 panel-elevated rounded-lg shadow-xl overflow-hidden">
+        <div className="absolute top-full left-0 mt-2 w-80 panel-elevated rounded-xl shadow-2xl overflow-hidden">
           {/* Start location */}
           <LocationRow
             label="START"
@@ -260,20 +262,20 @@ export function RampageButton({
           )}
 
           {/* Actions */}
-          <div className="border-t border-white/5 p-2 flex gap-2">
+          <div className="border-t border-white/8 p-2 flex gap-2">
             <button
               onClick={handleDeactivate}
-              className="flex items-center gap-1 px-3 py-2 rounded text-xs font-mono text-[--color-dim] hover:text-foreground hover:bg-white/5 transition-colors"
+              className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-mono text-[--color-dim] hover:text-foreground hover:bg-white/[0.06] transition-all"
             >
               <X className="size-3" /> EXIT
             </button>
             <button
               onClick={handlePlanRampage}
               disabled={gameCount < 2}
-              className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded font-mono text-xs font-semibold transition-colors ${
+              className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg font-mono text-xs font-semibold transition-all ${
                 gameCount >= 2
-                  ? "bg-[--color-rampage] text-white hover:bg-[--color-rampage-bright]"
-                  : "bg-white/5 text-[--color-dim] cursor-not-allowed"
+                  ? "bg-[--color-rampage] text-white shadow-md shadow-[--color-rampage]/20 hover:brightness-110"
+                  : "bg-white/[0.04] text-[--color-dim] cursor-not-allowed"
               }`}
             >
               <Zap className="size-3.5" />

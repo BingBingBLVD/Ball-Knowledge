@@ -193,10 +193,43 @@ function HomeInner() {
   }, []);
 
   const handleMarkerClick = useCallback((venue: VenueInfo) => {
+    // RAMPAGE mode: toggle the first game at this venue
+    if (rampage.active) {
+      const game = todayGames.find(
+        (g) => g.venue === venue.venue && g.lat != null && g.lng != null && g.est_date
+      );
+      if (game) {
+        const wasSelected = game.est_date && rampage.selectedGames.has(game.est_date) && rampage.selectedGames.get(game.est_date)!.id === game.id;
+        rampage.toggleGame({
+          id: game.id,
+          name: game.name,
+          venue: game.venue,
+          city: game.city,
+          state: game.state,
+          lat: game.lat!,
+          lng: game.lng!,
+          est_date: game.est_date!,
+          est_time: game.est_time,
+          min_price: game.min_price,
+          espn_price: game.espn_price,
+          odds: game.odds,
+          away_record: game.away_record,
+          home_record: game.home_record,
+        });
+        if (!wasSelected) {
+          setUserLocation({ lat: game.lat!, lng: game.lng! });
+          const idx = availableDates.indexOf(currentDate);
+          if (idx >= 0 && idx < availableDates.length - 1) {
+            setTimeout(() => setCurrentDate(availableDates[idx + 1]), 300);
+          }
+        }
+      }
+      return;
+    }
     setSelectedVenue(venue);
     setRouteFocus(null);
     setTrayState("peek");
-  }, []);
+  }, [rampage, todayGames, availableDates, currentDate]);
 
   const handleRouteFocus = useCallback((focus: RouteFocus | null) => {
     setRouteFocus(focus);
@@ -253,6 +286,7 @@ function HomeInner() {
           date={currentDate}
           selectedVenue={selectedVenue?.venue ?? null}
           hoveredVenue={hoveredVenue}
+          onVenueHover={setHoveredVenue}
           onVenueClick={handleMarkerClick}
           onRouteFocus={handleRouteFocus}
           trayState={trayState}

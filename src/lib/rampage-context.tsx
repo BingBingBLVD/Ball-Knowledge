@@ -13,6 +13,16 @@ export interface SelectedGame {
   est_date: string;
   est_time: string | null;
   min_price: { amount: number; currency: string } | null;
+  espn_price?: { amount: number; available: number; url: string | null } | null;
+  odds?: {
+    away_team: string;
+    home_team: string;
+    away_win: number;
+    home_win: number;
+    kalshi_event: string;
+  } | null;
+  away_record?: string | null;
+  home_record?: string | null;
 }
 
 export interface SavedCow {

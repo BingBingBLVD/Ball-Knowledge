@@ -795,121 +795,124 @@ function TakeMePage() {
   ];
 
   return (
-    <div className="h-screen flex flex-col bg-[#0a0a0f]">
-      {/* Header */}
-      <header className="panel z-10 px-4 py-3 border-b border-white/5 shrink-0">
-        <div className="mx-auto">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              className="text-[--color-dim] hover:text-foreground transition-colors"
-            >
-              <ArrowLeft className="size-5" />
-            </Link>
-            <div className="flex-1 min-w-0">
-              <h1 className="text-base font-semibold text-foreground truncate">
-                {gameDisplay}
-              </h1>
-              <p className="text-xs font-mono text-[--color-dim]">
-                {dateDisplay} {timeDisplay && `· ${timeDisplay} EST`}{" "}
-                {venue && `· ${venue}`}
-              </p>
-            </div>
-          </div>
-          {/* Editable origin */}
-          <div className="mt-2 relative">
-            <div className="flex items-center gap-2">
-              <MapPin className="size-3.5 text-[--color-dim] shrink-0" />
-              <span className="text-xs font-mono text-[--color-dim] shrink-0">FROM:</span>
-              <form
-                className="flex-1 flex items-center gap-1.5"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (sugIdx >= 0 && originSuggestions[sugIdx]) {
-                    selectOriginSuggestion(originSuggestions[sugIdx]);
-                  } else {
-                    geocodeOriginInput();
-                  }
-                }}
+    <div className="h-screen relative bg-[#0a0a0f]">
+      {/* Full-screen map */}
+      <div ref={mapContainerRef} className="absolute inset-0 z-0" />
+
+      {/* Floating header overlay */}
+      <header className="fixed top-0 left-0 right-0 z-20 pointer-events-none">
+        <div className="pointer-events-auto mx-3 mt-3 md:mx-4 md:mt-4 rounded-xl shadow-2xl" style={{ background: "rgba(18,18,26,0.7)", backdropFilter: "blur(24px) saturate(1.5)", WebkitBackdropFilter: "blur(24px) saturate(1.5)", border: "1px solid rgba(255,255,255,0.1)" }}>
+          <div className="px-4 py-3">
+            <div className="flex items-center gap-3">
+              <Link
+                href="/"
+                className="text-[--color-dim] hover:text-foreground transition-colors"
               >
-                <input
-                  type="text"
-                  value={originInput}
-                  onChange={(e) => {
-                    setOriginInput(e.target.value);
-                    if (originDebounce.current) clearTimeout(originDebounce.current);
-                    originDebounce.current = setTimeout(
-                      () => fetchOriginSuggestions(e.target.value),
-                      200
-                    );
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "ArrowDown") {
-                      e.preventDefault();
-                      setSugIdx((i) => Math.min(i + 1, originSuggestions.length - 1));
-                    } else if (e.key === "ArrowUp") {
-                      e.preventDefault();
-                      setSugIdx((i) => Math.max(i - 1, -1));
-                    } else if (e.key === "Escape") {
-                      setOriginSuggestions([]);
+                <ArrowLeft className="size-5" />
+              </Link>
+              <div className="flex-1 min-w-0">
+                <h1 className="text-base font-semibold text-foreground truncate">
+                  {gameDisplay}
+                </h1>
+                <p className="text-xs font-mono text-[--color-dim]">
+                  {dateDisplay} {timeDisplay && `· ${timeDisplay} EST`}{" "}
+                  {venue && `· ${venue}`}
+                </p>
+              </div>
+            </div>
+            {/* Editable origin */}
+            <div className="mt-2 relative">
+              <div className="flex items-center gap-2">
+                <MapPin className="size-3.5 text-[--color-dim] shrink-0" />
+                <span className="text-xs font-mono text-[--color-dim] shrink-0">FROM:</span>
+                <form
+                  className="flex-1 flex items-center gap-1.5"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (sugIdx >= 0 && originSuggestions[sugIdx]) {
+                      selectOriginSuggestion(originSuggestions[sugIdx]);
+                    } else {
+                      geocodeOriginInput();
                     }
                   }}
-                  onFocus={() => {
-                    if (originInput) fetchOriginSuggestions(originInput);
-                  }}
-                  onBlur={() => {
-                    // Delay to allow click on suggestions
-                    setTimeout(() => setOriginSuggestions([]), 200);
-                  }}
-                  placeholder="Enter city or address"
-                  className="flex-1 text-xs font-mono bg-white/5 border border-white/8 rounded px-2.5 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-[--primary]/50 placeholder:text-[--color-dim]"
-                />
-                <button
-                  type="submit"
-                  disabled={originLoading || !originInput.trim()}
-                  className="px-2.5 py-1.5 rounded bg-[--primary] text-[--primary-foreground] text-xs font-mono font-semibold hover:opacity-90 disabled:opacity-40 transition-colors"
                 >
-                  {originLoading ? (
-                    <Loader2 className="size-3 animate-spin" />
-                  ) : (
-                    "GO"
-                  )}
-                </button>
-              </form>
-            </div>
-            {/* Autocomplete suggestions dropdown */}
-            {originSuggestions.length > 0 && (
-              <div className="absolute left-0 right-0 top-full mt-1 panel-elevated rounded-lg z-50 overflow-hidden">
-                {originSuggestions.map((s, i) => (
+                  <input
+                    type="text"
+                    value={originInput}
+                    onChange={(e) => {
+                      setOriginInput(e.target.value);
+                      if (originDebounce.current) clearTimeout(originDebounce.current);
+                      originDebounce.current = setTimeout(
+                        () => fetchOriginSuggestions(e.target.value),
+                        200
+                      );
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "ArrowDown") {
+                        e.preventDefault();
+                        setSugIdx((i) => Math.min(i + 1, originSuggestions.length - 1));
+                      } else if (e.key === "ArrowUp") {
+                        e.preventDefault();
+                        setSugIdx((i) => Math.max(i - 1, -1));
+                      } else if (e.key === "Escape") {
+                        setOriginSuggestions([]);
+                      }
+                    }}
+                    onFocus={() => {
+                      if (originInput) fetchOriginSuggestions(originInput);
+                    }}
+                    onBlur={() => {
+                      setTimeout(() => setOriginSuggestions([]), 200);
+                    }}
+                    placeholder="Enter city or address"
+                    className="flex-1 text-xs font-mono bg-white/[0.06] border border-white/10 rounded-lg px-2.5 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-[--primary]/50 placeholder:text-[--color-dim] backdrop-blur-sm"
+                  />
                   <button
-                    key={s.placeId}
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => selectOriginSuggestion(s)}
-                    className={`w-full text-left px-3 py-2 text-xs transition-colors ${
-                      i === sugIdx
-                        ? "bg-[--primary]/10 text-[--primary]"
-                        : "text-foreground hover:bg-white/5"
-                    }`}
+                    type="submit"
+                    disabled={originLoading || !originInput.trim()}
+                    className="px-3 py-1.5 rounded-lg bg-[--primary] text-[--primary-foreground] text-xs font-mono font-semibold shadow-md shadow-[--primary]/20 hover:brightness-110 disabled:opacity-40 transition-all"
                   >
-                    <div className="font-medium">{s.main}</div>
-                    <div className="text-[10px] text-[--color-dim]">{s.secondary}</div>
+                    {originLoading ? (
+                      <Loader2 className="size-3 animate-spin" />
+                    ) : (
+                      "GO"
+                    )}
                   </button>
-                ))}
+                </form>
               </div>
-            )}
+              {/* Autocomplete suggestions dropdown */}
+              {originSuggestions.length > 0 && (
+                <div className="absolute left-0 right-0 top-full mt-1 panel-elevated rounded-lg z-50 overflow-hidden shadow-2xl">
+                  {originSuggestions.map((s, i) => (
+                    <button
+                      key={s.placeId}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => selectOriginSuggestion(s)}
+                      className={`w-full text-left px-3 py-2 text-xs transition-all ${
+                        i === sugIdx
+                          ? "bg-[--primary]/10 text-[--primary]"
+                          : "text-foreground hover:bg-white/[0.06]"
+                      }`}
+                    >
+                      <div className="font-medium">{s.main}</div>
+                      <div className="text-[10px] text-[--color-dim]">{s.secondary}</div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>
 
-      {/* 50/50 split: map + itinerary */}
-      <div className="flex flex-col md:flex-row flex-1 min-h-0">
-        {/* Map */}
-        <div className="h-[40vh] md:h-auto md:w-1/2 relative">
-          <div ref={mapContainerRef} className="absolute inset-0" />
-        </div>
+      {/* Floating itinerary panel — overlay on map */}
+      <div className="fixed bottom-0 left-0 right-0 md:top-0 md:right-0 md:left-auto md:bottom-0 z-10 pointer-events-none">
+        <div className="pointer-events-auto h-[55vh] md:h-full md:w-[420px] overflow-y-auto no-scrollbar md:pt-28 pt-0 rounded-t-xl md:rounded-none md:border-l md:border-white/8" style={{ background: "rgba(10,10,15,0.6)", backdropFilter: "blur(20px) saturate(1.4)", WebkitBackdropFilter: "blur(20px) saturate(1.4)", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
 
-        {/* Itinerary list */}
-        <div className="flex-1 md:w-1/2 overflow-y-auto">
+      {/* Drag handle (mobile) */}
+      <div className="md:hidden flex justify-center pt-2 pb-1">
+        <div className="w-10 h-1 rounded-full bg-white/20" />
+      </div>
 
       {/* Mode filter bar */}
       <div className="px-4 pt-3 pb-1 flex items-center gap-2">
@@ -929,16 +932,16 @@ function TakeMePage() {
           <button
             key={key}
             onClick={() => setTransitPref(key)}
-            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded text-[10px] font-mono font-semibold tracking-wider transition-colors ${
+            className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-mono font-semibold tracking-wider backdrop-blur-sm transition-all ${
               transitPref === key
                 ? key === "bus"
-                  ? "bg-[--color-bus]/10 text-[--color-bus] border border-[--color-bus]/30"
+                  ? "bg-[--color-bus]/15 text-[--color-bus] border border-[--color-bus]/40 shadow-sm shadow-[--color-bus]/10"
                   : key === "train"
-                    ? "bg-[--color-train]/10 text-[--color-train] border border-[--color-train]/30"
+                    ? "bg-[--color-train]/15 text-[--color-train] border border-[--color-train]/40 shadow-sm shadow-[--color-train]/10"
                     : key === "frontier"
-                      ? "bg-[--color-flight]/10 text-[--color-flight] border border-[--color-flight]/30"
-                      : "bg-white/5 text-foreground border border-white/10"
-                : "text-[--color-dim] hover:text-foreground border border-transparent hover:border-white/5"
+                      ? "bg-[--color-flight]/15 text-[--color-flight] border border-[--color-flight]/40 shadow-sm shadow-[--color-flight]/10"
+                      : "bg-white/[0.06] text-foreground border border-white/15"
+                : "text-[--color-dim] hover:text-foreground border border-white/5 bg-white/[0.02] hover:bg-white/[0.05]"
             }`}
           >
             {Icon && <Icon className="size-3" />}
@@ -963,7 +966,7 @@ function TakeMePage() {
 
       {/* Google Flights box */}
       {transitPref !== "frontier" && googleFlightsUrl && !loading && (
-        <div className="mx-4 mt-3 px-4 py-3 rounded-lg border border-[--color-flight]/20 bg-[--color-flight]/5">
+        <div className="mx-4 mt-3 px-4 py-3 rounded-xl border border-[--color-flight]/25 backdrop-blur-sm shadow-lg" style={{ background: "rgba(167,139,250,0.08)" }}>
           <div className="flex items-center gap-3">
             <Plane className="size-5 text-[--color-flight] shrink-0" />
             <div className="flex-1 min-w-0">
@@ -974,7 +977,7 @@ function TakeMePage() {
               href={googleFlightsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded bg-[--color-flight] text-black text-xs font-mono font-semibold hover:opacity-90 transition-opacity"
+              className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[--color-flight] text-black text-xs font-mono font-semibold shadow-md shadow-[--color-flight]/20 hover:brightness-110 transition-all"
             >
               Google Flights <ArrowRight className="size-3" />
             </a>
@@ -1066,7 +1069,7 @@ function TakeMePage() {
               return (
                 <div
                   key={it.id}
-                  className={`panel rounded overflow-hidden transition-colors border-l-2 ${modeBorderColor(mainModes.find((m) => m !== "drive") ?? mainModes[0] ?? "drive")}`}
+                  className={`panel rounded-xl overflow-hidden transition-all border-l-2 ${modeBorderColor(mainModes.find((m) => m !== "drive") ?? mainModes[0] ?? "drive")}`}
                 >
                   {/* Collapsed header */}
                   <button
@@ -1161,7 +1164,7 @@ function TakeMePage() {
                               enrichItinerary(it);
                             }}
                             disabled={isEnriching}
-                            className="mt-3 mb-1 flex items-center gap-1.5 w-full px-3 py-2 rounded border border-[--primary]/30 text-[--primary] text-xs font-mono font-semibold hover:bg-[--primary]/10 transition-colors disabled:opacity-50"
+                            className="mt-3 mb-1 flex items-center gap-1.5 w-full px-3 py-2.5 rounded-lg border border-[--primary]/30 text-[--primary] text-xs font-mono font-semibold bg-[--primary]/5 backdrop-blur-sm hover:bg-[--primary]/10 shadow-sm transition-all disabled:opacity-50"
                           >
                             {isEnriching ? (
                               <Loader2 className="size-3 animate-spin" />
@@ -1390,7 +1393,7 @@ function TakeMePage() {
                                                 href={`https://www.google.com/maps/dir/?api=1&origin=${leg.fromLat},${leg.fromLng}&destination=${leg.toLat},${leg.toLng}&travelmode=transit`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded text-xs font-medium border border-[--color-train]/30 text-[--color-train] hover:bg-[--color-train]/10 transition-colors"
+                                                className="inline-flex items-center gap-1 mt-1 px-2.5 py-1 rounded-md text-xs font-medium border border-[--color-train]/30 text-[--color-train] bg-[--color-train]/5 backdrop-blur-sm hover:bg-[--color-train]/10 transition-all"
                                                 onClick={(e) => e.stopPropagation()}
                                               >
                                                 Directions <ArrowRight className="size-3" />
@@ -1440,7 +1443,7 @@ function TakeMePage() {
                                                 href={`https://www.google.com/maps/dir/?api=1&origin=${leg.fromLat},${leg.fromLng}&destination=${leg.toLat},${leg.toLng}&travelmode=transit`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded text-xs font-medium border border-[--color-bus]/30 text-[--color-bus] hover:bg-[--color-bus]/10 transition-colors"
+                                                className="inline-flex items-center gap-1 mt-1 px-2.5 py-1 rounded-md text-xs font-medium border border-[--color-bus]/30 text-[--color-bus] bg-[--color-bus]/5 backdrop-blur-sm hover:bg-[--color-bus]/10 transition-all"
                                                 onClick={(e) => e.stopPropagation()}
                                               >
                                                 Directions <ArrowRight className="size-3" />
@@ -1474,32 +1477,23 @@ function TakeMePage() {
                                       {/* Show real prices only from enrichment */}
                                       {enrichData && !isSwapped && (
                                         <>
-                                          {enrichData.uberEstimate && (
-                                            <>
-                                              <span>·</span>
-                                              <span>
-                                                <span className="text-white">UBER</span>{" "}
-                                                <span className="text-emerald-400">~&lt;{extractUpperBound(enrichData.uberEstimate)}</span>
-                                              </span>
-                                            </>
-                                          )}
-                                          {enrichData.lyftEstimate && (
-                                            <>
-                                              <span>·</span>
-                                              <span>
-                                                <span className="text-white">LYFT</span>{" "}
-                                                <span className="text-emerald-400">~&lt;{extractUpperBound(enrichData.lyftEstimate)}</span>
-                                              </span>
-                                            </>
-                                          )}
+                                          <span>·</span>
+                                          <span>
+                                            <span className="text-white">UBER</span>{" "}
+                                            <span className="text-emerald-400">{enrichData.uberEstimate ? `~<${extractUpperBound(enrichData.uberEstimate)}` : "--"}</span>
+                                          </span>
+                                          <span>·</span>
+                                          <span>
+                                            <span className="text-white">LYFT</span>{" "}
+                                            <span className="text-emerald-400">{enrichData.lyftEstimate ? `~<${extractUpperBound(enrichData.lyftEstimate)}` : "--"}</span>
+                                          </span>
                                         </>
                                       )}
-                                      {isSwapped &&
-                                        enrichData?.transitFare && (
+                                      {isSwapped && enrichData && (
                                           <>
                                             <span>·</span>
                                             <span className="text-emerald-400">
-                                              {enrichData.transitFare}
+                                              {enrichData.transitFare || "--"}
                                             </span>
                                           </>
                                         )}
@@ -1542,7 +1536,7 @@ function TakeMePage() {
                                           )}
                                           target="_blank"
                                           rel="noopener noreferrer"
-                                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono font-semibold bg-[#191919] text-white border border-white/10 hover:bg-[#2a2a2a] transition-colors"
+                                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-mono font-semibold bg-[#191919]/80 text-white border border-white/10 backdrop-blur-sm hover:bg-[#2a2a2a]/80 transition-all"
                                           onClick={(e) =>
                                             e.stopPropagation()
                                           }
@@ -1559,7 +1553,7 @@ function TakeMePage() {
                                           )}
                                           target="_blank"
                                           rel="noopener noreferrer"
-                                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono font-semibold bg-[#d4004c] text-white hover:bg-[#e0105a] transition-colors"
+                                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-mono font-semibold bg-[#d4004c]/80 text-white backdrop-blur-sm border border-[#ff00bf]/20 hover:bg-[#e0105a]/80 transition-all"
                                           onClick={(e) =>
                                             e.stopPropagation()
                                           }
@@ -1574,7 +1568,7 @@ function TakeMePage() {
                                           }
                                           target="_blank"
                                           rel="noopener noreferrer"
-                                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono font-semibold border border-white text-white hover:bg-white/10 transition-colors"
+                                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-mono font-semibold border border-white/20 text-white bg-white/[0.04] backdrop-blur-sm hover:bg-white/10 transition-all"
                                           onClick={(e) =>
                                             e.stopPropagation()
                                           }
@@ -1590,7 +1584,7 @@ function TakeMePage() {
                                               e.stopPropagation();
                                               toggleTransitSwap(swapKey);
                                             }}
-                                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-[--color-transit]/10 text-[--color-transit] hover:bg-[--color-transit]/20 transition-colors"
+                                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-[--color-transit]/10 text-[--color-transit] border border-[--color-transit]/20 backdrop-blur-sm hover:bg-[--color-transit]/20 transition-all"
                                           >
                                             <ArrowLeftRight className="size-3" />
                                             {isSwapped
@@ -1607,7 +1601,7 @@ function TakeMePage() {
                                             href={`https://www.google.com/maps/dir/?api=1&origin=${leg.fromLat},${leg.fromLng}&destination=${leg.toLat},${leg.toLng}&travelmode=transit`}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border border-white text-white hover:bg-white/10 transition-colors"
+                                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium border border-white/20 text-white bg-white/[0.04] backdrop-blur-sm hover:bg-white/10 transition-all"
                                             onClick={(e) =>
                                               e.stopPropagation()
                                             }
@@ -1620,7 +1614,7 @@ function TakeMePage() {
                                               e.stopPropagation();
                                               toggleTransitSwap(swapKey);
                                             }}
-                                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border border-white/10 text-[--color-dim] hover:text-foreground transition-colors"
+                                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium border border-white/10 text-[--color-dim] bg-white/[0.02] backdrop-blur-sm hover:text-foreground hover:bg-white/[0.05] transition-all"
                                           >
                                             <ArrowLeftRight className="size-3" />
                                             {`Back to drive (${formatDuration(enrichData!.driveMinutes)}${enrichData!.uberEstimate ? `, ~${enrichData!.uberEstimate}` : ""})`}
@@ -1635,7 +1629,7 @@ function TakeMePage() {
                                             href={leg.bookingUrl}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border border-white text-white hover:bg-white/10 transition-colors"
+                                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium border border-white/20 text-white bg-white/[0.04] backdrop-blur-sm hover:bg-white/10 transition-all"
                                             onClick={(e) =>
                                               e.stopPropagation()
                                             }
@@ -1655,7 +1649,7 @@ function TakeMePage() {
                                           }
                                           target="_blank"
                                           rel="noopener noreferrer"
-                                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border border-white text-white hover:bg-white/10 transition-colors"
+                                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium border border-white/20 text-white bg-white/[0.04] backdrop-blur-sm hover:bg-white/10 transition-all"
                                           onClick={(e) =>
                                             e.stopPropagation()
                                           }
@@ -1669,7 +1663,7 @@ function TakeMePage() {
                                         href={leg.bookingUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded text-xs font-mono font-semibold bg-sky-500/15 text-sky-400 border border-sky-500/30 hover:bg-sky-500/25 transition-colors"
+                                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-mono font-semibold bg-sky-500/15 text-sky-400 border border-sky-500/30 backdrop-blur-sm hover:bg-sky-500/25 transition-all"
                                         onClick={(e) => e.stopPropagation()}
                                       >
                                         Check Google Flights for prices <ArrowRight className="size-3" />
@@ -1707,15 +1701,15 @@ function TakeMePage() {
             })}
             <button
               onClick={() => setResultLimit((l) => l + 10)}
-              className="w-full mt-3 py-2.5 rounded border border-white/10 font-mono text-sm font-semibold text-[--color-dim] hover:text-foreground hover:border-white/20 transition-colors"
+              className="w-full mt-3 py-2.5 rounded-lg border border-white/10 font-mono text-sm font-semibold text-[--color-dim] bg-white/[0.03] backdrop-blur-sm hover:text-foreground hover:border-white/20 hover:bg-white/[0.06] transition-all"
             >
               SHOW MORE ROUTES
             </button>
           </div>
         )}
       </main>
-        </div>{/* close right panel */}
-      </div>{/* close flex split */}
+        </div>{/* close floating itinerary panel */}
+      </div>{/* close overlay container */}
     </div>
   );
 }

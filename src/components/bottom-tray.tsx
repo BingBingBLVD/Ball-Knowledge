@@ -167,7 +167,7 @@ function TransitCards({
         return (
           <div
             key={stop.code}
-            className="flex flex-col gap-1 text-[11px] font-mono rounded border border-white/5 bg-white/[0.02] px-2.5 py-2 min-w-[8rem] shrink-0"
+            className="flex flex-col gap-1 text-[11px] font-mono rounded-lg border border-white/8 bg-white/[0.04] backdrop-blur-sm px-2.5 py-2 min-w-[8rem] shrink-0"
             onMouseEnter={() => !isAnimating && onRouteFocus(baseFocus)}
             onMouseLeave={() => !isAnimating && onRouteFocus(null)}
           >
@@ -197,7 +197,7 @@ function TransitCards({
                     href={gmapsUrl(vLat, vLng, stop.lat, stop.lng, "driving")}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[--color-dim] hover:text-foreground border border-white/10 no-underline"
+                    className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[--color-dim] hover:text-foreground border border-white/10 bg-white/[0.03] backdrop-blur-sm hover:bg-white/[0.06] transition-all no-underline"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <Car className="size-3" /> {formatDriveTime(times.driveMinutes)}
@@ -206,7 +206,7 @@ function TransitCards({
                     href={uberDeepLink(vLat, vLng, stop.lat, stop.lng)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 bg-[#191919] text-white font-semibold hover:bg-[#2a2a2a] transition-colors no-underline border border-white/10"
+                    className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 bg-[#191919]/80 text-white font-semibold hover:bg-[#2a2a2a]/80 backdrop-blur-sm transition-all no-underline border border-white/10"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <span className="text-white">UBER</span> {times.uberEstimate ? <span className="text-white">~&lt;{extractUpperBound(times.uberEstimate)}</span> : <span className="text-emerald-400">--</span>}
@@ -215,7 +215,7 @@ function TransitCards({
                     href={lyftDeepLink(vLat, vLng, stop.lat, stop.lng)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 bg-[#d4004c] text-white font-semibold hover:bg-[#e0105a] transition-colors no-underline"
+                    className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 bg-[#d4004c]/80 text-white font-semibold hover:bg-[#e0105a]/80 backdrop-blur-sm transition-all no-underline border border-[#ff00bf]/20"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <span className="text-white">LYFT</span> {times.lyftEstimate ? <span className="text-white">~&lt;{extractUpperBound(times.lyftEstimate)}</span> : <span className="text-emerald-400">--</span>}
@@ -226,7 +226,7 @@ function TransitCards({
                     href={gmapsUrl(vLat, vLng, stop.lat, stop.lng, "transit")}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[--color-dim] hover:text-foreground border border-white/10 no-underline"
+                    className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[--color-dim] hover:text-foreground border border-white/10 bg-white/[0.03] backdrop-blur-sm hover:bg-white/[0.06] transition-all no-underline"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <Bus className="size-3" /> {formatDriveTime(times.transitMinutes)} {times.transitFare ? <span>{times.transitFare}</span> : <span className="text-emerald-400">--</span>}
@@ -254,6 +254,7 @@ export function BottomTray({
   date,
   selectedVenue,
   hoveredVenue,
+  onVenueHover,
   onVenueClick,
   onRouteFocus,
   trayState,
@@ -272,6 +273,7 @@ export function BottomTray({
   date: string;
   selectedVenue: string | null;
   hoveredVenue?: string | null;
+  onVenueHover?: (venue: string | null) => void;
   onVenueClick: (venue: VenueInfo) => void;
   onRouteFocus: (focus: RouteFocus | null) => void;
   trayState: TrayState;
@@ -534,54 +536,57 @@ export function BottomTray({
     >
       <div className="h-full panel rounded-t-lg flex flex-col">
         {/* Header bar */}
-        <div className="flex items-center select-none border-b border-white/5">
+        <div className="flex items-center select-none border-b border-white/8">
           {/* Search */}
           <div className="flex-1 min-w-0 border-r border-white/5">
             <SearchBar value={search} onChange={onSearchChange} onLocationChange={onLocationChange} />
           </div>
           {/* Filters */}
-          {trayState !== "collapsed" && (
-            <div className="relative shrink-0 border-r border-white/5" ref={filterRef}>
-              <button
-                onClick={() => setShowFilters((v) => !v)}
-                className={`flex items-center gap-1.5 font-mono text-xs tracking-wider px-3 py-2.5 transition-colors ${
-                  showFilters || visibleColumns.size < ALL_COLUMNS.length
-                    ? "text-[--primary]"
-                    : "text-[--color-dim] hover:text-foreground"
-                }`}
+          <div className="relative shrink-0 border-r border-white/5" ref={filterRef}>
+            <button
+              onClick={() => setShowFilters((v) => !v)}
+              className={`flex items-center gap-1.5 font-mono text-xs tracking-wider px-3 py-2.5 transition-colors ${
+                showFilters || visibleColumns.size < ALL_COLUMNS.length
+                  ? "text-[--primary]"
+                  : "text-[--color-dim] hover:text-foreground"
+              }`}
+            >
+              <SlidersHorizontal className="size-4" />
+            </button>
+            {showFilters && (
+              <div
+                className="fixed inset-0 z-50 flex items-center justify-center"
+                onClick={(e) => { e.stopPropagation(); setShowFilters(false); }}
               >
-                <SlidersHorizontal className="size-4" />
-              </button>
-              {showFilters && (
                 <div
-                  className="absolute right-0 bottom-full mb-2 w-40 rounded-lg border border-white/10 panel-elevated shadow-xl z-50 py-1"
+                  className="w-64 rounded-xl border border-white/10 panel-elevated shadow-2xl py-2"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <div className="px-3 py-1.5 text-[10px] font-mono tracking-widest text-[--color-dim] uppercase border-b border-white/5">
+                  <div className="px-4 py-2 text-xs font-mono tracking-widest text-foreground uppercase border-b border-white/8 font-semibold">
                     Columns
                   </div>
                   {ALL_COLUMNS.map((col) => (
                     <button
                       key={col.id}
                       onClick={() => toggleColumn(col.id)}
-                      className="flex items-center gap-2 w-full px-3 py-1.5 text-xs font-mono hover:bg-white/5 transition-colors"
+                      className="flex items-center gap-3 w-full px-4 py-2.5 text-sm font-mono hover:bg-white/5 transition-all"
                     >
-                      <span className={`size-3.5 rounded border flex items-center justify-center transition-colors ${
+                      <span className={`size-5 rounded-md border-2 flex items-center justify-center transition-all ${
                         visibleColumns.has(col.id)
-                          ? "bg-[--primary] border-[--primary] text-white"
-                          : "border-white/20"
+                          ? "bg-[--primary] border-[--primary] text-white shadow-md shadow-[--primary]/25"
+                          : "border-white/25 bg-white/[0.04]"
                       }`}>
-                        {visibleColumns.has(col.id) && <Check className="size-2.5" />}
+                        {visibleColumns.has(col.id) && <Check className="size-3" />}
                       </span>
-                      <span className={visibleColumns.has(col.id) ? "text-foreground" : "text-[--color-dim]"}>
+                      <span className={visibleColumns.has(col.id) ? "text-foreground font-medium" : "text-[--color-dim]"}>
                         {col.label}
                       </span>
                     </button>
                   ))}
                 </div>
-              )}
-            </div>
-          )}
+              </div>
+            )}
+          </div>
           {/* Date selector */}
           <div className="shrink-0">
             <DateSelector
@@ -680,15 +685,16 @@ export function BottomTray({
                 <div
                   key={event.id}
                   data-venue={event.venue}
-                  className={`rounded card-enter transition-colors cursor-pointer ${
+                  onMouseEnter={() => onVenueHover?.(event.venue)}
+                  onMouseLeave={() => onVenueHover?.(null)}
+                  className={`rounded-lg card-enter transition-all cursor-pointer ${
                     isRampageSelected
-                      ? "border-l-2 border-[--color-rampage] bg-[--color-rampage]/5 panel-elevated"
-                      : isSelected
-                        ? "border-l-2 border-[--primary] bg-[--primary]/5 panel-elevated"
-                        : isHovered
-                          ? "border-l-2 border-[--primary]/50 bg-[--primary]/[0.03] panel-elevated"
-                          : "panel hover:bg-white/[0.02]"
+                      ? "border-l-2 border-[--color-rampage] bg-[--color-rampage]/8 panel-elevated shadow-lg shadow-[--color-rampage]/5"
+                      : isSelected || isHovered
+                        ? "panel shadow-lg"
+                        : "panel hover:bg-white/[0.04]"
                   }`}
+                  style={isSelected || isHovered ? { borderColor: "white" } : undefined}
                   onClick={() => {
                     // RAMPAGE mode: toggle game selection
                     if (rampage.active && event.lat != null && event.lng != null && event.est_date) {
@@ -704,9 +710,14 @@ export function BottomTray({
                         est_date: event.est_date,
                         est_time: event.est_time,
                         min_price: event.min_price,
+                        espn_price: event.espn_price,
+                        odds: event.odds,
+                        away_record: event.away_record,
+                        home_record: event.home_record,
                       });
-                      // Auto-advance to next date when selecting (not deselecting)
+                      // When selecting: set location to stadium for accurate distances on next date
                       if (!wasSelected) {
+                        onLocationChange({ lat: event.lat!, lng: event.lng! });
                         const idx = availableDates.indexOf(date);
                         if (idx >= 0 && idx < availableDates.length - 1) {
                           setTimeout(() => onDateChange(availableDates[idx + 1]), 300);
@@ -844,10 +855,10 @@ export function BottomTray({
                                     return next;
                                   });
                                 }}
-                                className={`text-[10px] font-mono px-1.5 py-0.5 rounded border transition-colors ${
+                                className={`text-[10px] font-mono px-2 py-1 rounded-md border backdrop-blur-sm transition-all ${
                                   shownTrains.has(event.id)
-                                    ? "border-[--color-train]/30 text-[--color-train] bg-[--color-train]/10 font-semibold"
-                                    : "border-white/10 text-[--color-dim] hover:text-[--color-train] hover:border-[--color-train]/20"
+                                    ? "border-[--color-train]/40 text-[--color-train] bg-[--color-train]/15 font-semibold shadow-sm shadow-[--color-train]/10"
+                                    : "border-white/10 text-[--color-dim] bg-white/[0.03] hover:text-[--color-train] hover:border-[--color-train]/25 hover:bg-[--color-train]/5"
                                 }`}
                               >
                                 {shownTrains.has(event.id) ? "Hide" : "Show"} Trains
@@ -866,10 +877,10 @@ export function BottomTray({
                                     return next;
                                   });
                                 }}
-                                className={`text-[10px] font-mono px-1.5 py-0.5 rounded border transition-colors ${
+                                className={`text-[10px] font-mono px-2 py-1 rounded-md border backdrop-blur-sm transition-all ${
                                   shownBuses.has(event.id)
-                                    ? "border-[--color-bus]/30 text-[--color-bus] bg-[--color-bus]/10 font-semibold"
-                                    : "border-white/10 text-[--color-dim] hover:text-[--color-bus] hover:border-[--color-bus]/20"
+                                    ? "border-[--color-bus]/40 text-[--color-bus] bg-[--color-bus]/15 font-semibold shadow-sm shadow-[--color-bus]/10"
+                                    : "border-white/10 text-[--color-dim] bg-white/[0.03] hover:text-[--color-bus] hover:border-[--color-bus]/25 hover:bg-[--color-bus]/5"
                                 }`}
                               >
                                 {shownBuses.has(event.id) ? "Hide" : "Show"} Bus
@@ -949,10 +960,10 @@ export function BottomTray({
                                       return next;
                                     });
                                   }}
-                                  className={`text-[10px] font-mono px-1.5 py-0.5 rounded border transition-colors ${
+                                  className={`text-[10px] font-mono px-2 py-1 rounded-md border backdrop-blur-sm transition-all ${
                                     expanded
-                                      ? "border-amber-400/30 text-amber-400 bg-amber-400/10 font-semibold"
-                                      : "border-white/10 text-[--color-dim] hover:text-amber-400 hover:border-amber-400/20"
+                                      ? "border-amber-400/40 text-amber-400 bg-amber-400/15 font-semibold shadow-sm shadow-amber-400/10"
+                                      : "border-white/10 text-[--color-dim] bg-white/[0.03] hover:text-amber-400 hover:border-amber-400/25 hover:bg-amber-400/5"
                                   }`}
                                 >
                                   {expanded ? "Hide" : "Details"}
@@ -1020,12 +1031,12 @@ export function BottomTray({
                       {userLocation && event.lat != null && event.est_time ? (
                         <a
                           href={`/take-me?originLat=${userLocation.lat}&originLng=${userLocation.lng}&venue=${encodeURIComponent(event.venue)}&venueLat=${event.lat}&venueLng=${event.lng}&date=${date}&time=${event.est_time}&game=${encodeURIComponent(event.name)}`}
-                          className="mt-3 flex items-center justify-center gap-2 w-full py-2 rounded font-mono text-sm font-semibold border border-[--primary] text-[--primary] hover:bg-[--primary]/10 transition-colors press-scale"
+                          className="mt-3 flex items-center justify-center gap-2 w-full py-2.5 rounded-lg font-mono text-sm font-semibold tracking-wider bg-[--primary] text-[--primary-foreground] shadow-lg backdrop-blur-md hover:brightness-110 transition-all press-scale"
                         >
                           <Navigation className="size-4" /> TAKE ME
                         </a>
                       ) : (
-                        <div className="mt-3 flex items-center justify-center gap-2 w-full py-2 rounded font-mono text-[11px] text-[--color-dim] border border-white/5">
+                        <div className="mt-3 flex items-center justify-center gap-2 w-full py-2.5 rounded-lg font-mono text-[11px] text-[--color-dim] bg-white/[0.03] border border-white/5 backdrop-blur-sm">
                           SET LOCATION TO PLAN ROUTE
                         </div>
                       )}

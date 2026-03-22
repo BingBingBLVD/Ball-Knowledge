@@ -160,11 +160,12 @@ export function LocationButton({
       {/* Toggle button */}
       <button
         onClick={() => { setOpen(!open); setAddressMode(false); setQuery(""); setSuggestions([]); }}
-        className={`flex items-center gap-1.5 px-2.5 py-2 rounded-lg shadow-lg backdrop-blur-md transition-colors ${
+        className={`flex items-center gap-1.5 px-2.5 py-2 rounded-xl shadow-lg transition-all ${
           userLocation
-            ? "bg-[#0a0a0f]/80 border border-[--primary]/30 text-[--primary]"
-            : "bg-[#0a0a0f]/80 border border-white/10 text-[--color-dim]"
+            ? "border border-[--primary]/30 text-[--primary] shadow-[--primary]/10"
+            : "border border-white/10 text-[--color-dim]"
         }`}
+        style={{ background: "rgba(10,10,15,0.65)", backdropFilter: "blur(20px) saturate(1.5)", WebkitBackdropFilter: "blur(20px) saturate(1.5)" }}
       >
         <MapPin className="size-4" />
         {userLocation && label ? (
@@ -174,12 +175,12 @@ export function LocationButton({
 
       {/* Dropdown menu */}
       {open && (
-        <div className="absolute top-full right-0 mt-2 w-72 panel-elevated rounded-lg shadow-xl overflow-hidden">
+        <div className="absolute top-full right-0 mt-2 w-72 panel-elevated rounded-xl shadow-2xl overflow-hidden">
           {/* Use current location */}
           <button
             onClick={useCurrentLocation}
             disabled={locating}
-            className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5 transition-colors border-b border-white/5"
+            className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/[0.06] transition-all border-b border-white/8"
           >
             {locating ? (
               <Loader2 className="size-4 text-[--primary] animate-spin" />
@@ -196,7 +197,7 @@ export function LocationButton({
           {!addressMode ? (
             <button
               onClick={() => setAddressMode(true)}
-              className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5 transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/[0.06] transition-all"
             >
               <Search className="size-4 text-[--color-dim]" />
               <div>
