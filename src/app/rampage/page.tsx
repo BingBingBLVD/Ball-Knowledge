@@ -19,6 +19,7 @@ import {
   Star,
   Clock,
   Ticket,
+  AlertTriangle,
 } from "lucide-react";
 import Link from "next/link";
 import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
@@ -378,6 +379,43 @@ function RampageContent() {
           </button>
         </div>
       </div>
+
+      {/* Tight-time warning banner */}
+      {(() => {
+        const now = Date.now();
+        const tight: { index: number; game: string }[] = [];
+        result.games.forEach((game, i) => {
+          const leg = result.legs[i];
+          if (!leg) return;
+          const cheapest = leg.itineraries.length
+            ? leg.itineraries.reduce((a, b) => (a.totalCost ?? Infinity) < (b.totalCost ?? Infinity) ? a : b)
+            : null;
+          if (!cheapest) return;
+          const timeStr = game.est_time ?? "19:00";
+          // Approximate ET offset: Mar–Nov → EDT (UTC-4), else EST (UTC-5)
+          const month = new Date(game.est_date + "T12:00:00Z").getMonth();
+          const offset = month >= 2 && month <= 10 ? "-04:00" : "-05:00";
+          const gameStart = new Date(`${game.est_date}T${timeStr}:00${offset}`);
+          const minutesAvailable = Math.floor((gameStart.getTime() - now) / 60000);
+          if (minutesAvailable > 0 && cheapest.totalMinutes > minutesAvailable) {
+            const parts = game.name.split(/\s+(?:vs?\.?|VS\.?)\s+/);
+            const label = parts.length > 1 ? `Game ${i + 1}` : game.name;
+            tight.push({ index: i + 1, game: label });
+          }
+        });
+        if (tight.length === 0) return null;
+        return (
+          <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2.5">
+            <div className="max-w-4xl mx-auto flex items-start gap-2.5">
+              <AlertTriangle className="size-4 text-amber-400 shrink-0 mt-0.5" />
+              <div className="text-xs font-mono text-amber-300/90">
+                <span className="font-semibold text-amber-400">TIGHT SCHEDULE</span>
+                <span className="text-amber-300/70"> — Travel time exceeds time until tipoff for {tight.map((t) => `Game ${t.index}`).join(", ")}. These legs may not be possible.</span>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Map */}
       <div ref={mapRef} className="w-full h-[300px] sm:h-[400px]" />
