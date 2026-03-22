@@ -345,11 +345,13 @@ function RampageContent() {
   if (error) {
     return (
       <div className="min-h-dvh bg-[#0a0a0f] flex flex-col items-center justify-center gap-4">
-        <p className="font-mono text-[--color-danger] tracking-widest">ERROR</p>
-        <p className="text-sm text-[--color-dim]">{error}</p>
-        <Link href="/" className="text-sm text-[--color-rampage] hover:underline font-mono">
-          <ArrowLeft className="size-4 inline mr-1" />BACK TO MAP
-        </Link>
+        <div className="panel-elevated rounded-xl px-8 py-6 flex flex-col items-center gap-3">
+          <p className="font-mono text-[--color-danger] tracking-widest">ERROR</p>
+          <p className="text-sm text-[--color-dim]">{error}</p>
+          <Link href="/" className="text-sm text-[--color-rampage] hover:underline font-mono">
+            <ArrowLeft className="size-4 inline mr-1" />BACK TO MAP
+          </Link>
+        </div>
       </div>
     );
   }
@@ -357,8 +359,10 @@ function RampageContent() {
   if (loading || !result || !cow) {
     return (
       <div className="min-h-dvh bg-[#0a0a0f] flex flex-col items-center justify-center gap-3">
-        <Loader2 className="size-8 text-[--color-rampage] animate-spin" />
-        <p className="text-sm text-[--color-dim] font-mono">Planning your rampage...</p>
+        <div className="panel-elevated rounded-xl px-8 py-6 flex flex-col items-center gap-3">
+          <Loader2 className="size-8 text-[--color-rampage] animate-spin" />
+          <p className="text-sm text-[--color-dim] font-mono">Planning your rampage...</p>
+        </div>
       </div>
     );
   }
@@ -366,7 +370,7 @@ function RampageContent() {
   return (
     <div className="min-h-dvh bg-[#0a0a0f] text-foreground">
       {/* Header */}
-      <div className="sticky top-0 z-20 panel border-b border-white/5">
+      <div className="sticky top-0 z-20 panel-elevated border-b border-white/10">
         <div className="flex items-center gap-3 px-4 py-3 max-w-4xl mx-auto">
           <Link href="/" className="text-[--color-dim] hover:text-foreground transition-colors">
             <ArrowLeft className="size-5" />
@@ -375,7 +379,7 @@ function RampageContent() {
           <h1 className="font-mono font-bold tracking-wider text-[--color-rampage] flex-1">RAMPAGE</h1>
           <button
             onClick={handleShare}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-mono text-[--color-dim] hover:text-foreground border border-white/10 hover:border-white/20 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono text-[--color-dim] hover:text-foreground panel-inset hover:bg-white/[0.06] transition-colors"
           >
             <Share2 className="size-3.5" /> SHARE
           </button>
@@ -407,7 +411,7 @@ function RampageContent() {
         });
         if (tight.length === 0) return null;
         return (
-          <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2.5">
+          <div className="panel border-b border-amber-500/20 px-4 py-2.5 bg-amber-500/5">
             <div className="max-w-4xl mx-auto flex items-start gap-2.5">
               <AlertTriangle className="size-4 text-amber-400 shrink-0 mt-0.5" />
               <div className="text-xs font-mono text-amber-300/90">
@@ -420,12 +424,14 @@ function RampageContent() {
       })()}
 
       {/* Map */}
-      <div ref={mapRef} className="w-full h-[300px] sm:h-[400px]" />
+      <div className="max-w-4xl mx-auto px-4 pt-4">
+        <div ref={mapRef} className="w-full h-[300px] sm:h-[400px] rounded-xl overflow-hidden ring-1 ring-white/10" />
+      </div>
 
       {/* Timeline */}
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-3">
         {/* Start card */}
-        <div className="flex items-center gap-3 px-4 py-3 rounded-lg panel">
+        <div className="flex items-center gap-3 px-4 py-3 rounded-xl panel-elevated">
           <div className="size-8 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
             <MapPin className="size-4 text-emerald-400" />
           </div>
@@ -457,7 +463,7 @@ function RampageContent() {
               <TravelLegCard leg={leg} cheapest={cheapest} />
 
               {/* Game card — matches home page style */}
-              <div className="rounded-lg panel overflow-hidden">
+              <div className="rounded-xl panel-elevated overflow-hidden">
                 <div className="px-4 py-3">
                   <div className="flex items-start gap-3">
                     {/* Number badge */}
@@ -533,7 +539,7 @@ function RampageContent() {
                 </div>
 
                 {/* Links row */}
-                <div className="flex items-center gap-3 px-4 py-2 border-t border-white/5 text-[11px] font-mono">
+                <div className="flex items-center gap-3 px-4 py-2 border-t border-white/8 text-[11px] font-mono">
                   <a href={`https://www.ticketmaster.com/event/${game.id}`} target="_blank" rel="noopener noreferrer" className="text-[--color-rampage]/70 hover:text-[--color-rampage] inline-flex items-center gap-0.5 transition-colors">
                     TICKETMASTER <ArrowUpRight className="size-2.5" />
                   </a>
@@ -552,7 +558,7 @@ function RampageContent() {
 
               {/* Hotel suggestions */}
               {hotels && hotels.suggestions.length > 0 && (
-                <div className="ml-4 border-l-2 border-amber-500/30 pl-4 py-2 mt-1">
+                <div className="mt-2 rounded-xl panel-inset px-4 py-3">
                   <div className="flex items-center gap-1.5 text-[10px] font-mono text-amber-400/70 tracking-widest mb-1.5">
                     <Hotel className="size-3" /> NEARBY HOTELS
                   </div>
@@ -560,7 +566,7 @@ function RampageContent() {
                     {hotels.suggestions.map((h, hi) => (
                       <div
                         key={hi}
-                        className="flex flex-col gap-1 text-[11px] font-mono rounded border border-white/5 bg-white/[0.02] px-2.5 py-2 min-w-[12rem] shrink-0"
+                        className="flex flex-col gap-1 text-[11px] font-mono rounded-lg panel px-2.5 py-2 min-w-[12rem] shrink-0"
                       >
                         <a href={h.bookingUrl} target="_blank" rel="noopener noreferrer" className="hover:text-amber-400 transition-colors">
                           <span className="text-xs font-semibold text-foreground truncate block">{h.name}</span>
@@ -573,7 +579,7 @@ function RampageContent() {
                           )}
                           <span className="text-emerald-400">{h.estimatedPrice}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-[10px] text-[--color-dim] border-t border-white/5 pt-1 mt-0.5">
+                        <div className="flex items-center gap-2 text-[10px] text-[--color-dim] border-t border-white/8 pt-1 mt-0.5">
                           <MapPin className="size-2.5 text-amber-400/60 shrink-0" />
                           <span className="text-foreground">{h.distanceMiles} mi from {hotels.venue}</span>
                           <span>·</span>
@@ -611,7 +617,7 @@ function RampageContent() {
         })()}
 
         {/* End card */}
-        <div className="flex items-center gap-3 px-4 py-3 rounded-lg panel">
+        <div className="flex items-center gap-3 px-4 py-3 rounded-xl panel-elevated">
           <div className="size-8 rounded-full bg-red-500/20 flex items-center justify-center shrink-0">
             <MapPin className="size-4 text-red-400" />
           </div>
@@ -623,7 +629,7 @@ function RampageContent() {
       </div>
 
       {/* Summary bar */}
-      <div className="sticky bottom-0 z-20 panel border-t border-white/5">
+      <div className="sticky bottom-0 z-20 panel-elevated border-t border-white/10">
         <div className="flex items-center justify-between px-4 py-3 max-w-4xl mx-auto text-xs font-mono">
           <div className="flex items-center gap-4 flex-wrap">
             <span className="text-[--color-dim]">
@@ -663,7 +669,7 @@ function TravelLegCard({ leg, cheapest }: { leg: RampageLeg; cheapest: Itinerary
   const t = leg.transitOption;
 
   return (
-    <div className="ml-4 border-l-2 border-[--color-rampage]/30 pl-4 py-2 my-1">
+    <div className="my-2 rounded-xl panel-inset px-4 py-3">
       {/* Summary header */}
       <div className="flex items-center gap-2 text-[11px] font-mono text-[--color-dim] mb-2">
         <span className="text-foreground font-semibold">{leg.from.name}</span>
