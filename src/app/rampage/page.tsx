@@ -53,11 +53,22 @@ interface Itinerary {
   legs: Leg[];
 }
 
+interface TransitOption {
+  transitMinutes: number;
+  transitFare: string | null;
+  transitDepartureTime: string | null;
+  transitArrivalTime: string | null;
+  uberEstimate: string | null;
+  lyftEstimate: string | null;
+  googleMapsUrl: string;
+}
+
 interface RampageLeg {
   from: { name: string; lat: number; lng: number };
   to: { name: string; lat: number; lng: number };
   date: string;
   itineraries: Itinerary[];
+  transitOption?: TransitOption | null;
 }
 
 interface HotelSuggestion {
@@ -554,7 +565,7 @@ function RampageContent() {
         <div className="flex items-center justify-between px-4 py-3 max-w-4xl mx-auto text-xs font-mono">
           <div className="flex items-center gap-4 flex-wrap">
             <span className="text-[--color-dim]">
-              <span className="text-[--color-rampage] font-semibold">{result.summary.gameCount}</span> GAMES
+              <span className="text-[--color-rampage] font-semibold">{result.summary.gameCount}</span> GAME{result.summary.gameCount !== 1 ? "S" : ""}
             </span>
             <span className="text-[--color-dim]">
               <span className="text-foreground font-semibold">{formatDuration(result.summary.totalMinutes)}</span> TRAVEL
@@ -587,6 +598,8 @@ function RampageContent() {
 function TravelLegCard({ leg, cheapest }: { leg: RampageLeg; cheapest: Itinerary | null }) {
   if (!cheapest) return null;
 
+  const t = leg.transitOption;
+
   return (
     <div className="ml-4 border-l-2 border-[--color-rampage]/30 pl-4 py-2 my-1">
       <div className="flex items-center gap-2 text-[11px] font-mono text-[--color-dim] mb-1.5">
@@ -615,7 +628,33 @@ function TravelLegCard({ leg, cheapest }: { leg: RampageLeg; cheapest: Itinerary
             <ArrowUpRight className="size-2.5 text-[--color-dim]" />
           </a>
         ))}
+        {/* Transit option from Google Directions */}
+        {t && (
+          <a
+            href={t.googleMapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-[11px] font-mono px-2 py-1 rounded border border-cyan-500/20 bg-cyan-500/[0.05] hover:bg-cyan-500/[0.10] transition-colors no-underline"
+          >
+            <Bus className="size-4 text-cyan-400" />
+            <span className="text-cyan-400">Transit</span>
+            <span className="text-foreground">{formatDuration(t.transitMinutes)}</span>
+            {t.transitFare && <span className="text-emerald-400">{t.transitFare}</span>}
+            <ArrowUpRight className="size-2.5 text-[--color-dim]" />
+          </a>
+        )}
       </div>
+      {/* Uber/Lyft estimates when transit is available */}
+      {t && (t.uberEstimate || t.lyftEstimate) && (
+        <div className="flex items-center gap-3 mt-1.5 text-[10px] font-mono text-[--color-dim]">
+          {t.uberEstimate && (
+            <span>UBER <span className="text-emerald-400">{t.uberEstimate}</span></span>
+          )}
+          {t.lyftEstimate && (
+            <span>LYFT <span className="text-emerald-400">{t.lyftEstimate}</span></span>
+          )}
+        </div>
+      )}
     </div>
   );
 }

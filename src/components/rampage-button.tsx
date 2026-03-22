@@ -182,7 +182,7 @@ export function RampageButton({
             </span>
           )}
         </button>
-        {rampage.active && gameCount >= 2 && (
+        {rampage.active && gameCount >= 1 && (
           <button
             onClick={handlePlanRampage}
             className="flex items-center gap-1 px-3 py-2 rounded-xl shadow-lg shadow-[--color-rampage]/20 bg-[--color-rampage] text-white font-mono text-[11px] font-semibold tracking-wider hover:brightness-110 transition-all"
@@ -271,15 +271,15 @@ export function RampageButton({
             </button>
             <button
               onClick={handlePlanRampage}
-              disabled={gameCount < 2}
+              disabled={gameCount < 1}
               className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg font-mono text-xs font-semibold transition-all ${
-                gameCount >= 2
+                gameCount >= 1
                   ? "bg-[--color-rampage] text-white shadow-md shadow-[--color-rampage]/20 hover:brightness-110"
                   : "bg-white/[0.04] text-[--color-dim] cursor-not-allowed"
               }`}
             >
               <Zap className="size-3.5" />
-              {gameCount >= 2 ? "PLAN RAMPAGE" : `SELECT ${2 - gameCount} MORE GAME${2 - gameCount !== 1 ? "S" : ""}`}
+              {gameCount >= 1 ? "PLAN RAMPAGE" : "SELECT A GAME"}
             </button>
           </div>
         </div>

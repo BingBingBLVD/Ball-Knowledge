@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { searchRoutes, type Itinerary, type Leg } from "@/lib/route-search";
+import { getTravelTimes } from "@/lib/driving";
 
 interface RampageGame {
   venue: string;
@@ -12,11 +13,22 @@ interface RampageGame {
   espn_price?: { amount: number } | null;
 }
 
+interface TransitOption {
+  transitMinutes: number;
+  transitFare: string | null;
+  transitDepartureTime: string | null;
+  transitArrivalTime: string | null;
+  uberEstimate: string | null;
+  lyftEstimate: string | null;
+  googleMapsUrl: string;
+}
+
 interface RampageLeg {
   from: { name: string; lat: number; lng: number };
   to: { name: string; lat: number; lng: number };
   date: string;
   itineraries: Itinerary[];
+  transitOption?: TransitOption | null;
 }
 
 interface HotelSuggestion {
@@ -133,8 +145,8 @@ export async function POST(req: NextRequest) {
       games: RampageGame[];
     };
 
-    if (!startLocation || !endLocation || !games || games.length < 2) {
-      return NextResponse.json({ error: "Need start, end, and at least 2 games" }, { status: 400 });
+    if (!startLocation || !endLocation || !games || games.length < 1) {
+      return NextResponse.json({ error: "Need start, end, and at least 1 game" }, { status: 400 });
     }
 
     // Sort games chronologically
@@ -209,6 +221,31 @@ export async function POST(req: NextRequest) {
             date: leg.date,
             itineraries: [driveFallback(leg.from, leg.to, leg.date)],
           };
+        }
+      })
+    );
+
+    // Enrich each leg with transit options (Google Directions) in parallel
+    await Promise.all(
+      legResults.map(async (leg) => {
+        try {
+          const times = await getTravelTimes(
+            leg.from.lat, leg.from.lng,
+            leg.to.lat, leg.to.lng,
+          );
+          if (times.transitMinutes != null) {
+            leg.transitOption = {
+              transitMinutes: times.transitMinutes,
+              transitFare: times.transitFare,
+              transitDepartureTime: times.transitDepartureTime,
+              transitArrivalTime: times.transitArrivalTime,
+              uberEstimate: times.uberEstimate,
+              lyftEstimate: times.lyftEstimate,
+              googleMapsUrl: `https://www.google.com/maps/dir/?api=1&origin=${leg.from.lat},${leg.from.lng}&destination=${leg.to.lat},${leg.to.lng}&travelmode=transit`,
+            };
+          }
+        } catch {
+          // Transit enrichment is best-effort
         }
       })
     );

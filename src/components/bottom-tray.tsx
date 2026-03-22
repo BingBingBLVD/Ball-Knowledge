@@ -25,6 +25,7 @@ import type { VenuePolicy } from "@/lib/venue-policies";
 import { SearchBar } from "./search-bar";
 import { DateSelector } from "./date-selector";
 import { useRampage } from "@/lib/rampage-context";
+import { useRouter } from "next/navigation";
 
 type TrayState = "collapsed" | "peek" | "expanded";
 
@@ -289,6 +290,7 @@ export function BottomTray({
   onLocationChange: (loc: { lat: number; lng: number } | null) => void;
 }) {
   const rampage = useRampage();
+  const router = useRouter();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const prevTrayState = useRef(trayState);
@@ -1027,14 +1029,41 @@ export function BottomTray({
                         ) : null;
                       })()}
 
-                      {/* Take Me button */}
-                      {userLocation && event.lat != null && event.est_time ? (
-                        <a
-                          href={`/take-me?originLat=${userLocation.lat}&originLng=${userLocation.lng}&venue=${encodeURIComponent(event.venue)}&venueLat=${event.lat}&venueLng=${event.lng}&date=${date}&time=${event.est_time}&game=${encodeURIComponent(event.name)}`}
+                      {/* Take Me button — saves a 1-game cow and navigates to rampage */}
+                      {userLocation && event.lat != null && event.lng != null && event.est_time ? (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const id = crypto.randomUUID().slice(0, 8);
+                            const cow = {
+                              id,
+                              createdAt: new Date().toISOString(),
+                              startLocation: { lat: userLocation.lat, lng: userLocation.lng, label: "Current Location" },
+                              endLocation: { lat: userLocation.lat, lng: userLocation.lng, label: "Current Location" },
+                              games: [{
+                                id: event.id,
+                                name: event.name,
+                                venue: event.venue,
+                                city: event.city,
+                                state: event.state,
+                                lat: event.lat!,
+                                lng: event.lng!,
+                                est_date: event.est_date || date,
+                                est_time: event.est_time,
+                                min_price: event.min_price,
+                                espn_price: event.espn_price,
+                                odds: event.odds,
+                                away_record: event.away_record,
+                                home_record: event.home_record,
+                              }],
+                            };
+                            localStorage.setItem(`balltastic_cow_${id}`, JSON.stringify(cow));
+                            router.push(`/rampage?cow=${id}`);
+                          }}
                           className="mt-3 flex items-center justify-center gap-2 w-full py-2.5 rounded-lg font-mono text-sm font-semibold tracking-wider bg-[--primary] text-[--primary-foreground] shadow-lg backdrop-blur-md hover:brightness-110 transition-all press-scale"
                         >
                           <Navigation className="size-4" /> TAKE ME
-                        </a>
+                        </button>
                       ) : (
                         <div className="mt-3 flex items-center justify-center gap-2 w-full py-2.5 rounded-lg font-mono text-[11px] text-[--color-dim] bg-white/[0.03] border border-white/5 backdrop-blur-sm">
                           SET LOCATION TO PLAN ROUTE
