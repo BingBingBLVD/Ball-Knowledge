@@ -17,8 +17,11 @@ import {
   Ban,
   Loader2,
   SlidersHorizontal,
+  Map,
 } from "lucide-react";
 import type { VenuePolicy } from "@/lib/venue-policies";
+import { SearchBar } from "./search-bar";
+import { DateSelector } from "./date-selector";
 
 type TrayState = "collapsed" | "peek" | "expanded";
 
@@ -122,15 +125,6 @@ function getDefaultColumns(): Set<ColumnId> {
   return new Set(["ticket", "record", "odds", "team", "stadium", "time"]);
 }
 
-function formatDateHeading(dateStr: string) {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  const date = new Date(y, m - 1, d);
-  const mon = date.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
-  const day = String(d).padStart(2, "0");
-  const wday = date.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase();
-  return `${mon} ${day} ${wday}`;
-}
-
 function TransitCards({
   stops,
   icon: Icon,
@@ -176,15 +170,19 @@ function TransitCards({
           >
             {/* Stop header */}
             <div className="flex items-center gap-1.5">
+              <span className={`flex items-center gap-1 font-bold ${colorClass}`}>
+                <Icon className="size-3.5" />
+                {stop.code}
+              </span>
               <a
                 href={`https://www.google.com/maps/search/?api=1&query=${stop.lat},${stop.lng}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`flex items-center gap-1.5 font-bold ${colorClass} underline`}
+                className="text-[--color-dim] hover:text-foreground transition-colors"
                 onClick={(e) => e.stopPropagation()}
+                title={`Open ${stop.code} in Google Maps`}
               >
-                <Icon className="size-3.5" />
-                {stop.code}
+                <Map className="size-3" />
               </a>
               <span className="ml-auto font-normal text-[10px] text-[--color-dim]">({Math.round(haversineMiles(vLat, vLng, stop.lat, stop.lng))}mi)</span>
             </div>
@@ -206,10 +204,10 @@ function TransitCards({
                       href={uberDeepLink(vLat, vLng, stop.lat, stop.lng)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 bg-[#191919] text-emerald-400 font-semibold hover:bg-[#2a2a2a] transition-colors no-underline border border-white/10"
+                      className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 bg-[#191919] text-white font-semibold hover:bg-[#2a2a2a] transition-colors no-underline border border-white/10"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <span className="text-white">UBER</span> <span className="text-emerald-400">~&lt;{extractUpperBound(times.uberEstimate)}</span>
+                      <span className="text-white">UBER</span> <span className="text-white">~&lt;{extractUpperBound(times.uberEstimate)}</span>
                     </a>
                   )}
                   {times.lyftEstimate && (
@@ -217,10 +215,10 @@ function TransitCards({
                       href={lyftDeepLink(vLat, vLng, stop.lat, stop.lng)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 bg-[#d4004c] text-emerald-400 font-semibold hover:bg-[#e0105a] transition-colors no-underline"
+                      className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 bg-[#d4004c] text-white font-semibold hover:bg-[#e0105a] transition-colors no-underline"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <span className="text-white">LYFT</span> <span className="text-emerald-400">~&lt;{extractUpperBound(times.lyftEstimate)}</span>
+                      <span className="text-white">LYFT</span> <span className="text-white">~&lt;{extractUpperBound(times.lyftEstimate)}</span>
                     </a>
                   )}
                 </div>
@@ -256,6 +254,7 @@ export function BottomTray({
   games,
   date,
   selectedVenue,
+  hoveredVenue,
   onVenueClick,
   onRouteFocus,
   trayState,
@@ -263,10 +262,17 @@ export function BottomTray({
   userLocation,
   allAirports,
   showOdds,
+  search,
+  onSearchChange,
+  availableDates,
+  onDateChange,
+  gameCountByDate,
+  onLocationChange,
 }: {
   games: GameEvent[];
   date: string;
   selectedVenue: string | null;
+  hoveredVenue?: string | null;
   onVenueClick: (venue: VenueInfo) => void;
   onRouteFocus: (focus: RouteFocus | null) => void;
   trayState: TrayState;
@@ -274,6 +280,12 @@ export function BottomTray({
   userLocation: { lat: number; lng: number } | null;
   allAirports?: { code: string; name: string; lat: number; lng: number }[];
   showOdds: boolean;
+  search: string;
+  onSearchChange: (v: string) => void;
+  availableDates: string[];
+  onDateChange: (date: string) => void;
+  gameCountByDate: Record<string, number>;
+  onLocationChange: (loc: { lat: number; lng: number } | null) => void;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -469,9 +481,12 @@ export function BottomTray({
     }
   }, [venuePolicies, policyLoading]);
 
-  // Auto-scroll to selected venue
+  // Auto-scroll and expand when a marker is clicked (selectedVenue changes)
   useEffect(() => {
     if (!selectedVenue || trayState === "collapsed") return;
+    // Expand the first game at this venue
+    const firstGame = games.find((g) => g.venue === selectedVenue);
+    if (firstGame) setExpandedCardId(firstGame.id);
     const timer = setTimeout(() => {
       const container = scrollRef.current;
       if (!container) return;
@@ -481,7 +496,18 @@ export function BottomTray({
       }
     }, 100);
     return () => clearTimeout(timer);
-  }, [selectedVenue, trayState]);
+  }, [selectedVenue, trayState, games]);
+
+  // Scroll to and highlight hovered venue (from map marker hover)
+  useEffect(() => {
+    if (!hoveredVenue || trayState === "collapsed") return;
+    const container = scrollRef.current;
+    if (!container) return;
+    const row = container.querySelector(`[data-venue="${CSS.escape(hoveredVenue)}"]`) as HTMLElement | null;
+    if (row) {
+      row.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [hoveredVenue, trayState]);
 
   // Track tray state changes
   useEffect(() => {
@@ -508,23 +534,23 @@ export function BottomTray({
     >
       <div className="h-full panel rounded-t-lg flex flex-col">
         {/* Header bar */}
-        <div className="flex items-center gap-2 text-xs px-4 py-2.5 select-none border-b border-white/5">
-          <span className="font-mono text-foreground tracking-wide">
-            {games.length} GAMES &middot; {formatDateHeading(date)}
-          </span>
-          <span className="flex-1" />
+        <div className="flex items-center select-none border-b border-white/5">
+          {/* Search */}
+          <div className="flex-1 min-w-0 border-r border-white/5">
+            <SearchBar value={search} onChange={onSearchChange} onLocationChange={onLocationChange} />
+          </div>
+          {/* Filters */}
           {trayState !== "collapsed" && (
-            <div className="relative" ref={filterRef}>
+            <div className="relative shrink-0 border-r border-white/5" ref={filterRef}>
               <button
                 onClick={() => setShowFilters((v) => !v)}
-                className={`flex items-center gap-1 font-mono text-[10px] tracking-wider px-2 py-0.5 rounded border transition-colors ${
+                className={`flex items-center gap-1.5 font-mono text-xs tracking-wider px-3 py-2.5 transition-colors ${
                   showFilters || visibleColumns.size < ALL_COLUMNS.length
-                    ? "border-[--primary]/40 text-[--primary] bg-[--primary]/10"
-                    : "border-white/10 text-[--color-dim] hover:text-foreground hover:border-white/20"
+                    ? "text-[--primary]"
+                    : "text-[--color-dim] hover:text-foreground"
                 }`}
               >
-                <SlidersHorizontal className="size-3" />
-                FILTERS
+                <SlidersHorizontal className="size-4" />
               </button>
               {showFilters && (
                 <div
@@ -556,11 +582,22 @@ export function BottomTray({
               )}
             </div>
           )}
+          {/* Date selector */}
+          <div className="shrink-0">
+            <DateSelector
+              currentDate={date}
+              availableDates={availableDates}
+              onDateChange={onDateChange}
+              gameCount={games.length}
+              gameCountByDate={gameCountByDate}
+            />
+          </div>
+          {/* Expand/collapse */}
           <button
             onClick={cycleTray}
-            className="p-0.5 rounded hover:bg-white/10 transition-colors"
+            className="shrink-0 px-2 py-2.5 hover:bg-white/5 transition-colors border-l border-white/5"
           >
-            <ChevronUp className={`size-3.5 text-[--color-dim] transition-transform ${trayState === "expanded" ? "rotate-180" : ""}`} />
+            <ChevronUp className={`size-4 text-[--color-dim] transition-transform ${trayState === "expanded" ? "rotate-180" : ""}`} />
           </button>
         </div>
 
@@ -615,6 +652,7 @@ export function BottomTray({
               const home = parts[0].replace(/\s*\(.*?\)/g, "").trim();
               const away = parts.length > 1 ? parts.slice(1).join(" vs ").replace(/\s*\(.*?\)/g, "").trim() : null;
               const isSelected = selectedVenue === event.venue;
+              const isHovered = hoveredVenue === event.venue;
               const isExpanded = expandedCardId === event.id;
               const airports = event.nearbyAirports ?? [];
               const trains = event.nearbyTrainStations ?? [];
@@ -644,7 +682,9 @@ export function BottomTray({
                   className={`rounded card-enter transition-colors cursor-pointer ${
                     isSelected
                       ? "border-l-2 border-[--primary] bg-[--primary]/5 panel-elevated"
-                      : "panel hover:bg-white/[0.02]"
+                      : isHovered
+                        ? "border-l-2 border-[--primary]/50 bg-[--primary]/[0.03] panel-elevated"
+                        : "panel hover:bg-white/[0.02]"
                   }`}
                   onClick={() => {
                     if (event.lat != null && event.lng != null) {

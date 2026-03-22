@@ -3,7 +3,6 @@
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { RouteFocus, VenueInfo } from "@/components/game-map";
-import { TopBar } from "@/components/top-bar";
 import { BottomTray } from "@/components/bottom-tray";
 
 const GameMap = dynamic(
@@ -86,6 +85,7 @@ export default function Home() {
   const [currentDate, setCurrentDate] = useState(() => loadState().date ?? todayEST());
   const [search, setSearch] = useState(() => loadState().search ?? "");
   const [selectedVenue, setSelectedVenue] = useState<VenueInfo | null>(null);
+  const [hoveredVenue, setHoveredVenue] = useState<string | null>(null);
   const [routeFocus, setRouteFocus] = useState<RouteFocus | null>(null);
   const [trayState, setTrayState] = useState<"collapsed" | "peek" | "expanded">(() => {
     const saved = loadState().tray;
@@ -214,24 +214,11 @@ export default function Home() {
         routeFocus={routeFocus}
         selectedVenue={selectedVenue?.venue ?? null}
         onMarkerClick={handleMarkerClick}
+        onMarkerHover={setHoveredVenue}
+        hoveredVenue={hoveredVenue}
         userLocation={userLocation}
         bottomPadding={bottomPadding}
       />
-
-      {/* Top bar: command bar */}
-      {data && (
-        <TopBar
-          search={search}
-          onSearchChange={setSearch}
-          currentDate={currentDate}
-          availableDates={availableDates}
-          onDateChange={handleDateChange}
-          gameCount={todayGames.length}
-          gameCountByDate={gameCountByDate}
-          userLocation={userLocation}
-          onLocationChange={setUserLocation}
-        />
-      )}
 
       {/* Bottom tray — intel panel */}
       {data && (
@@ -239,6 +226,7 @@ export default function Home() {
           games={todayGames}
           date={currentDate}
           selectedVenue={selectedVenue?.venue ?? null}
+          hoveredVenue={hoveredVenue}
           onVenueClick={handleMarkerClick}
           onRouteFocus={handleRouteFocus}
           trayState={trayState}
@@ -246,6 +234,12 @@ export default function Home() {
           userLocation={userLocation}
           allAirports={data.allAirports ?? []}
           showOdds={showOdds}
+          search={search}
+          onSearchChange={setSearch}
+          availableDates={availableDates}
+          onDateChange={handleDateChange}
+          gameCountByDate={gameCountByDate}
+          onLocationChange={setUserLocation}
         />
       )}
 

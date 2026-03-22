@@ -94,6 +94,8 @@ export function GameMap({
   routeFocus,
   selectedVenue,
   onMarkerClick,
+  onMarkerHover,
+  hoveredVenue,
   userLocation,
   bottomPadding = 0,
 }: {
@@ -101,6 +103,8 @@ export function GameMap({
   routeFocus?: RouteFocus | null;
   selectedVenue?: string | null;
   onMarkerClick?: (venue: VenueInfo) => void;
+  onMarkerHover?: (venue: string | null) => void;
+  hoveredVenue?: string | null;
   userLocation?: { lat: number; lng: number } | null;
   bottomPadding?: number;
 }) {
@@ -114,6 +118,8 @@ export function GameMap({
   const [mapReady, setMapReady] = useState(false);
   const onMarkerClickRef = useRef(onMarkerClick);
   onMarkerClickRef.current = onMarkerClick;
+  const onMarkerHoverRef = useRef(onMarkerHover);
+  onMarkerHoverRef.current = onMarkerHover;
   const bottomPaddingRef = useRef(bottomPadding);
   bottomPaddingRef.current = bottomPadding;
   const routeFocusRef = useRef(routeFocus);
@@ -228,6 +234,13 @@ export function GameMap({
         onMarkerClickRef.current?.(venueInfo);
       });
 
+      dot.addEventListener("mouseenter", () => {
+        onMarkerHoverRef.current?.(v.venue);
+      });
+      dot.addEventListener("mouseleave", () => {
+        onMarkerHoverRef.current?.(null);
+      });
+
       markersRef.current.push({ marker, venue: v.venue, dot });
     }
 
@@ -235,10 +248,10 @@ export function GameMap({
     map.fitBounds(bounds, { top: 40, left: 40, right: 40, bottom: 40 + bottomPaddingRef.current });
   }, [events, mapReady]);
 
-  // Highlight selected venue — green glow
+  // Highlight selected or hovered venue — green glow
   useEffect(() => {
     for (const { venue, dot } of markersRef.current) {
-      if (selectedVenue && venue === selectedVenue) {
+      if ((selectedVenue && venue === selectedVenue) || (hoveredVenue && venue === hoveredVenue)) {
         dot.style.background = "#22c55e";
         dot.style.width = "22px";
         dot.style.height = "22px";
@@ -250,7 +263,7 @@ export function GameMap({
         dot.style.boxShadow = "none";
       }
     }
-  }, [selectedVenue]);
+  }, [selectedVenue, hoveredVenue]);
 
   // User location marker
   useEffect(() => {
