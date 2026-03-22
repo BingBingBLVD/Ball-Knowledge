@@ -25,8 +25,10 @@ interface Suggestion {
 
 export function RampageButton({
   userLocation,
+  onCancelRampage,
 }: {
   userLocation: { lat: number; lng: number } | null;
+  onCancelRampage: () => void;
 }) {
   const rampage = useRampage();
   const router = useRouter();
@@ -154,8 +156,8 @@ export function RampageButton({
     router.push(`/rampage?cow=${cowId}`);
   }
 
-  function handleDeactivate() {
-    rampage.toggleRampage();
+  function handleCancel() {
+    onCancelRampage();
     setOpen(false);
   }
 
@@ -183,14 +185,23 @@ export function RampageButton({
           )}
         </button>
         {rampage.active && gameCount >= 1 && (
-          <button
-            onClick={handlePlanRampage}
-            className="flex items-center gap-1 px-3 py-2 rounded-xl shadow-lg shadow-[--color-rampage]/20 bg-[--color-rampage] text-white font-mono text-[11px] font-semibold tracking-wider hover:brightness-110 transition-all"
-            style={{ backdropFilter: "blur(20px) saturate(1.5)", WebkitBackdropFilter: "blur(20px) saturate(1.5)" }}
-          >
-            PLAN
-            <ArrowRight className="size-3.5" />
-          </button>
+          <>
+            <button
+              onClick={handleCancel}
+              className="flex items-center gap-1 px-2.5 py-2 rounded-xl shadow-lg border border-white/10 text-[--color-dim] hover:text-foreground font-mono text-[11px] font-semibold tracking-wider hover:bg-white/[0.06] transition-all"
+              style={{ background: "rgba(10,10,15,0.65)", backdropFilter: "blur(20px) saturate(1.5)", WebkitBackdropFilter: "blur(20px) saturate(1.5)" }}
+            >
+              <X className="size-3.5" />
+            </button>
+            <button
+              onClick={handlePlanRampage}
+              className="flex items-center gap-1 px-3 py-2 rounded-xl shadow-lg shadow-[--color-rampage]/20 bg-[--color-rampage] text-white font-mono text-[11px] font-semibold tracking-wider hover:brightness-110 transition-all"
+              style={{ backdropFilter: "blur(20px) saturate(1.5)", WebkitBackdropFilter: "blur(20px) saturate(1.5)" }}
+            >
+              PLAN
+              <ArrowRight className="size-3.5" />
+            </button>
+          </>
         )}
       </div>
 
@@ -264,10 +275,10 @@ export function RampageButton({
           {/* Actions */}
           <div className="border-t border-white/8 p-2 flex gap-2">
             <button
-              onClick={handleDeactivate}
+              onClick={handleCancel}
               className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-mono text-[--color-dim] hover:text-foreground hover:bg-white/[0.06] transition-all"
             >
-              <X className="size-3" /> EXIT
+              <X className="size-3" /> CANCEL
             </button>
             <button
               onClick={handlePlanRampage}

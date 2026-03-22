@@ -37,13 +37,16 @@ Mark each as allowed:true or allowed:false based on typical policy for this venu
     ],
   });
 
-  const text =
+  let text =
     message.content[0].type === "text" ? message.content[0].text : "";
+  // Strip markdown code fences if present
+  text = text.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
   try {
     const parsed = JSON.parse(text);
     if (parsed.error) return null;
     return parsed as VenuePolicy;
-  } catch {
+  } catch (e) {
+    console.error("venue-policy parse error:", e, "raw:", text.slice(0, 200));
     return null;
   }
 }

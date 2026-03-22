@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { RouteFocus, VenueInfo } from "@/components/game-map";
 import { BottomTray } from "@/components/bottom-tray";
 import { LocationButton } from "@/components/location-button";
@@ -242,6 +242,26 @@ function HomeInner() {
     }
   }, []);
 
+  // Capture pre-rampage state for cancel/restore
+  const preRampageRef = useRef<{ location: { lat: number; lng: number } | null; date: string } | null>(null);
+
+  useEffect(() => {
+    if (rampage.active && !preRampageRef.current) {
+      preRampageRef.current = { location: userLocation, date: currentDate };
+    } else if (!rampage.active) {
+      preRampageRef.current = null;
+    }
+  }, [rampage.active]);
+
+  const handleCancelRampage = useCallback(() => {
+    if (preRampageRef.current) {
+      setUserLocation(preRampageRef.current.location);
+      setCurrentDate(preRampageRef.current.date);
+      preRampageRef.current = null;
+    }
+    rampage.toggleRampage();
+  }, [rampage]);
+
   const showOdds = useMemo(() => {
     const today = new Date(todayEST() + "T00:00:00");
     const selected = new Date(currentDate + "T00:00:00");
@@ -276,7 +296,7 @@ function HomeInner() {
 
       {/* Rampage button — floating top left */}
       {trayState !== "expanded" && (
-        <RampageButton userLocation={userLocation} />
+        <RampageButton userLocation={userLocation} onCancelRampage={handleCancelRampage} />
       )}
 
       {/* Bottom tray — intel panel */}
