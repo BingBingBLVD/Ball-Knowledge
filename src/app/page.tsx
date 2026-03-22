@@ -216,7 +216,7 @@ function HomeInner() {
     return diffDays <= 3;
   }, [currentDate]);
 
-  const bottomPadding = trayState === "collapsed" ? 56 : trayState === "peek" ? Math.round(vh * 0.35) : Math.round(vh * 0.85);
+  const bottomPadding = trayState === "collapsed" ? 56 : trayState === "peek" ? Math.round(vh * 0.5) : vh;
 
   return (
     <main className="relative h-dvh w-dvw overflow-hidden">
@@ -237,10 +237,14 @@ function HomeInner() {
       />
 
       {/* Location button — floating top right */}
-      <LocationButton userLocation={userLocation} onLocationChange={setUserLocation} />
+      {trayState !== "expanded" && (
+        <LocationButton userLocation={userLocation} onLocationChange={setUserLocation} />
+      )}
 
-      {/* Rampage button — floating below location */}
-      <RampageButton userLocation={userLocation} />
+      {/* Rampage button — floating top left */}
+      {trayState !== "expanded" && (
+        <RampageButton userLocation={userLocation} />
+      )}
 
       {/* Bottom tray — intel panel */}
       {data && (

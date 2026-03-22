@@ -525,7 +525,7 @@ export function BottomTray({
     else onTrayStateChange("collapsed");
   }, [trayState, onTrayStateChange]);
 
-  const height = trayState === "collapsed" ? "56px" : trayState === "peek" ? "35vh" : "85vh";
+  const height = trayState === "collapsed" ? "56px" : trayState === "peek" ? "50vh" : "100vh";
 
   return (
     <div
