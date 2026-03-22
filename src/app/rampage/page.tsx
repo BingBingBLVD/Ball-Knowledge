@@ -656,7 +656,7 @@ function RampageContent() {
   );
 }
 
-/** Travel leg card between two points */
+/** Travel leg card between two points — vertical stop sequence */
 function TravelLegCard({ leg, cheapest }: { leg: RampageLeg; cheapest: Itinerary | null }) {
   if (!cheapest) return null;
 
@@ -664,7 +664,8 @@ function TravelLegCard({ leg, cheapest }: { leg: RampageLeg; cheapest: Itinerary
 
   return (
     <div className="ml-4 border-l-2 border-[--color-rampage]/30 pl-4 py-2 my-1">
-      <div className="flex items-center gap-2 text-[11px] font-mono text-[--color-dim] mb-1.5">
+      {/* Summary header */}
+      <div className="flex items-center gap-2 text-[11px] font-mono text-[--color-dim] mb-2">
         <span className="text-foreground font-semibold">{leg.from.name}</span>
         <ArrowRight className="size-3 text-[--color-rampage]" />
         <span className="text-foreground font-semibold">{leg.to.name}</span>
@@ -673,57 +674,93 @@ function TravelLegCard({ leg, cheapest }: { leg: RampageLeg; cheapest: Itinerary
           <span className="text-emerald-400">${cheapest.totalCost}</span>
         )}
       </div>
-      <div className="flex flex-wrap gap-1.5">
-        {cheapest.legs.map((l, li) => (
-          <div key={li} className="flex flex-col gap-0.5">
-            <a
-              href={l.bookingUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-[11px] font-mono px-2 py-1 rounded border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] transition-colors no-underline"
-            >
-              {modeIcon(l.mode)}
-              <span className="text-[--color-dim]">{modeLabel(l.mode)}</span>
-              <span className="text-foreground">{formatDuration(l.minutes)}</span>
-              {l.miles > 0 && <span className="text-[--color-dim]">{l.miles}mi</span>}
-              {l.cost != null && <span className="text-emerald-400">${l.cost}</span>}
-              <ArrowUpRight className="size-2.5 text-[--color-dim]" />
-            </a>
-            {l.uberEstimate && (
-              <div className="flex items-center gap-2 text-[10px] font-mono text-[--color-dim] px-2">
-                <span>UBER <span className="text-emerald-400">{l.uberEstimate}</span></span>
-                {l.lyftEstimate && <span>LYFT <span className="text-emerald-400">{l.lyftEstimate}</span></span>}
+
+      {/* Vertical stop sequence */}
+      <div className="flex flex-col ml-1">
+        {cheapest.legs.map((l, li) => {
+          const isLast = li === cheapest.legs.length - 1 && !t;
+          return (
+            <div key={li} className="flex items-stretch gap-0">
+              {/* Dot + connector line */}
+              <div className="flex flex-col items-center w-4 shrink-0">
+                <div className="size-2 rounded-full bg-[--color-rampage]/60 mt-[7px] shrink-0" />
+                {!isLast && <div className="w-px flex-1 bg-[--color-rampage]/20" />}
               </div>
-            )}
-          </div>
-        ))}
+              {/* Leg content */}
+              <div className="flex flex-col pb-1 min-w-0 flex-1">
+                <a
+                  href={l.bookingUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-[11px] font-mono py-1 hover:bg-white/[0.03] rounded px-1.5 -ml-0.5 transition-colors no-underline"
+                >
+                  <span className="shrink-0">{modeIcon(l.mode)}</span>
+                  <span className="text-[--color-dim] shrink-0 w-12">{modeLabel(l.mode)}</span>
+                  <span className="text-foreground shrink-0">{formatDuration(l.minutes)}</span>
+                  {l.miles > 0 && <span className="text-[--color-dim] shrink-0">{l.miles}mi</span>}
+                  {l.cost != null && <span className="text-emerald-400 shrink-0">${l.cost}</span>}
+                  <span className="text-[--color-dim]/50 truncate text-[10px]">{l.from} → {l.to}</span>
+                  <ArrowUpRight className="size-2.5 text-[--color-dim] shrink-0 ml-auto" />
+                </a>
+                {l.uberEstimate && (
+                  <div className="flex items-center gap-2 text-[10px] font-mono text-[--color-dim] px-1.5 -ml-0.5">
+                    <span>UBER <span className="text-emerald-400">{l.uberEstimate}</span></span>
+                    {l.lyftEstimate && <span>LYFT <span className="text-emerald-400">{l.lyftEstimate}</span></span>}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+
         {/* Transit option from Google Directions */}
         {t && (
-          <a
-            href={t.googleMapsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-[11px] font-mono px-2 py-1 rounded border border-cyan-500/20 bg-cyan-500/[0.05] hover:bg-cyan-500/[0.10] transition-colors no-underline"
-          >
-            <Bus className="size-4 text-cyan-400" />
-            <span className="text-cyan-400">Transit</span>
-            <span className="text-foreground">{formatDuration(t.transitMinutes)}</span>
-            {t.transitFare && <span className="text-emerald-400">{t.transitFare}</span>}
-            <ArrowUpRight className="size-2.5 text-[--color-dim]" />
-          </a>
+          <div className="flex items-stretch gap-0">
+            <div className="flex flex-col items-center w-4 shrink-0">
+              <div className="size-2 rounded-full bg-cyan-400/60 mt-[7px] shrink-0" />
+              {(t.uberEstimate || t.lyftEstimate) ? <div className="w-px flex-1 bg-[--color-rampage]/20" /> : null}
+            </div>
+            <div className="flex flex-col pb-1 min-w-0 flex-1">
+              <a
+                href={t.googleMapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-[11px] font-mono py-1 hover:bg-cyan-500/[0.05] rounded px-1.5 -ml-0.5 transition-colors no-underline"
+              >
+                <Bus className="size-4 text-cyan-400 shrink-0" />
+                <span className="text-cyan-400 shrink-0 w-12">Transit</span>
+                <span className="text-foreground shrink-0">{formatDuration(t.transitMinutes)}</span>
+                {t.transitFare && <span className="text-emerald-400 shrink-0">{t.transitFare}</span>}
+                <ArrowUpRight className="size-2.5 text-[--color-dim] shrink-0 ml-auto" />
+              </a>
+            </div>
+          </div>
         )}
-      </div>
-      {/* Uber/Lyft estimates when transit is available */}
-      {t && (t.uberEstimate || t.lyftEstimate) && (
-        <div className="flex items-center gap-3 mt-1.5 text-[10px] font-mono text-[--color-dim]">
-          {t.uberEstimate && (
-            <span>UBER <span className="text-emerald-400">{t.uberEstimate}</span></span>
-          )}
-          {t.lyftEstimate && (
-            <span>LYFT <span className="text-emerald-400">{t.lyftEstimate}</span></span>
-          )}
+
+        {/* Uber/Lyft estimates */}
+        {t && (t.uberEstimate || t.lyftEstimate) && (
+          <div className="flex items-stretch gap-0">
+            <div className="flex flex-col items-center w-4 shrink-0">
+              <div className="size-1.5 rounded-full bg-white/20 mt-[7px] shrink-0" />
+            </div>
+            <div className="flex items-center gap-3 text-[10px] font-mono text-[--color-dim] py-0.5 px-1.5 -ml-0.5">
+              {t.uberEstimate && (
+                <span>UBER <span className="text-emerald-400">{t.uberEstimate}</span></span>
+              )}
+              {t.lyftEstimate && (
+                <span>LYFT <span className="text-emerald-400">{t.lyftEstimate}</span></span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* End dot */}
+        <div className="flex items-center gap-0">
+          <div className="flex flex-col items-center w-4 shrink-0">
+            <div className="size-2 rounded-full bg-[--color-rampage]/60 shrink-0" />
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
