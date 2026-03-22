@@ -13,7 +13,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ball Knowledge — Game Intelligence",
+  title: "Ball Knowledge\u2122",
   description:
     "NBA games sorted by date with Kalshi odds, Ticketmaster links, and venue maps.",
 };

@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { RouteFocus, TransitStop, VenueInfo } from "./game-map";
 import {
   ChevronUp,
-  ChevronDown,
   Plane,
   Car,
   Bus,
@@ -17,6 +16,7 @@ import {
   Check,
   Ban,
   Loader2,
+  SlidersHorizontal,
 } from "lucide-react";
 import type { VenuePolicy } from "@/lib/venue-policies";
 
@@ -103,8 +103,24 @@ function haversineMiles(lat1: number, lng1: number, lat2: number, lng2: number):
 
 type SortKey = "time" | "price" | "dist" | "odds" | "record" | "team";
 type SortDir = "asc" | "desc";
+type ColumnId = "ticket" | "record" | "odds" | "team" | "stadium" | "time";
 
 const SORT_KEYS: SortKey[] = ["time", "price", "dist", "odds", "record", "team"];
+const ALL_COLUMNS: { id: ColumnId; label: string }[] = [
+  { id: "ticket", label: "Ticket" },
+  { id: "record", label: "Record" },
+  { id: "odds", label: "Odds" },
+  { id: "team", label: "Team" },
+  { id: "stadium", label: "Stadium" },
+  { id: "time", label: "Time" },
+];
+function getDefaultColumns(): Set<ColumnId> {
+  if (typeof window === "undefined") return new Set(["ticket", "record", "odds", "team", "stadium", "time"]);
+  const w = window.innerWidth;
+  if (w < 640) return new Set(["ticket", "team", "time"]);
+  if (w < 768) return new Set(["ticket", "team", "stadium", "time"]);
+  return new Set(["ticket", "record", "odds", "team", "stadium", "time"]);
+}
 
 function formatDateHeading(dateStr: string) {
   const [y, m, d] = dateStr.split("-").map(Number);
@@ -260,8 +276,6 @@ export function BottomTray({
   showOdds: boolean;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const dragStartY = useRef(0);
-  const isDragging = useRef(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const prevTrayState = useRef(trayState);
   const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
@@ -282,8 +296,31 @@ export function BottomTray({
 
   const [sortKey, setSortKey] = useState<SortKey>((saved.current.sortKey as SortKey) ?? "time");
   const [sortDir, setSortDir] = useState<SortDir>((saved.current.sortDir as SortDir) ?? "asc");
+  const [visibleColumns, setVisibleColumns] = useState<Set<ColumnId>>(() => {
+    const raw = saved.current.visibleColumns as ColumnId[] | undefined;
+    return raw ? new Set(raw) : getDefaultColumns();
+  });
+  const [showFilters, setShowFilters] = useState(false);
 
-  useEffect(() => { saveTray({ sortKey, sortDir }); }, [sortKey, sortDir]);
+  useEffect(() => { saveTray({ sortKey, sortDir, visibleColumns: Array.from(visibleColumns) }); }, [sortKey, sortDir, visibleColumns]);
+
+  const toggleColumn = useCallback((col: ColumnId) => {
+    setVisibleColumns((prev) => {
+      const next = new Set(prev);
+      if (next.has(col)) { if (next.size > 1) next.delete(col); } else { next.add(col); }
+      return next;
+    });
+  }, []);
+
+  const filterRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!showFilters) return;
+    const handler = (e: PointerEvent) => {
+      if (filterRef.current && !filterRef.current.contains(e.target as Node)) setShowFilters(false);
+    };
+    document.addEventListener("pointerdown", handler);
+    return () => document.removeEventListener("pointerdown", handler);
+  }, [showFilters]);
 
   // Distances
   const distanceMap = useMemo(() => {
@@ -456,39 +493,11 @@ export function BottomTray({
     }
   }, [trayState]);
 
-  const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    dragStartY.current = e.clientY;
-    isDragging.current = false;
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-  }, []);
-
-  const handlePointerMove = useCallback((e: React.PointerEvent) => {
-    const delta = Math.abs(e.clientY - dragStartY.current);
-    if (delta > 10) isDragging.current = true;
-  }, []);
-
-  const handlePointerUp = useCallback(
-    (e: React.PointerEvent) => {
-      const delta = dragStartY.current - e.clientY;
-      if (isDragging.current) {
-        if (delta > 50) {
-          // Swipe up
-          if (trayState === "collapsed") onTrayStateChange("peek");
-          else if (trayState === "peek") onTrayStateChange("expanded");
-        } else if (delta < -50) {
-          // Swipe down
-          if (trayState === "expanded") onTrayStateChange("peek");
-          else if (trayState === "peek") onTrayStateChange("collapsed");
-        }
-      } else {
-        // Tap — cycle
-        if (trayState === "collapsed") onTrayStateChange("peek");
-        else if (trayState === "peek") onTrayStateChange("expanded");
-        else onTrayStateChange("collapsed");
-      }
-    },
-    [trayState, onTrayStateChange]
-  );
+  const cycleTray = useCallback(() => {
+    if (trayState === "collapsed") onTrayStateChange("peek");
+    else if (trayState === "peek") onTrayStateChange("expanded");
+    else onTrayStateChange("collapsed");
+  }, [trayState, onTrayStateChange]);
 
   const height = trayState === "collapsed" ? "56px" : trayState === "peek" ? "35vh" : "85vh";
 
@@ -498,53 +507,97 @@ export function BottomTray({
       style={{ height }}
     >
       <div className="h-full panel rounded-t-lg flex flex-col">
-        {/* Drag handle */}
-        <div
-          className="flex flex-col items-center pt-2 pb-1 cursor-grab active:cursor-grabbing select-none touch-none border-b border-white/5"
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-        >
-          <div className="w-12 h-0.5 rounded-full bg-[--primary]/40 mb-1.5" />
-          <div className="flex items-center gap-2 text-xs px-4 w-full">
-            <span className="font-mono text-foreground tracking-wide">
-              {games.length} GAMES &middot; {formatDateHeading(date)}
-            </span>
-            <span className="flex-1" />
-            {trayState === "collapsed" ? (
-              <ChevronUp className="size-3.5 text-[--color-dim]" />
-            ) : trayState === "peek" ? (
-              <ChevronUp className="size-3.5 text-[--color-dim]" />
-            ) : (
-              <ChevronDown className="size-3.5 text-[--color-dim]" />
-            )}
-          </div>
+        {/* Header bar */}
+        <div className="flex items-center gap-2 text-xs px-4 py-2.5 select-none border-b border-white/5">
+          <span className="font-mono text-foreground tracking-wide">
+            {games.length} GAMES &middot; {formatDateHeading(date)}
+          </span>
+          <span className="flex-1" />
+          {trayState !== "collapsed" && (
+            <div className="relative" ref={filterRef}>
+              <button
+                onClick={() => setShowFilters((v) => !v)}
+                className={`flex items-center gap-1 font-mono text-[10px] tracking-wider px-2 py-0.5 rounded border transition-colors ${
+                  showFilters || visibleColumns.size < ALL_COLUMNS.length
+                    ? "border-[--primary]/40 text-[--primary] bg-[--primary]/10"
+                    : "border-white/10 text-[--color-dim] hover:text-foreground hover:border-white/20"
+                }`}
+              >
+                <SlidersHorizontal className="size-3" />
+                FILTERS
+              </button>
+              {showFilters && (
+                <div
+                  className="absolute right-0 bottom-full mb-2 w-40 rounded-lg border border-white/10 panel-elevated shadow-xl z-50 py-1"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="px-3 py-1.5 text-[10px] font-mono tracking-widest text-[--color-dim] uppercase border-b border-white/5">
+                    Columns
+                  </div>
+                  {ALL_COLUMNS.map((col) => (
+                    <button
+                      key={col.id}
+                      onClick={() => toggleColumn(col.id)}
+                      className="flex items-center gap-2 w-full px-3 py-1.5 text-xs font-mono hover:bg-white/5 transition-colors"
+                    >
+                      <span className={`size-3.5 rounded border flex items-center justify-center transition-colors ${
+                        visibleColumns.has(col.id)
+                          ? "bg-[--primary] border-[--primary] text-white"
+                          : "border-white/20"
+                      }`}>
+                        {visibleColumns.has(col.id) && <Check className="size-2.5" />}
+                      </span>
+                      <span className={visibleColumns.has(col.id) ? "text-foreground" : "text-[--color-dim]"}>
+                        {col.label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          <button
+            onClick={cycleTray}
+            className="p-0.5 rounded hover:bg-white/10 transition-colors"
+          >
+            <ChevronUp className={`size-3.5 text-[--color-dim] transition-transform ${trayState === "expanded" ? "rotate-180" : ""}`} />
+          </button>
         </div>
 
         {/* Column headers — clickable to sort */}
         {trayState !== "collapsed" && (
-          <div className="px-6 py-1.5 border-b border-white/5">
-            <div className="flex items-center gap-2.5 text-[9px] font-mono tracking-widest uppercase">
-              <span onClick={() => handleHeaderSort("price")} className={`shrink-0 min-w-[2.5rem] cursor-pointer hover:text-foreground transition-colors ${sortKey === "price" ? "text-foreground" : "text-[--color-dim]"}`}>
-                TICKET{sortKey === "price" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
-              </span>
-              <span onClick={() => handleHeaderSort("record")} className={`shrink-0 min-w-[3.2rem] cursor-pointer hover:text-foreground transition-colors ${sortKey === "record" ? "text-foreground" : "text-[--color-dim]"}`}>
-                REC{sortKey === "record" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
-              </span>
-              {showOdds && (
+          <div className="px-6 py-1.5 border-b border-white/5 overflow-x-auto no-scrollbar">
+            <div className="flex items-center gap-2.5 text-[9px] font-mono tracking-widest uppercase" style={{ minWidth: visibleColumns.size > 3 ? "600px" : undefined }}>
+              {visibleColumns.has("ticket") && (
+                <span onClick={() => handleHeaderSort("price")} className={`shrink-0 min-w-[2.5rem] cursor-pointer hover:text-foreground transition-colors ${sortKey === "price" ? "text-foreground" : "text-[--color-dim]"}`}>
+                  TICKET{sortKey === "price" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
+                </span>
+              )}
+              {visibleColumns.has("record") && (
+                <span onClick={() => handleHeaderSort("record")} className={`shrink-0 min-w-[3.2rem] cursor-pointer hover:text-foreground transition-colors ${sortKey === "record" ? "text-foreground" : "text-[--color-dim]"}`}>
+                  REC{sortKey === "record" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
+                </span>
+              )}
+              {showOdds && visibleColumns.has("odds") && (
                 <span onClick={() => handleHeaderSort("odds")} className={`shrink-0 min-w-[2.5rem] cursor-pointer hover:text-foreground transition-colors ${sortKey === "odds" ? "text-foreground" : "text-[--color-dim]"}`}>
                   ODDS{sortKey === "odds" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
                 </span>
               )}
-              <span onClick={() => handleHeaderSort("team")} className={`flex-1 min-w-0 cursor-pointer hover:text-foreground transition-colors ${sortKey === "team" ? "text-foreground" : "text-[--color-dim]"}`}>
-                TEAM{sortKey === "team" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
-              </span>
-              <span onClick={() => handleHeaderSort("dist")} className={`flex-1 min-w-0 cursor-pointer hover:text-foreground transition-colors ${sortKey === "dist" ? "text-foreground" : "text-[--color-dim]"}`}>
-                STADIUM{sortKey === "dist" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
-              </span>
-              <span onClick={() => handleHeaderSort("time")} className={`shrink-0 cursor-pointer hover:text-foreground transition-colors ${sortKey === "time" ? "text-foreground" : "text-[--color-dim]"}`}>
-                TIME{sortKey === "time" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
-              </span>
+              {visibleColumns.has("team") && (
+                <span onClick={() => handleHeaderSort("team")} className={`flex-1 min-w-0 cursor-pointer hover:text-foreground transition-colors ${sortKey === "team" ? "text-foreground" : "text-[--color-dim]"}`}>
+                  TEAM{sortKey === "team" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
+                </span>
+              )}
+              {visibleColumns.has("stadium") && (
+                <span onClick={() => handleHeaderSort("dist")} className={`flex-1 min-w-0 cursor-pointer hover:text-foreground transition-colors ${sortKey === "dist" ? "text-foreground" : "text-[--color-dim]"}`}>
+                  STADIUM{sortKey === "dist" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
+                </span>
+              )}
+              {visibleColumns.has("time") && (
+                <span onClick={() => handleHeaderSort("time")} className={`shrink-0 cursor-pointer hover:text-foreground transition-colors ${sortKey === "time" ? "text-foreground" : "text-[--color-dim]"}`}>
+                  TIME{sortKey === "time" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
+                </span>
+              )}
             </div>
           </div>
         )}
@@ -627,28 +680,32 @@ export function BottomTray({
                   }}
                 >
                   {/* Card header — always visible */}
-                  <div className="px-3 py-2.5">
-                    <div className="flex items-start gap-2.5">
+                  <div className="px-3 py-2.5 overflow-x-auto no-scrollbar">
+                    <div className="flex items-start gap-2.5" style={{ minWidth: visibleColumns.size > 3 ? "600px" : undefined }}>
                       {/* Col: Ticket */}
-                      <div className="flex flex-col items-start shrink-0 gap-0.5 min-w-[2.5rem]">
-                        {price != null && (
-                          <span className={`font-mono text-sm font-semibold ${price < 30 ? "text-emerald-400" : "text-foreground"}`}>${price}</span>
-                        )}
-                        {event.espn_price?.available != null && event.espn_price.available > 0 && (
-                          <span className="font-mono text-[10px] text-[--color-dim]">{event.espn_price.available}<br/>available</span>
-                        )}
-                      </div>
+                      {visibleColumns.has("ticket") && (
+                        <div className="flex flex-col items-start shrink-0 gap-0.5 min-w-[2.5rem]">
+                          {price != null && (
+                            <span className={`font-mono text-sm font-semibold ${price < 30 ? "text-emerald-400" : "text-foreground"}`}>${price}</span>
+                          )}
+                          {event.espn_price?.available != null && event.espn_price.available > 0 && (
+                            <span className="font-mono text-[10px] text-[--color-dim]">{event.espn_price.available}<br/>available</span>
+                          )}
+                        </div>
+                      )}
                       {/* Col: Records */}
-                      <div className="flex flex-col items-start shrink-0 gap-0.5 min-w-[3.2rem]">
-                        {away ? (
-                          <>
-                            <span className={`font-mono text-xs tabular-nums ${isCloseMatchup ? "text-[#facc15]" : "text-[--color-dim]"}`}>{event.away_record || "—"}</span>
-                            <span className={`font-mono text-xs tabular-nums ${isCloseMatchup ? "text-[#facc15]" : "text-[--color-dim]"}`}>{event.home_record || "—"}</span>
-                          </>
-                        ) : <span className="text-xs">&nbsp;</span>}
-                      </div>
+                      {visibleColumns.has("record") && (
+                        <div className="flex flex-col items-start shrink-0 gap-0.5 min-w-[3.2rem]">
+                          {away ? (
+                            <>
+                              <span className={`font-mono text-xs tabular-nums ${isCloseMatchup ? "text-[#facc15]" : "text-[--color-dim]"}`}>{event.away_record || "—"}</span>
+                              <span className={`font-mono text-xs tabular-nums ${isCloseMatchup ? "text-[#facc15]" : "text-[--color-dim]"}`}>{event.home_record || "—"}</span>
+                            </>
+                          ) : <span className="text-xs">&nbsp;</span>}
+                        </div>
+                      )}
                       {/* Col: Odds + spread */}
-                      {showOdds && (
+                      {showOdds && visibleColumns.has("odds") && (
                         <div className="flex flex-col items-start shrink-0 gap-0.5 min-w-[2.5rem]">
                           {away && event.odds ? (
                             <>
@@ -660,25 +717,31 @@ export function BottomTray({
                         </div>
                       )}
                       {/* Col: Team */}
-                      <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-                        {away ? (
-                          <>
-                            <span className="text-sm font-semibold uppercase text-foreground truncate">{away}</span>
-                            <span className="text-sm font-semibold uppercase text-foreground truncate"><span className="text-[--color-dim] font-normal mr-1">@</span>{home}</span>
-                          </>
-                        ) : (
-                          <span className="text-sm font-semibold uppercase text-foreground truncate">{event.name}</span>
-                        )}
-                      </div>
+                      {visibleColumns.has("team") && (
+                        <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+                          {away ? (
+                            <>
+                              <span className="text-sm font-semibold uppercase text-foreground truncate">{away}</span>
+                              <span className="text-sm font-semibold uppercase text-foreground truncate"><span className="text-[--color-dim] font-normal mr-1">@</span>{home}</span>
+                            </>
+                          ) : (
+                            <span className="text-sm font-semibold uppercase text-foreground truncate">{event.name}</span>
+                          )}
+                        </div>
+                      )}
                       {/* Col: Stadium */}
-                      <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-                        <span className="text-[11px] text-[--color-dim] font-mono truncate">{event.venue}</span>
-                        <span className="text-[10px] text-[--color-dim] font-mono truncate">{event.city}, {event.state}{dist != null ? ` · ${Math.round(dist)}mi` : ""}</span>
-                      </div>
+                      {visibleColumns.has("stadium") && (
+                        <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+                          <span className="text-[11px] text-[--color-dim] font-mono truncate">{event.venue}</span>
+                          <span className="text-[10px] text-[--color-dim] font-mono truncate">{event.city}, {event.state}{dist != null ? ` · ${Math.round(dist)}mi` : ""}</span>
+                        </div>
+                      )}
                       {/* Col: Time */}
-                      <div className="shrink-0">
-                        <span className="font-mono text-sm text-foreground">{formatTimeEST(event.est_time)}</span>
-                      </div>
+                      {visibleColumns.has("time") && (
+                        <div className="shrink-0">
+                          <span className="font-mono text-sm text-foreground">{formatTimeEST(event.est_time)}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 

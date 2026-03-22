@@ -6,6 +6,7 @@ import {
   gtfsIdToFlixId,
   matchTrip,
 } from "./flixbus";
+import { fetchFlights } from "./flightaware";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -125,6 +126,8 @@ function amtrakBookingUrl(
 
 /** Minimum layover between consecutive legs to ensure realistic transitions. */
 const MIN_LAYOVER = 20; // minutes
+/** Pre-flight buffer: arrive at airport 1 hour before departure. */
+const FLIGHT_BUFFER = 60; // minutes
 
 function dateStr(d: string): string {
   return d.replace(/-/g, "");
@@ -415,13 +418,13 @@ export async function searchRoutes(
     }
   }
 
-  // ── 3. Build Google Flights link (no estimated flight itineraries) ──
+  // ── 3. Flight itineraries via FlightAware AeroAPI ──
 
   let googleFlightsUrl: string | undefined;
   if (stadium) {
     const destAirports = stadium.airports ?? [];
-    // Find the closest origin airport to the user
-    let bestOrigApt: { code: string } | null = null;
+    // Find the closest origin airport to the user (within 100 mi)
+    let bestOrigApt: { code: string; name: string; lat: number; lng: number } | null = null;
     let bestOrigDist = Infinity;
     for (const s of Object.values(getStadiumData())) {
       for (const a of s.airports) {
@@ -432,10 +435,133 @@ export async function searchRoutes(
         }
       }
     }
-    // Use the closest destination airport
     const bestDestApt = destAirports[0];
+
     if (bestOrigApt && bestDestApt && bestOrigApt.code !== bestDestApt.code) {
+      // Google Flights link as fallback
       googleFlightsUrl = `https://www.google.com/travel/flights?q=Flights+to+${bestDestApt.code}+from+${bestOrigApt.code}+on+${gameDate}`;
+
+      // Fetch real flights from FlightAware
+      const flights = await fetchFlights(bestOrigApt.code, bestDestApt.code, gameDate);
+
+      // Drive to origin airport
+      const toAirportMiles = haversineMiles(originLat, originLng, bestOrigApt.lat, bestOrigApt.lng);
+      const toAirportDriveMin = toAirportMiles < 1 ? 5 : estimateDriveMin(toAirportMiles);
+      const toAirportRoadMi = Math.round(toAirportMiles * 1.3);
+
+      // Drive from dest airport to venue
+      const fromAirportMiles = haversineMiles(bestDestApt.lat, bestDestApt.lng, venueLat, venueLng);
+      const fromAirportDriveMin = fromAirportMiles < 1 ? 5 : estimateDriveMin(fromAirportMiles);
+      const fromAirportRoadMi = Math.round(fromAirportMiles * 1.3);
+
+      for (const flight of flights) {
+        // Flight times are in UTC — convert to EST minutes for filtering
+        const depUtc = new Date(flight.scheduledOut);
+        const arrUtc = new Date(flight.scheduledIn);
+
+        // Must arrive at venue by game time:
+        // flight arrives → drive from airport → arrive at venue
+        const arriveAtVenueMin =
+          arrUtc.getTime() / 60000 -
+          new Date(`${gameDate}T00:00:00-05:00`).getTime() / 60000 +
+          fromAirportDriveMin +
+          MIN_LAYOVER;
+
+        if (arriveAtVenueMin > arrivalDeadline) continue;
+
+        // Must depart: drive to airport + FLIGHT_BUFFER (1 hour) before flight
+        const flightDepEstMin =
+          depUtc.getTime() / 60000 -
+          new Date(`${gameDate}T00:00:00-05:00`).getTime() / 60000;
+        const mustLeaveBy = flightDepEstMin - FLIGHT_BUFFER - toAirportDriveMin;
+
+        if (isGameToday && mustLeaveBy < earliestDepartEst) continue;
+
+        const legs: Leg[] = [];
+
+        // Leg 1: Drive to origin airport (with 1-hour buffer before flight)
+        if (toAirportMiles > 0.5) {
+          const driveDepart = mustLeaveBy;
+          const driveArrive = mustLeaveBy + toAirportDriveMin;
+          legs.push({
+            mode: "drive",
+            from: "Your location",
+            fromLat: originLat,
+            fromLng: originLng,
+            to: `${bestOrigApt.name} (${bestOrigApt.code})`,
+            toLat: bestOrigApt.lat,
+            toLng: bestOrigApt.lng,
+            depart: toIso(gameDateYMD, driveDepart),
+            arrive: toIso(gameDateYMD, driveArrive),
+            minutes: toAirportDriveMin,
+            cost: null,
+            bookingUrl: `https://www.google.com/maps/dir/?api=1&origin=${originLat},${originLng}&destination=${bestOrigApt.lat},${bestOrigApt.lng}&travelmode=driving`,
+            miles: toAirportRoadMi,
+            enrichable: true,
+          });
+        }
+
+        // Leg 2: Flight
+        const googleFlightSearch = `https://www.google.com/travel/flights?q=Flights+to+${bestDestApt.code}+from+${bestOrigApt.code}+on+${gameDate}`;
+        legs.push({
+          mode: "flight",
+          carrier: flight.airline,
+          routeName: flight.ident,
+          from: `${bestOrigApt.name} (${bestOrigApt.code})`,
+          fromLat: bestOrigApt.lat,
+          fromLng: bestOrigApt.lng,
+          to: `${bestDestApt.name} (${bestDestApt.code})`,
+          toLat: bestDestApt.lat,
+          toLng: bestDestApt.lng,
+          depart: flight.scheduledOut,
+          arrive: flight.scheduledIn,
+          minutes: flight.durationMinutes,
+          cost: null, // FlightAware doesn't provide prices
+          bookingUrl: googleFlightSearch,
+          miles: Math.round(haversineMiles(bestOrigApt.lat, bestOrigApt.lng, bestDestApt.lat, bestDestApt.lng)),
+        });
+
+        // Leg 3: Drive from dest airport to venue
+        if (fromAirportMiles > 0.5) {
+          const lastLegDepEstMin =
+            arrUtc.getTime() / 60000 -
+            new Date(`${gameDate}T00:00:00-05:00`).getTime() / 60000 +
+            MIN_LAYOVER;
+          legs.push({
+            mode: "drive",
+            from: `${bestDestApt.name} (${bestDestApt.code})`,
+            fromLat: bestDestApt.lat,
+            fromLng: bestDestApt.lng,
+            to: venueName,
+            toLat: venueLat,
+            toLng: venueLng,
+            depart: toIso(gameDateYMD, lastLegDepEstMin),
+            arrive: toIso(gameDateYMD, lastLegDepEstMin + fromAirportDriveMin),
+            minutes: fromAirportDriveMin,
+            cost: null,
+            bookingUrl: `https://www.google.com/maps/dir/?api=1&origin=${bestDestApt.lat},${bestDestApt.lng}&destination=${venueLat},${venueLng}&travelmode=driving`,
+            miles: fromAirportRoadMi,
+            enrichable: true,
+          });
+        }
+
+        const totalMin = Math.round(
+          (new Date(legs[legs.length - 1].arrive).getTime() -
+            new Date(legs[0].depart).getTime()) /
+            60000
+        );
+
+        itineraries.push({
+          id: `flight-${idCounter++}`,
+          totalMinutes: totalMin,
+          totalCost: null,
+          departureTime: legs[0].depart,
+          arrivalTime: legs[legs.length - 1].arrive,
+          bufferMinutes: FLIGHT_BUFFER,
+          enriched: false,
+          legs,
+        });
+      }
     }
   }
 
@@ -525,18 +651,22 @@ export async function searchRoutes(
     }
   }
 
-  // Always include drive, then fill remaining slots with transit
+  // Always include drive, then flights, then fill remaining with transit
   const drive = itineraries.filter((i) => i.id.startsWith("drive-"));
+  const flightItins = itineraries
+    .filter((i) => i.id.startsWith("flight-"))
+    .sort((a, b) => a.totalMinutes - b.totalMinutes);
   const transit = itineraries
     .filter((i) => i.id.startsWith("transit-"))
     .sort((a, b) => a.totalMinutes - b.totalMinutes);
 
-  const remaining = limit - drive.length;
+  const remaining = limit - drive.length - flightItins.length;
 
   return {
     itineraries: [
       ...drive,
-      ...transit.slice(0, remaining),
+      ...flightItins,
+      ...transit.slice(0, Math.max(0, remaining)),
     ],
     googleFlightsUrl,
   };

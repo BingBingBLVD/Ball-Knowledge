@@ -254,7 +254,6 @@ export default function Home() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0a0a0f]/90">
           <div className="flex flex-col items-center gap-3">
             <div className="w-8 h-8 border-2 border-[--primary]/30 border-t-[--primary] rounded-full animate-spin" />
-            <p className="text-sm font-mono text-[--primary] tracking-widest">LOADING INTEL...</p>
           </div>
         </div>
       )}
