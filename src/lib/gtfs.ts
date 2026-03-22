@@ -389,6 +389,7 @@ export function searchGTFS(
   // Phase 3: match forward → backward at transfer points
   const TRANSFER_BUFFER = 30; // minutes minimum layover
   const seen = new Set<string>();
+  const directDist = haversineMi(originLat, originLng, destLat, destLng);
 
   for (const [midStop, fwdList] of forwardReach) {
     const candidateStops = [midStop, ...(d.transfers[midStop] ?? [])];
@@ -402,6 +403,19 @@ export function searchGTFS(
           if (fwd.ti === bwd.ti) continue;
           if (fwd.arriveMin + TRANSFER_BUFFER > bwd.departMin) continue;
           if (bwd.arriveMin > deadlineMin) continue;
+
+          // Geographic sanity: prevent backtracking itineraries
+          const midGeo = d.stops[midStop];
+          const midToDestMi = haversineMi(midGeo.lat, midGeo.lng, destLat, destLng);
+          // Transfer point must not be further from dest than origin (20% tolerance for hubs)
+          if (midToDestMi > directDist * 1.2) continue;
+          // Total leg distance must not exceed 2.5× direct distance
+          const fwdFrom = d.stops[fwd.boardStopId];
+          const bwdTo = d.stops[bwd.alightStopId];
+          const leg1Mi = haversineMi(fwdFrom.lat, fwdFrom.lng, midGeo.lat, midGeo.lng);
+          const candGeo = d.stops[candStop];
+          const leg2Mi = haversineMi(candGeo.lat, candGeo.lng, bwdTo.lat, bwdTo.lng);
+          if (leg1Mi + leg2Mi > directDist * 2.5) continue;
 
           const key = `${fwd.ti}:${fwd.boardIdx}:${fwd.offset}-${bwd.ti}:${bwd.alightIdx}:${bwd.offset}`;
           if (seen.has(key)) continue;

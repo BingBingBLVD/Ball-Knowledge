@@ -792,7 +792,7 @@ export function BottomTray({
                       {(airports.length > 0 || trains.length > 0 || buses.length > 0) && event.lat != null && event.lng != null && (
                         <div className="mt-2 space-y-1.5">
                           <div className="flex items-center gap-2">
-                            <div className="text-[10px] font-mono tracking-widest text-[--color-dim] uppercase">TRANSIT</div>
+                            <div className="text-[10px] font-mono tracking-widest text-[--color-dim] uppercase">DISTANCE FROM STADIUM</div>
                             {trains.length > 0 && (
                               <button
                                 onClick={(e) => {
@@ -852,21 +852,6 @@ export function BottomTray({
                               venueName={event.venue}
                               colorClass="text-[--color-flight]"
                             />
-                          )}
-                          {airports.length > 0 && (
-                            <div className="flex flex-wrap gap-1.5 pl-1">
-                              {airports.map((apt) => (
-                                <a
-                                  key={apt.code}
-                                  href={`https://www.google.com/travel/flights?q=flights+from+${nearestUserAirport ?? ""}+to+${apt.code}+on+${date}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-[11px] font-mono text-[--color-flight]/70 hover:text-[--color-flight] underline inline-flex items-center gap-0.5"
-                                >
-                                  <Plane className="size-2.5" /> {nearestUserAirport ?? "?"} → {apt.code}
-                                </a>
-                              ))}
-                            </div>
                           )}
                           {shownTrains.has(event.id) && trains.length > 0 && (
                             <TransitCards
@@ -993,6 +978,20 @@ export function BottomTray({
                         ) : null;
                       })()}
 
+                      {/* Take Me button */}
+                      {userLocation && event.lat != null && event.est_time ? (
+                        <a
+                          href={`/take-me?originLat=${userLocation.lat}&originLng=${userLocation.lng}&venue=${encodeURIComponent(event.venue)}&venueLat=${event.lat}&venueLng=${event.lng}&date=${date}&time=${event.est_time}&game=${encodeURIComponent(event.name)}`}
+                          className="mt-3 flex items-center justify-center gap-2 w-full py-2 rounded font-mono text-sm font-semibold border border-[--primary] text-[--primary] hover:bg-[--primary]/10 transition-colors press-scale"
+                        >
+                          <Navigation className="size-4" /> TAKE ME
+                        </a>
+                      ) : (
+                        <div className="mt-3 flex items-center justify-center gap-2 w-full py-2 rounded font-mono text-[11px] text-[--color-dim] border border-white/5">
+                          SET LOCATION TO PLAN ROUTE
+                        </div>
+                      )}
+
                       {/* Links section */}
                       <div className="mt-2">
                         <div className="text-[10px] font-mono tracking-widest text-[--color-dim] uppercase mb-1">LINKS</div>
@@ -1025,20 +1024,6 @@ export function BottomTray({
                           )}
                         </div>
                       </div>
-
-                      {/* Plan route button */}
-                      {userLocation && event.lat != null && event.est_time ? (
-                        <a
-                          href={`/take-me?originLat=${userLocation.lat}&originLng=${userLocation.lng}&venue=${encodeURIComponent(event.venue)}&venueLat=${event.lat}&venueLng=${event.lng}&date=${date}&time=${event.est_time}&game=${encodeURIComponent(event.name)}`}
-                          className="mt-3 flex items-center justify-center gap-2 w-full py-2 rounded font-mono text-sm font-semibold border border-[--primary] text-[--primary] hover:bg-[--primary]/10 transition-colors press-scale"
-                        >
-                          <Navigation className="size-4" /> PLAN ROUTE
-                        </a>
-                      ) : (
-                        <div className="mt-3 flex items-center justify-center gap-2 w-full py-2 rounded font-mono text-[11px] text-[--color-dim] border border-white/5">
-                          SET LOCATION TO PLAN ROUTE
-                        </div>
-                      )}
                     </div>
                   )}
                 </div>
