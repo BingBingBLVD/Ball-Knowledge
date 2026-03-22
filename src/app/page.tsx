@@ -6,6 +6,7 @@ import type { RouteFocus, VenueInfo } from "@/components/game-map";
 import { BottomTray } from "@/components/bottom-tray";
 import { LocationButton } from "@/components/location-button";
 import { RampageProvider, useRampage } from "@/lib/rampage-context";
+import { RampageButton } from "@/components/rampage-button";
 
 const GameMap = dynamic(
   () => import("@/components/game-map").then((m) => m.GameMap),
@@ -188,7 +189,7 @@ function HomeInner() {
     setCurrentDate(date);
     setSelectedVenue(null);
     setRouteFocus(null);
-    setTrayState("collapsed");
+    // Keep tray open when changing dates
   }, []);
 
   const handleMarkerClick = useCallback((venue: VenueInfo) => {
@@ -237,6 +238,9 @@ function HomeInner() {
 
       {/* Location button — floating top right */}
       <LocationButton userLocation={userLocation} onLocationChange={setUserLocation} />
+
+      {/* Rampage button — floating below location */}
+      <RampageButton userLocation={userLocation} />
 
       {/* Bottom tray — intel panel */}
       {data && (

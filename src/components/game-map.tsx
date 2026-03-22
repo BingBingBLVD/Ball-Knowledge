@@ -98,6 +98,10 @@ export function GameMap({
   hoveredVenue,
   userLocation,
   bottomPadding = 0,
+  rampageActive = false,
+  rampageGames = [],
+  rampageStart,
+  rampageEnd,
 }: {
   events: MapEvent[];
   routeFocus?: RouteFocus | null;
@@ -107,6 +111,10 @@ export function GameMap({
   hoveredVenue?: string | null;
   userLocation?: { lat: number; lng: number } | null;
   bottomPadding?: number;
+  rampageActive?: boolean;
+  rampageGames?: { id: string; venue: string; lat: number; lng: number; est_date: string }[];
+  rampageStart?: { lat: number; lng: number; label: string } | null;
+  rampageEnd?: { lat: number; lng: number; label: string } | null;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
@@ -115,6 +123,8 @@ export function GameMap({
   const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
   const defaultBoundsRef = useRef<google.maps.LatLngBounds | null>(null);
   const userMarkerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
+  const rampageMarkersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
+  const rampagePolylineRef = useRef<google.maps.Polyline | null>(null);
   const [mapReady, setMapReady] = useState(false);
   const onMarkerClickRef = useRef(onMarkerClick);
   onMarkerClickRef.current = onMarkerClick;
@@ -362,6 +372,69 @@ export function GameMap({
       }
     }
   }, [routeFocus, mapReady]);
+
+  // Rampage overlay: numbered markers + connecting polyline
+  useEffect(() => {
+    // Clean up previous rampage markers and polyline
+    for (const m of rampageMarkersRef.current) m.map = null;
+    rampageMarkersRef.current = [];
+    if (rampagePolylineRef.current) {
+      rampagePolylineRef.current.setMap(null);
+      rampagePolylineRef.current = null;
+    }
+
+    if (!mapReady || !mapRef.current || !rampageActive || rampageGames.length === 0) return;
+
+    const map = mapRef.current;
+    const points: { lat: number; lng: number }[] = [];
+
+    // Add start point
+    if (rampageStart) points.push({ lat: rampageStart.lat, lng: rampageStart.lng });
+
+    // Add numbered markers for each game
+    rampageGames.forEach((game, i) => {
+      points.push({ lat: game.lat, lng: game.lng });
+
+      const el = document.createElement("div");
+      el.style.cssText = `
+        width: 24px; height: 24px; border-radius: 50%;
+        background: #f97316; color: white; font-family: monospace;
+        font-size: 12px; font-weight: 700; display: flex;
+        align-items: center; justify-content: center;
+        border: 2px solid rgba(255,255,255,0.8);
+        box-shadow: 0 2px 8px rgba(249,115,22,0.5);
+      `;
+      el.textContent = String(i + 1);
+
+      const marker = new google.maps.marker.AdvancedMarkerElement({
+        map,
+        position: { lat: game.lat, lng: game.lng },
+        content: el,
+        zIndex: 1000 + i,
+      });
+      rampageMarkersRef.current.push(marker);
+    });
+
+    // Add end point
+    if (rampageEnd) points.push({ lat: rampageEnd.lat, lng: rampageEnd.lng });
+
+    // Draw connecting polyline
+    if (points.length >= 2) {
+      rampagePolylineRef.current = new google.maps.Polyline({
+        path: points,
+        geodesic: true,
+        strokeColor: "#f97316",
+        strokeOpacity: 0.6,
+        strokeWeight: 2,
+        icons: [{
+          icon: { path: "M 0,-1 0,1", strokeOpacity: 1, scale: 3 },
+          offset: "0",
+          repeat: "16px",
+        }],
+        map,
+      });
+    }
+  }, [rampageActive, rampageGames, rampageStart, rampageEnd, mapReady]);
 
   return (
     <div

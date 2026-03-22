@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useRampage } from "@/lib/rampage-context";
 
 function formatDateMono(dateStr: string) {
   const [y, m, d] = dateStr.split("-").map(Number);
@@ -27,6 +28,7 @@ export function DateSelector({
   gameCount: number;
   gameCountByDate: Record<string, number>;
 }) {
+  const rampage = useRampage();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -198,6 +200,7 @@ export function DateSelector({
               const isSelected = dateStr === currentDate;
               const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
               const isToday = dateStr === today;
+              const hasRampageGame = rampage.active && rampage.selectedGames.has(dateStr);
 
               return (
                 <button
@@ -215,14 +218,18 @@ export function DateSelector({
                       : hasGames
                         ? "text-foreground font-medium hover:bg-white/5 cursor-pointer"
                         : "text-[--color-dim]/40 cursor-default"
-                  } ${isToday && !isSelected ? "ring-1 ring-[--primary]/50" : ""}`}
+                  } ${isToday && !isSelected ? "ring-1 ring-[--primary]/50" : ""} ${hasRampageGame && !isSelected ? "ring-1 ring-[--color-rampage]" : ""}`}
                 >
                   <span className="leading-none">{dayNum}</span>
-                  {hasGames && count > 0 && (
+                  {hasRampageGame ? (
+                    <span className={`text-[8px] leading-none mt-0.5 ${isSelected ? "text-[--primary-foreground]/70" : "text-[--color-rampage]"}`}>
+                      ●
+                    </span>
+                  ) : hasGames && count > 0 ? (
                     <span className={`text-[8px] leading-none mt-0.5 ${isSelected ? "text-[--primary-foreground]/70" : "text-green-400"}`}>
                       {count}
                     </span>
-                  )}
+                  ) : null}
                 </button>
               );
             })}

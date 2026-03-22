@@ -18,18 +18,13 @@ import {
   Loader2,
   SlidersHorizontal,
   Map,
-  Zap,
-  MapPin,
-  ArrowRight,
   Circle,
   CheckCircle2,
 } from "lucide-react";
 import type { VenuePolicy } from "@/lib/venue-policies";
 import { SearchBar } from "./search-bar";
 import { DateSelector } from "./date-selector";
-import { useRampage, type SelectedGame } from "@/lib/rampage-context";
-import { RampageLocationInput } from "./rampage-location-input";
-import { useRouter } from "next/navigation";
+import { useRampage } from "@/lib/rampage-context";
 
 type TrayState = "collapsed" | "peek" | "expanded";
 
@@ -207,28 +202,24 @@ function TransitCards({
                   >
                     <Car className="size-3" /> {formatDriveTime(times.driveMinutes)}
                   </a>
-                  {times.uberEstimate && (
-                    <a
-                      href={uberDeepLink(vLat, vLng, stop.lat, stop.lng)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 bg-[#191919] text-white font-semibold hover:bg-[#2a2a2a] transition-colors no-underline border border-white/10"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <span className="text-white">UBER</span> <span className="text-white">~&lt;{extractUpperBound(times.uberEstimate)}</span>
-                    </a>
-                  )}
-                  {times.lyftEstimate && (
-                    <a
-                      href={lyftDeepLink(vLat, vLng, stop.lat, stop.lng)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 bg-[#d4004c] text-white font-semibold hover:bg-[#e0105a] transition-colors no-underline"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <span className="text-white">LYFT</span> <span className="text-white">~&lt;{extractUpperBound(times.lyftEstimate)}</span>
-                    </a>
-                  )}
+                  <a
+                    href={uberDeepLink(vLat, vLng, stop.lat, stop.lng)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 bg-[#191919] text-white font-semibold hover:bg-[#2a2a2a] transition-colors no-underline border border-white/10"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <span className="text-white">UBER</span> {times.uberEstimate ? <span className="text-white">~&lt;{extractUpperBound(times.uberEstimate)}</span> : <span className="text-emerald-400">--</span>}
+                  </a>
+                  <a
+                    href={lyftDeepLink(vLat, vLng, stop.lat, stop.lng)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 bg-[#d4004c] text-white font-semibold hover:bg-[#e0105a] transition-colors no-underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <span className="text-white">LYFT</span> {times.lyftEstimate ? <span className="text-white">~&lt;{extractUpperBound(times.lyftEstimate)}</span> : <span className="text-emerald-400">--</span>}
+                  </a>
                 </div>
                 {times.transitMinutes != null && (
                   <a
@@ -238,7 +229,7 @@ function TransitCards({
                     className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[--color-dim] hover:text-foreground border border-white/10 no-underline"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <Bus className="size-3" /> {formatDriveTime(times.transitMinutes)}{times.transitFare ? ` ${times.transitFare}` : ""}
+                    <Bus className="size-3" /> {formatDriveTime(times.transitMinutes)} {times.transitFare ? <span>{times.transitFare}</span> : <span className="text-emerald-400">--</span>}
                   </a>
                 )}
               </div>
@@ -295,6 +286,7 @@ export function BottomTray({
   gameCountByDate: Record<string, number>;
   onLocationChange: (loc: { lat: number; lng: number } | null) => void;
 }) {
+  const rampage = useRampage();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const prevTrayState = useRef(trayState);
@@ -659,9 +651,10 @@ export function BottomTray({
               const parts = event.name.split(/\s+(?:vs?\.?|VS\.?)\s+/);
               const home = parts[0].replace(/\s*\(.*?\)/g, "").trim();
               const away = parts.length > 1 ? parts.slice(1).join(" vs ").replace(/\s*\(.*?\)/g, "").trim() : null;
-              const isSelected = selectedVenue === event.venue;
-              const isHovered = hoveredVenue === event.venue;
-              const isExpanded = expandedCardId === event.id;
+              const isRampageSelected = rampage.active && event.est_date && rampage.selectedGames.has(event.est_date) && rampage.selectedGames.get(event.est_date)!.id === event.id;
+              const isSelected = !rampage.active && selectedVenue === event.venue;
+              const isHovered = !rampage.active && hoveredVenue === event.venue;
+              const isExpanded = !rampage.active && expandedCardId === event.id;
               const airports = event.nearbyAirports ?? [];
               const trains = event.nearbyTrainStations ?? [];
               const buses = event.nearbyBusStations ?? [];
@@ -688,13 +681,40 @@ export function BottomTray({
                   key={event.id}
                   data-venue={event.venue}
                   className={`rounded card-enter transition-colors cursor-pointer ${
-                    isSelected
-                      ? "border-l-2 border-[--primary] bg-[--primary]/5 panel-elevated"
-                      : isHovered
-                        ? "border-l-2 border-[--primary]/50 bg-[--primary]/[0.03] panel-elevated"
-                        : "panel hover:bg-white/[0.02]"
+                    isRampageSelected
+                      ? "border-l-2 border-[--color-rampage] bg-[--color-rampage]/5 panel-elevated"
+                      : isSelected
+                        ? "border-l-2 border-[--primary] bg-[--primary]/5 panel-elevated"
+                        : isHovered
+                          ? "border-l-2 border-[--primary]/50 bg-[--primary]/[0.03] panel-elevated"
+                          : "panel hover:bg-white/[0.02]"
                   }`}
                   onClick={() => {
+                    // RAMPAGE mode: toggle game selection
+                    if (rampage.active && event.lat != null && event.lng != null && event.est_date) {
+                      const wasSelected = rampage.selectedGames.has(event.est_date) && rampage.selectedGames.get(event.est_date)!.id === event.id;
+                      rampage.toggleGame({
+                        id: event.id,
+                        name: event.name,
+                        venue: event.venue,
+                        city: event.city,
+                        state: event.state,
+                        lat: event.lat!,
+                        lng: event.lng!,
+                        est_date: event.est_date,
+                        est_time: event.est_time,
+                        min_price: event.min_price,
+                      });
+                      // Auto-advance to next date when selecting (not deselecting)
+                      if (!wasSelected) {
+                        const idx = availableDates.indexOf(date);
+                        if (idx >= 0 && idx < availableDates.length - 1) {
+                          setTimeout(() => onDateChange(availableDates[idx + 1]), 300);
+                        }
+                      }
+                      return;
+                    }
+                    // Normal mode: venue focus
                     if (event.lat != null && event.lng != null) {
                       const vLat = event.lat!;
                       const vLng = event.lng!;
@@ -730,6 +750,16 @@ export function BottomTray({
                   {/* Card header — always visible */}
                   <div className="px-3 py-2.5 overflow-x-auto no-scrollbar">
                     <div className="flex items-start gap-2.5" style={{ minWidth: visibleColumns.size > 3 ? "600px" : undefined }}>
+                      {/* Rampage selection indicator */}
+                      {rampage.active && (
+                        <div className="shrink-0 flex items-center pt-0.5">
+                          {isRampageSelected ? (
+                            <CheckCircle2 className="size-5 text-[--color-rampage]" />
+                          ) : (
+                            <Circle className="size-5 text-[--color-dim]" />
+                          )}
+                        </div>
+                      )}
                       {/* Col: Ticket */}
                       {visibleColumns.has("ticket") && (
                         <div className="flex flex-col items-start shrink-0 gap-0.5 min-w-[2.5rem]">
