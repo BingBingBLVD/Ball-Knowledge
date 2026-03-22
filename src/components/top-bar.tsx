@@ -27,16 +27,16 @@ export function TopBar({
 }) {
   return (
     <div className="fixed top-3 left-3 right-3 z-20 pointer-events-none">
-      <div className="pointer-events-auto panel rounded-lg flex flex-col sm:flex-row items-stretch sm:items-center">
+      <div className="pointer-events-auto panel rounded-lg flex flex-row items-center">
         {/* GPS */}
-        <div className="shrink-0 border-b sm:border-b-0 sm:border-r border-white/5">
+        <div className="shrink-0 border-r border-white/5">
           <LocationPicker
             userLocation={userLocation}
             onLocationChange={onLocationChange}
           />
         </div>
         {/* Search (games + city) */}
-        <div className="flex-1 min-w-0 border-b sm:border-b-0 sm:border-r border-white/5">
+        <div className="flex-1 min-w-0 border-r border-white/5">
           <SearchBar value={search} onChange={onSearchChange} onLocationChange={onLocationChange} />
         </div>
         {/* Date */}
