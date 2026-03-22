@@ -773,7 +773,7 @@ export function BottomTray({
                       {visibleColumns.has("stadium") && (
                         <div className="flex-1 min-w-0 flex flex-col gap-0.5">
                           <span className="text-[11px] text-[--color-dim] font-mono truncate">{event.venue}</span>
-                          <span className="text-[10px] text-[--color-dim] font-mono truncate">{event.city}, {event.state}{dist != null ? ` · ${Math.round(dist)}mi` : ""}</span>
+                          <span className="text-[10px] text-[--color-dim] font-mono truncate">{event.city}, {event.state}</span>
                         </div>
                       )}
                       {/* Col: Time */}
