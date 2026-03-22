@@ -129,7 +129,7 @@ function getDefaultColumns(): Set<ColumnId> {
   return new Set(["ticket", "record", "odds", "team", "stadium", "time"]);
 }
 
-function TransitCards({
+function TransitRows({
   stops,
   icon: Icon,
   vLat,
@@ -158,7 +158,7 @@ function TransitCards({
   const enrichKey = (sLat: number, sLng: number) => `${vLat},${vLng};${sLat},${sLng}`;
 
   return (
-    <div className="flex gap-2 overflow-x-auto no-scrollbar">
+    <div className="space-y-1">
       {stops.map((stop) => {
         const ek = enrichKey(stop.lat, stop.lng);
         const times = enriched[ek] ?? null;
@@ -168,75 +168,75 @@ function TransitCards({
         return (
           <div
             key={stop.code}
-            className="flex flex-col gap-1 text-[11px] font-mono rounded-lg border border-white/8 bg-white/[0.04] backdrop-blur-sm px-2.5 py-2 min-w-[8rem] shrink-0"
+            className="flex items-center gap-2 text-[11px] font-mono py-1"
             onMouseEnter={() => !isAnimating && onRouteFocus(baseFocus)}
             onMouseLeave={() => !isAnimating && onRouteFocus(null)}
           >
-            {/* Stop header */}
-            <div className="flex items-center gap-1.5">
-              <span className={`flex items-center gap-1 font-bold ${colorClass}`}>
-                <Icon className="size-3.5" />
-                {stop.code}
-              </span>
+            {/* Stop code + distance */}
+            <span className={`flex items-center gap-1 font-bold shrink-0 ${colorClass}`}>
+              <Icon className="size-3.5" />
               <a
                 href={`https://www.google.com/maps/search/?api=1&query=${stop.lat},${stop.lng}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[--color-dim] hover:text-foreground transition-colors"
+                className={`hover:underline no-underline ${colorClass}`}
                 onClick={(e) => e.stopPropagation()}
                 title={`Open ${stop.code} in Google Maps`}
               >
-                <Map className="size-3" />
+                {stop.code}
               </a>
-              <span className="ml-auto font-normal text-[10px] text-[--color-dim]">({Math.round(haversineMiles(vLat, vLng, stop.lat, stop.lng))}mi)</span>
-            </div>
-            {/* Transport options */}
+            </span>
+            <span className="text-[10px] text-[--color-dim] shrink-0">({Math.round(haversineMiles(vLat, vLng, stop.lat, stop.lng))}mi)</span>
+            {/* Transport options inline */}
             {times ? (
-              <div className="flex flex-col gap-0.5 mt-0.5 text-[10px]">
-                <div className="flex items-center gap-1 flex-wrap">
-                  <a
-                    href={gmapsUrl(vLat, vLng, stop.lat, stop.lng, "driving")}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[--color-dim] hover:text-foreground border border-white/10 bg-white/[0.03] backdrop-blur-sm hover:bg-white/[0.06] transition-all no-underline"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Car className="size-3" /> {formatDriveTime(times.driveMinutes)}
-                  </a>
-                  <a
-                    href={uberDeepLink(vLat, vLng, stop.lat, stop.lng)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 bg-[#191919]/80 text-white font-semibold hover:bg-[#2a2a2a]/80 backdrop-blur-sm transition-all no-underline border border-white/10"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <span className="text-white">UBER</span> {times.uberEstimate ? <span className="text-white">~&lt;{extractUpperBound(times.uberEstimate)}</span> : <span className="text-emerald-400">--</span>}
-                  </a>
-                  <a
-                    href={lyftDeepLink(vLat, vLng, stop.lat, stop.lng)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 bg-[#d4004c]/80 text-white font-semibold hover:bg-[#e0105a]/80 backdrop-blur-sm transition-all no-underline border border-[#ff00bf]/20"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <span className="text-white">LYFT</span> {times.lyftEstimate ? <span className="text-white">~&lt;{extractUpperBound(times.lyftEstimate)}</span> : <span className="text-emerald-400">--</span>}
-                  </a>
-                </div>
+              <div className="flex items-center gap-1.5 flex-wrap text-[10px]">
+                <a
+                  href={gmapsUrl(vLat, vLng, stop.lat, stop.lng, "driving")}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-0.5 text-[--color-dim] hover:text-foreground no-underline transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Car className="size-3" /> {formatDriveTime(times.driveMinutes)}
+                </a>
+                <span className="text-white/10">|</span>
+                <a
+                  href={uberDeepLink(vLat, vLng, stop.lat, stop.lng)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-0.5 text-[--color-dim] hover:text-foreground font-semibold no-underline transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  UBER {times.uberEstimate ? <span className="text-emerald-400">~{extractUpperBound(times.uberEstimate)}</span> : <span className="text-emerald-400">--</span>}
+                </a>
+                <span className="text-white/10">|</span>
+                <a
+                  href={lyftDeepLink(vLat, vLng, stop.lat, stop.lng)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-0.5 text-[--color-dim] hover:text-foreground font-semibold no-underline transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  LYFT {times.lyftEstimate ? <span className="text-emerald-400">~{extractUpperBound(times.lyftEstimate)}</span> : <span className="text-emerald-400">--</span>}
+                </a>
                 {times.transitMinutes != null && (
-                  <a
-                    href={gmapsUrl(vLat, vLng, stop.lat, stop.lng, "transit")}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[--color-dim] hover:text-foreground border border-white/10 bg-white/[0.03] backdrop-blur-sm hover:bg-white/[0.06] transition-all no-underline"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Bus className="size-3" /> {formatDriveTime(times.transitMinutes)} {times.transitFare ? <span>{times.transitFare}</span> : <span className="text-emerald-400">--</span>}
-                  </a>
+                  <>
+                    <span className="text-white/10">|</span>
+                    <a
+                      href={gmapsUrl(vLat, vLng, stop.lat, stop.lng, "transit")}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-[--color-dim] hover:text-foreground no-underline transition-colors"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Bus className="size-3" /> {formatDriveTime(times.transitMinutes)} {times.transitFare ? <span className="text-emerald-400">{times.transitFare}</span> : <span className="text-emerald-400">--</span>}
+                    </a>
+                  </>
                 )}
               </div>
             ) : (
               <button
-                className={`text-[--color-dim] hover:text-foreground mt-0.5 flex items-center gap-1 ${loading ? "[&>svg]:animate-spin" : ""}`}
+                className={`text-[--color-dim] hover:text-foreground flex items-center gap-1 ${loading ? "[&>svg]:animate-spin" : ""}`}
                 onClick={(e) => { e.stopPropagation(); onEnrich(stop); }}
                 title="Load transit info"
               >
@@ -295,9 +295,6 @@ export function BottomTray({
   const [isAnimating, setIsAnimating] = useState(false);
   const prevTrayState = useRef(trayState);
   const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
-  // Track which transit sub-modes are visible per event
-  const [shownTrains, setShownTrains] = useState<Set<string>>(new Set());
-  const [shownBuses, setShownBuses] = useState<Set<string>>(new Set());
   const [shownPolicies, setShownPolicies] = useState<Set<string>>(new Set());
 
   // Sort state
@@ -732,7 +729,7 @@ export function BottomTray({
                     if (event.lat != null && event.lng != null) {
                       const vLat = event.lat!;
                       const vLng = event.lng!;
-                      for (const s of airports) {
+                      for (const s of [...airports, ...trains, ...buses]) {
                         handleEnrich(vLat, vLng, s);
                       }
                       handlePolicyLoad(event.venue);
@@ -842,56 +839,10 @@ export function BottomTray({
                     <div className="px-3 pb-3 border-t border-white/5" onClick={(e) => e.stopPropagation()}>
                       {/* Transit section */}
                       {(airports.length > 0 || trains.length > 0 || buses.length > 0) && event.lat != null && event.lng != null && (
-                        <div className="mt-2 space-y-1.5">
-                          <div className="flex items-center gap-2">
-                            <div className="text-[10px] font-mono tracking-widest text-[--primary]/70 uppercase">DISTANCE FROM STADIUM</div>
-                            {trains.length > 0 && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setShownTrains((prev) => {
-                                    const next = new Set(prev);
-                                    if (next.has(event.id)) { next.delete(event.id); } else {
-                                      next.add(event.id);
-                                      for (const s of trains) handleEnrich(event.lat!, event.lng!, s);
-                                    }
-                                    return next;
-                                  });
-                                }}
-                                className={`text-[10px] font-mono px-2 py-1 rounded-md border backdrop-blur-sm transition-all ${
-                                  shownTrains.has(event.id)
-                                    ? "border-[--color-train]/40 text-[--color-train] bg-[--color-train]/15 font-semibold shadow-sm shadow-[--color-train]/10"
-                                    : "border-white/10 text-[--color-dim] bg-white/[0.03] hover:text-[--color-train] hover:border-[--color-train]/25 hover:bg-[--color-train]/5"
-                                }`}
-                              >
-                                {shownTrains.has(event.id) ? "Hide" : "Show"} Trains
-                              </button>
-                            )}
-                            {buses.length > 0 && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setShownBuses((prev) => {
-                                    const next = new Set(prev);
-                                    if (next.has(event.id)) { next.delete(event.id); } else {
-                                      next.add(event.id);
-                                      for (const s of buses) handleEnrich(event.lat!, event.lng!, s);
-                                    }
-                                    return next;
-                                  });
-                                }}
-                                className={`text-[10px] font-mono px-2 py-1 rounded-md border backdrop-blur-sm transition-all ${
-                                  shownBuses.has(event.id)
-                                    ? "border-[--color-bus]/40 text-[--color-bus] bg-[--color-bus]/15 font-semibold shadow-sm shadow-[--color-bus]/10"
-                                    : "border-white/10 text-[--color-dim] bg-white/[0.03] hover:text-[--color-bus] hover:border-[--color-bus]/25 hover:bg-[--color-bus]/5"
-                                }`}
-                              >
-                                {shownBuses.has(event.id) ? "Hide" : "Show"} Bus
-                              </button>
-                            )}
-                          </div>
+                        <div className="mt-2 space-y-1">
+                          <div className="text-[10px] font-mono tracking-widest text-[--primary]/70 uppercase">DISTANCE FROM STADIUM</div>
                           {airports.length > 0 && (
-                            <TransitCards
+                            <TransitRows
                               stops={airports}
                               icon={Plane}
                               vLat={event.lat!}
@@ -905,8 +856,8 @@ export function BottomTray({
                               colorClass="text-[--color-flight]"
                             />
                           )}
-                          {shownTrains.has(event.id) && trains.length > 0 && (
-                            <TransitCards
+                          {trains.length > 0 && (
+                            <TransitRows
                               stops={trains}
                               icon={TrainFront}
                               vLat={event.lat!}
@@ -920,8 +871,8 @@ export function BottomTray({
                               colorClass="text-[--color-train]"
                             />
                           )}
-                          {shownBuses.has(event.id) && buses.length > 0 && (
-                            <TransitCards
+                          {buses.length > 0 && (
+                            <TransitRows
                               stops={buses}
                               icon={BusFront}
                               vLat={event.lat!}
