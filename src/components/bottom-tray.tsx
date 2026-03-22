@@ -610,35 +610,35 @@ export function BottomTray({
 
         {/* Column headers — clickable to sort */}
         {trayState !== "collapsed" && (
-          <div className="px-6 py-1.5 border-b border-white/5 overflow-x-auto no-scrollbar">
+          <div className="px-6 py-1.5 border-b border-[--primary]/10 overflow-x-auto no-scrollbar bg-white/[0.02]">
             <div className="flex items-center gap-2.5 text-[9px] font-mono tracking-widest uppercase" style={{ minWidth: visibleColumns.size > 3 ? "600px" : undefined }}>
               {visibleColumns.has("ticket") && (
-                <span onClick={() => handleHeaderSort("price")} className={`shrink-0 min-w-[2.5rem] cursor-pointer hover:text-foreground transition-colors ${sortKey === "price" ? "text-foreground" : "text-[--color-dim]"}`}>
+                <span onClick={() => handleHeaderSort("price")} className={`shrink-0 min-w-[2.5rem] cursor-pointer hover:text-foreground transition-colors ${sortKey === "price" ? "text-[--primary] font-semibold" : "text-[--color-dim]"}`}>
                   TICKET{sortKey === "price" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
                 </span>
               )}
               {visibleColumns.has("record") && (
-                <span onClick={() => handleHeaderSort("record")} className={`shrink-0 min-w-[3.2rem] cursor-pointer hover:text-foreground transition-colors ${sortKey === "record" ? "text-foreground" : "text-[--color-dim]"}`}>
+                <span onClick={() => handleHeaderSort("record")} className={`shrink-0 min-w-[3.2rem] cursor-pointer hover:text-foreground transition-colors ${sortKey === "record" ? "text-[--primary] font-semibold" : "text-[--color-dim]"}`}>
                   REC{sortKey === "record" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
                 </span>
               )}
               {showOdds && visibleColumns.has("odds") && (
-                <span onClick={() => handleHeaderSort("odds")} className={`shrink-0 min-w-[2.5rem] cursor-pointer hover:text-foreground transition-colors ${sortKey === "odds" ? "text-foreground" : "text-[--color-dim]"}`}>
+                <span onClick={() => handleHeaderSort("odds")} className={`shrink-0 min-w-[2.5rem] cursor-pointer hover:text-foreground transition-colors ${sortKey === "odds" ? "text-[--primary] font-semibold" : "text-[--color-dim]"}`}>
                   ODDS{sortKey === "odds" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
                 </span>
               )}
               {visibleColumns.has("team") && (
-                <span onClick={() => handleHeaderSort("team")} className={`flex-1 min-w-0 cursor-pointer hover:text-foreground transition-colors ${sortKey === "team" ? "text-foreground" : "text-[--color-dim]"}`}>
+                <span onClick={() => handleHeaderSort("team")} className={`flex-1 min-w-0 cursor-pointer hover:text-foreground transition-colors ${sortKey === "team" ? "text-[--primary] font-semibold" : "text-[--color-dim]"}`}>
                   TEAM{sortKey === "team" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
                 </span>
               )}
               {visibleColumns.has("stadium") && (
-                <span onClick={() => handleHeaderSort("dist")} className={`flex-1 min-w-0 cursor-pointer hover:text-foreground transition-colors ${sortKey === "dist" ? "text-foreground" : "text-[--color-dim]"}`}>
+                <span onClick={() => handleHeaderSort("dist")} className={`flex-1 min-w-0 cursor-pointer hover:text-foreground transition-colors ${sortKey === "dist" ? "text-[--primary] font-semibold" : "text-[--color-dim]"}`}>
                   STADIUM{sortKey === "dist" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
                 </span>
               )}
               {visibleColumns.has("time") && (
-                <span onClick={() => handleHeaderSort("time")} className={`shrink-0 cursor-pointer hover:text-foreground transition-colors ${sortKey === "time" ? "text-foreground" : "text-[--color-dim]"}`}>
+                <span onClick={() => handleHeaderSort("time")} className={`shrink-0 cursor-pointer hover:text-foreground transition-colors ${sortKey === "time" ? "text-[--primary] font-semibold" : "text-[--color-dim]"}`}>
                   TIME{sortKey === "time" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
                 </span>
               )}
@@ -650,8 +650,9 @@ export function BottomTray({
         {trayState !== "collapsed" && (
           <div ref={scrollRef} className={`flex-1 overflow-y-auto no-scrollbar px-3 pb-3 space-y-2 ${isAnimating ? "pointer-events-none" : ""}`}>
             {games.length === 0 && (
-              <div className="flex items-center justify-center py-12 text-[--color-dim] text-sm font-mono">
-                NO GAMES AVAILABLE
+              <div className="flex flex-col items-center justify-center py-12 gap-2">
+                <span className="text-[--color-dim] text-sm font-mono">NO GAMES AVAILABLE</span>
+                <span className="text-[--color-dim]/60 text-xs font-mono">Try a different date</span>
               </div>
             )}
             {sortedGames.map((event) => {
@@ -777,7 +778,7 @@ export function BottomTray({
                       {visibleColumns.has("ticket") && (
                         <div className="flex flex-col items-start shrink-0 gap-0.5 min-w-[2.5rem]">
                           {price != null && (
-                            <span className={`font-mono text-sm font-semibold ${price < 30 ? "text-emerald-400" : "text-foreground"}`}>${price}</span>
+                            <span className={`font-mono text-sm font-semibold ${price < 30 ? "text-emerald-400" : price < 80 ? "text-emerald-300/80" : "text-foreground"}`}>${price}</span>
                           )}
                           {event.espn_price?.available != null && event.espn_price.available > 0 && (
                             <span className="font-mono text-[10px] text-[--color-dim]">{event.espn_price.available}<br/>available</span>
@@ -813,7 +814,7 @@ export function BottomTray({
                           {away ? (
                             <>
                               <span className="text-sm font-semibold uppercase text-foreground truncate">{away}</span>
-                              <span className="text-sm font-semibold uppercase text-foreground truncate"><span className="text-[--color-dim] font-normal mr-1">@</span>{home}</span>
+                              <span className="text-sm font-semibold uppercase text-foreground truncate"><span className="text-[--primary]/60 font-normal mr-1">@</span>{home}</span>
                             </>
                           ) : (
                             <span className="text-sm font-semibold uppercase text-foreground truncate">{event.name}</span>
@@ -843,7 +844,7 @@ export function BottomTray({
                       {(airports.length > 0 || trains.length > 0 || buses.length > 0) && event.lat != null && event.lng != null && (
                         <div className="mt-2 space-y-1.5">
                           <div className="flex items-center gap-2">
-                            <div className="text-[10px] font-mono tracking-widest text-[--color-dim] uppercase">DISTANCE FROM STADIUM</div>
+                            <div className="text-[10px] font-mono tracking-widest text-[--primary]/70 uppercase">DISTANCE FROM STADIUM</div>
                             {trains.length > 0 && (
                               <button
                                 onClick={(e) => {
@@ -948,8 +949,8 @@ export function BottomTray({
                         return (policy || loading) ? (
                           <div className="mt-2">
                             <div className="flex items-center gap-2">
-                              <div className="text-[10px] font-mono tracking-widest text-[--color-dim] uppercase flex items-center gap-1">
-                                <ShieldCheck className="size-3" /> VENUE POLICY
+                              <div className="text-[10px] font-mono tracking-widest text-[--primary]/70 uppercase flex items-center gap-1">
+                                <ShieldCheck className="size-3 text-[--primary]" /> VENUE POLICY
                               </div>
                               {policy && (
                                 <button
@@ -1072,31 +1073,31 @@ export function BottomTray({
 
                       {/* Links section */}
                       <div className="mt-2">
-                        <div className="text-[10px] font-mono tracking-widest text-[--color-dim] uppercase mb-1">LINKS</div>
+                        <div className="text-[10px] font-mono tracking-widest text-[--primary]/70 uppercase mb-1">LINKS</div>
                         <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-mono">
-                          <a href={event.url} target="_blank" rel="noopener noreferrer" className="text-[--color-dim] hover:text-foreground underline inline-flex items-center gap-0.5">
+                          <a href={event.url} target="_blank" rel="noopener noreferrer" className="text-[--primary]/70 hover:text-[--primary] no-underline inline-flex items-center gap-0.5 hover:brightness-110 transition-colors">
                             TICKETMASTER <ArrowUpRight className="size-2.5" />
                           </a>
                           {away && (
-                            <a href={stubhubUrl(home)} target="_blank" rel="noopener noreferrer" className="text-[--color-dim] hover:text-foreground underline inline-flex items-center gap-0.5">
+                            <a href={stubhubUrl(home)} target="_blank" rel="noopener noreferrer" className="text-[--primary]/70 hover:text-[--primary] no-underline inline-flex items-center gap-0.5 hover:brightness-110 transition-colors">
                               STUBHUB <ArrowUpRight className="size-2.5" />
                             </a>
                           )}
                           {event.espn_price?.url && (
-                            <a href={event.espn_price.url} target="_blank" rel="noopener noreferrer" className="text-[--color-dim] hover:text-foreground underline inline-flex items-center gap-0.5">
+                            <a href={event.espn_price.url} target="_blank" rel="noopener noreferrer" className="text-[--primary]/70 hover:text-[--primary] no-underline inline-flex items-center gap-0.5 hover:brightness-110 transition-colors">
                               VIVIDSEATS <ArrowUpRight className="size-2.5" />
                             </a>
                           )}
                           {kalshiUrl && (
-                            <a href={kalshiUrl} target="_blank" rel="noopener noreferrer" className="text-[--color-dim] hover:text-foreground underline inline-flex items-center gap-0.5">
+                            <a href={kalshiUrl} target="_blank" rel="noopener noreferrer" className="text-[--primary]/70 hover:text-[--primary] no-underline inline-flex items-center gap-0.5 hover:brightness-110 transition-colors">
                               KALSHI <ArrowUpRight className="size-2.5" />
                             </a>
                           )}
-                          <a href={`https://www.espn.com/nba/scoreboard/_/date/${date.replace(/-/g, "")}`} target="_blank" rel="noopener noreferrer" className="text-[--color-dim] hover:text-foreground underline inline-flex items-center gap-0.5">
+                          <a href={`https://www.espn.com/nba/scoreboard/_/date/${date.replace(/-/g, "")}`} target="_blank" rel="noopener noreferrer" className="text-[--primary]/70 hover:text-[--primary] no-underline inline-flex items-center gap-0.5 hover:brightness-110 transition-colors">
                             ESPN <ArrowUpRight className="size-2.5" />
                           </a>
                           {venuePolicies[event.venue]?.websiteUrl && (
-                            <a href={venuePolicies[event.venue].websiteUrl} target="_blank" rel="noopener noreferrer" className="text-[--color-dim] hover:text-foreground underline inline-flex items-center gap-0.5">
+                            <a href={venuePolicies[event.venue].websiteUrl} target="_blank" rel="noopener noreferrer" className="text-[--primary]/70 hover:text-[--primary] no-underline inline-flex items-center gap-0.5 hover:brightness-110 transition-colors">
                               VENUE <ArrowUpRight className="size-2.5" />
                             </a>
                           )}

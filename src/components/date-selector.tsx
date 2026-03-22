@@ -129,7 +129,7 @@ export function DateSelector({
             <ChevronLeft className="size-4 text-[--color-dim]" />
           </button>
           {prevDate && (
-            <span className="text-[9px] font-mono text-[--color-dim] leading-none -mt-0.5">
+            <span className="text-[9px] font-mono text-green-400/70 leading-none -mt-0.5">
               {gameCountByDate[prevDate] ?? 0}
             </span>
           )}
@@ -160,7 +160,7 @@ export function DateSelector({
             <ChevronRight className="size-4 text-[--color-dim]" />
           </button>
           {nextDate && (
-            <span className="text-[9px] font-mono text-[--color-dim] leading-none -mt-0.5">
+            <span className="text-[9px] font-mono text-green-400/70 leading-none -mt-0.5">
               {gameCountByDate[nextDate] ?? 0}
             </span>
           )}

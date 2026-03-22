@@ -80,6 +80,11 @@ interface HotelSuggestion {
   bookingUrl: string;
   lat: number;
   lng: number;
+  distanceMiles: number;
+  driveMinutes: number;
+  uberEstimate: string;
+  lyftEstimate: string;
+  directionsUrl: string;
 }
 
 interface HotelGroup {
@@ -385,7 +390,7 @@ function RampageContent() {
             <MapPin className="size-4 text-emerald-400" />
           </div>
           <div>
-            <div className="text-[10px] font-mono text-[--color-dim] tracking-widest">START</div>
+            <div className="text-[10px] font-mono text-emerald-400/70 tracking-widest">START</div>
             <div className="text-sm font-semibold">{cow.startLocation.label}</div>
           </div>
         </div>
@@ -446,7 +451,7 @@ function RampageContent() {
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-semibold uppercase text-foreground truncate">
-                              <span className="text-[--color-dim] font-normal mr-1">@</span>{home}
+                              <span className="text-[--color-rampage]/60 font-normal mr-1">@</span>{home}
                             </span>
                             {game.home_record && (
                               <span className="text-xs font-mono text-[--color-dim] tabular-nums">{game.home_record}</span>
@@ -471,7 +476,7 @@ function RampageContent() {
                     {/* Price */}
                     <div className="shrink-0 flex flex-col items-end gap-0.5">
                       {price != null && (
-                        <span className={`font-mono text-lg font-semibold ${price < 30 ? "text-emerald-400" : "text-foreground"}`}>
+                        <span className={`font-mono text-lg font-semibold ${price < 30 ? "text-emerald-400" : price < 80 ? "text-emerald-300/80" : "text-foreground"}`}>
                           ${price}
                         </span>
                       )}
@@ -489,16 +494,16 @@ function RampageContent() {
 
                 {/* Links row */}
                 <div className="flex items-center gap-3 px-4 py-2 border-t border-white/5 text-[11px] font-mono">
-                  <a href={`https://www.ticketmaster.com/event/${game.id}`} target="_blank" rel="noopener noreferrer" className="text-[--color-dim] hover:text-foreground inline-flex items-center gap-0.5">
+                  <a href={`https://www.ticketmaster.com/event/${game.id}`} target="_blank" rel="noopener noreferrer" className="text-[--color-rampage]/70 hover:text-[--color-rampage] inline-flex items-center gap-0.5 transition-colors">
                     TICKETMASTER <ArrowUpRight className="size-2.5" />
                   </a>
                   {game.espn_price?.url && (
-                    <a href={game.espn_price.url} target="_blank" rel="noopener noreferrer" className="text-[--color-dim] hover:text-foreground inline-flex items-center gap-0.5">
+                    <a href={game.espn_price.url} target="_blank" rel="noopener noreferrer" className="text-[--color-rampage]/70 hover:text-[--color-rampage] inline-flex items-center gap-0.5 transition-colors">
                       VIVIDSEATS <ArrowUpRight className="size-2.5" />
                     </a>
                   )}
                   {game.odds && (
-                    <a href={`https://kalshi.com/markets/KXNBAGAME/${game.odds.kalshi_event}`} target="_blank" rel="noopener noreferrer" className="text-[--color-dim] hover:text-foreground inline-flex items-center gap-0.5">
+                    <a href={`https://kalshi.com/markets/KXNBAGAME/${game.odds.kalshi_event}`} target="_blank" rel="noopener noreferrer" className="text-[--color-rampage]/70 hover:text-[--color-rampage] inline-flex items-center gap-0.5 transition-colors">
                       KALSHI <ArrowUpRight className="size-2.5" />
                     </a>
                   )}
@@ -508,21 +513,19 @@ function RampageContent() {
               {/* Hotel suggestions */}
               {hotels && hotels.suggestions.length > 0 && (
                 <div className="ml-4 border-l-2 border-amber-500/30 pl-4 py-2 mt-1">
-                  <div className="flex items-center gap-1.5 text-[10px] font-mono text-[--color-dim] tracking-widest mb-1.5">
+                  <div className="flex items-center gap-1.5 text-[10px] font-mono text-amber-400/70 tracking-widest mb-1.5">
                     <Hotel className="size-3" /> NEARBY HOTELS
                   </div>
                   <div className="flex gap-2 overflow-x-auto no-scrollbar">
                     {hotels.suggestions.map((h, hi) => (
-                      <a
+                      <div
                         key={hi}
-                        href={h.bookingUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex flex-col gap-0.5 text-[11px] font-mono rounded border border-white/5 bg-white/[0.02] px-2.5 py-2 min-w-[10rem] shrink-0 hover:bg-white/[0.04] transition-colors"
+                        className="flex flex-col gap-1 text-[11px] font-mono rounded border border-white/5 bg-white/[0.02] px-2.5 py-2 min-w-[12rem] shrink-0"
                       >
-                        <span className="text-xs font-semibold text-foreground truncate">{h.name}</span>
-                        <span className="text-[--color-dim] truncate">{h.vicinity}</span>
-                        <div className="flex items-center gap-2 mt-0.5">
+                        <a href={h.bookingUrl} target="_blank" rel="noopener noreferrer" className="hover:text-amber-400 transition-colors">
+                          <span className="text-xs font-semibold text-foreground truncate block">{h.name}</span>
+                        </a>
+                        <div className="flex items-center gap-2">
                           {h.rating && (
                             <span className="flex items-center gap-0.5 text-amber-400">
                               <Star className="size-2.5" /> {h.rating}
@@ -530,7 +533,26 @@ function RampageContent() {
                           )}
                           <span className="text-emerald-400">{h.estimatedPrice}</span>
                         </div>
-                      </a>
+                        <div className="flex items-center gap-2 text-[10px] text-[--color-dim] border-t border-white/5 pt-1 mt-0.5">
+                          <MapPin className="size-2.5 text-amber-400/60 shrink-0" />
+                          <span className="text-foreground">{h.distanceMiles} mi</span>
+                          <span>·</span>
+                          <Car className="size-2.5 shrink-0" />
+                          <span>{h.driveMinutes} min</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] text-[--color-dim]">
+                          <span>UBER <span className="text-emerald-400">{h.uberEstimate}</span></span>
+                          <span>LYFT <span className="text-emerald-400">{h.lyftEstimate}</span></span>
+                        </div>
+                        <a
+                          href={h.directionsUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[10px] text-cyan-400/70 hover:text-cyan-400 inline-flex items-center gap-0.5 transition-colors"
+                        >
+                          DIRECTIONS <ArrowUpRight className="size-2.5" />
+                        </a>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -554,7 +576,7 @@ function RampageContent() {
             <MapPin className="size-4 text-red-400" />
           </div>
           <div>
-            <div className="text-[10px] font-mono text-[--color-dim] tracking-widest">END</div>
+            <div className="text-[10px] font-mono text-red-400/70 tracking-widest">END</div>
             <div className="text-sm font-semibold">{cow.endLocation.label}</div>
           </div>
         </div>

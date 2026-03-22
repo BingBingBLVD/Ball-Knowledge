@@ -40,6 +40,11 @@ interface HotelSuggestion {
   bookingUrl: string;
   lat: number;
   lng: number;
+  distanceMiles: number;
+  driveMinutes: number;
+  uberEstimate: string;
+  lyftEstimate: string;
+  directionsUrl: string;
 }
 
 const PRICE_LEVEL_MAP: Record<number, string> = {
@@ -121,16 +126,35 @@ async function searchHotelsNearVenue(
       rating?: number;
       price_level?: number;
       geometry: { location: { lat: number; lng: number } };
-    }) => ({
-      name: place.name,
-      vicinity: place.vicinity,
-      rating: place.rating ?? null,
-      priceLevel: place.price_level ?? null,
-      estimatedPrice: place.price_level ? PRICE_LEVEL_MAP[place.price_level] ?? "Unknown" : "Check price",
-      bookingUrl: `https://www.google.com/travel/hotels/?q=hotels+near+${encodeURIComponent(venueName)}&dates=${checkinDate},${checkout}`,
-      lat: place.geometry.location.lat,
-      lng: place.geometry.location.lng,
-    }));
+    }) => {
+      const hLat = place.geometry.location.lat;
+      const hLng = place.geometry.location.lng;
+      const dist = haversineMiles(hLat, hLng, venueLat, venueLng);
+      const roadMiles = dist * 1.3;
+      const driveMin = Math.max(3, Math.round((roadMiles / 25) * 60));
+      // Uber: $2.50 base + $1.50/mi + $0.25/min, $7 min
+      const uberLow = Math.max(7, Math.round(2.5 + 1.5 * roadMiles + 0.25 * driveMin));
+      const uberHigh = Math.round(uberLow * 1.3);
+      // Lyft: $2.00 base + $1.35/mi + $0.20/min, $6 min
+      const lyftLow = Math.max(6, Math.round(2.0 + 1.35 * roadMiles + 0.20 * driveMin));
+      const lyftHigh = Math.round(lyftLow * 1.3);
+
+      return {
+        name: place.name,
+        vicinity: place.vicinity,
+        rating: place.rating ?? null,
+        priceLevel: place.price_level ?? null,
+        estimatedPrice: place.price_level ? PRICE_LEVEL_MAP[place.price_level] ?? "Unknown" : "Check price",
+        bookingUrl: `https://www.google.com/travel/hotels/?q=hotels+near+${encodeURIComponent(venueName)}&dates=${checkinDate},${checkout}`,
+        lat: hLat,
+        lng: hLng,
+        distanceMiles: Math.round(dist * 10) / 10,
+        driveMinutes: driveMin,
+        uberEstimate: uberLow === uberHigh ? `~$${uberLow}` : `~$${uberLow}–${uberHigh}`,
+        lyftEstimate: lyftLow === lyftHigh ? `~$${lyftLow}` : `~$${lyftLow}–${lyftHigh}`,
+        directionsUrl: `https://www.google.com/maps/dir/?api=1&origin=${hLat},${hLng}&destination=${venueLat},${venueLng}`,
+      };
+    });
   } catch {
     return [];
   }

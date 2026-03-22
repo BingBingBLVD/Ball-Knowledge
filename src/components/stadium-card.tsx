@@ -52,34 +52,34 @@ export function StadiumCard({
               const home = parts[0];
               const away = parts.length > 1 ? parts.slice(1).join(" vs ") : null;
               return (
-                <h3 key={game.id} className="font-semibold text-base text-gray-900">
+                <h3 key={game.id} className="font-semibold text-base text-foreground">
                   {away ? (
                     <>
-                      {away}{game.away_record && <span className="text-gray-400 text-xs font-normal ml-1">[{game.away_record}]</span>}
-                      {" @ "}
-                      {home}{game.home_record && <span className="text-gray-400 text-xs font-normal ml-1">[{game.home_record}]</span>}
+                      {away}{game.away_record && <span className="text-[--color-dim] text-xs font-normal ml-1">[{game.away_record}]</span>}
+                      <span className="text-[--primary] mx-1">@</span>
+                      {home}{game.home_record && <span className="text-[--color-dim] text-xs font-normal ml-1">[{game.home_record}]</span>}
                     </>
                   ) : game.name}
                 </h3>
               );
             })}
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-[--color-dim]">
               {venue.venue} &middot; {venue.city}, {venue.state}
             </p>
           </div>
           <div className="flex items-center gap-1 -mt-1 -mr-1">
             <button
               onClick={onExpand}
-              className="p-1 rounded-lg hover:bg-black/5 transition-colors"
+              className="p-1 rounded-lg hover:bg-white/10 transition-colors"
               title="Show details"
             >
-              <Maximize2 className="size-4 text-gray-500" />
+              <Maximize2 className="size-4 text-[--color-dim]" />
             </button>
             <button
               onClick={onClose}
-              className="p-1 rounded-lg hover:bg-black/5 transition-colors"
+              className="p-1 rounded-lg hover:bg-white/10 transition-colors"
             >
-              <X className="size-4 text-gray-500" />
+              <X className="size-4 text-[--color-dim]" />
             </button>
           </div>
         </div>
@@ -93,7 +93,7 @@ export function StadiumCard({
               : null;
 
             return (
-              <div key={game.id} className="flex items-center gap-2 text-xs text-gray-400">
+              <div key={game.id} className="flex items-center gap-2 text-xs text-[--color-dim]">
                 <Clock className="size-3" />
                 {formatTimeEST(game.est_time)}
                 {price && (
@@ -119,8 +119,8 @@ export function StadiumCard({
         {/* Transport summary */}
         {(venue.airports.length > 0 || venue.trains.length > 0 || venue.buses.length > 0) && (
           <>
-            <div className="h-px bg-gray-200 my-3" />
-            <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-gray-500">
+            <div className="h-px bg-white/10 my-3" />
+            <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-[--color-dim]">
               {venue.airports.length > 0 && (
                 <span className="flex items-center gap-1">
                   <Plane className="size-3" />
