@@ -42,6 +42,8 @@ interface Leg {
   cost: number | null;
   bookingUrl?: string;
   miles: number;
+  uberEstimate?: string;
+  lyftEstimate?: string;
 }
 
 interface Itinerary {
@@ -673,20 +675,27 @@ function TravelLegCard({ leg, cheapest }: { leg: RampageLeg; cheapest: Itinerary
       </div>
       <div className="flex flex-wrap gap-1.5">
         {cheapest.legs.map((l, li) => (
-          <a
-            key={li}
-            href={l.bookingUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-[11px] font-mono px-2 py-1 rounded border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] transition-colors no-underline"
-          >
-            {modeIcon(l.mode)}
-            <span className="text-[--color-dim]">{modeLabel(l.mode)}</span>
-            <span className="text-foreground">{formatDuration(l.minutes)}</span>
-            {l.miles > 0 && <span className="text-[--color-dim]">{l.miles}mi</span>}
-            {l.cost != null && <span className="text-emerald-400">${l.cost}</span>}
-            <ArrowUpRight className="size-2.5 text-[--color-dim]" />
-          </a>
+          <div key={li} className="flex flex-col gap-0.5">
+            <a
+              href={l.bookingUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-[11px] font-mono px-2 py-1 rounded border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] transition-colors no-underline"
+            >
+              {modeIcon(l.mode)}
+              <span className="text-[--color-dim]">{modeLabel(l.mode)}</span>
+              <span className="text-foreground">{formatDuration(l.minutes)}</span>
+              {l.miles > 0 && <span className="text-[--color-dim]">{l.miles}mi</span>}
+              {l.cost != null && <span className="text-emerald-400">${l.cost}</span>}
+              <ArrowUpRight className="size-2.5 text-[--color-dim]" />
+            </a>
+            {l.uberEstimate && (
+              <div className="flex items-center gap-2 text-[10px] font-mono text-[--color-dim] px-2">
+                <span>UBER <span className="text-emerald-400">{l.uberEstimate}</span></span>
+                {l.lyftEstimate && <span>LYFT <span className="text-emerald-400">{l.lyftEstimate}</span></span>}
+              </div>
+            )}
+          </div>
         ))}
         {/* Transit option from Google Directions */}
         {t && (
