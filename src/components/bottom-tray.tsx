@@ -246,6 +246,7 @@ export function BottomTray({
   onTrayStateChange,
   userLocation,
   allAirports,
+  showOdds,
 }: {
   games: GameEvent[];
   date: string;
@@ -256,6 +257,7 @@ export function BottomTray({
   onTrayStateChange: (state: TrayState) => void;
   userLocation: { lat: number; lng: number } | null;
   allAirports?: { code: string; name: string; lat: number; lng: number }[];
+  showOdds: boolean;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const dragStartY = useRef(0);
@@ -529,9 +531,11 @@ export function BottomTray({
               <span onClick={() => handleHeaderSort("record")} className={`shrink-0 min-w-[3.2rem] cursor-pointer hover:text-foreground transition-colors ${sortKey === "record" ? "text-foreground" : "text-[--color-dim]"}`}>
                 REC{sortKey === "record" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
               </span>
-              <span onClick={() => handleHeaderSort("odds")} className={`shrink-0 min-w-[2.5rem] cursor-pointer hover:text-foreground transition-colors ${sortKey === "odds" ? "text-foreground" : "text-[--color-dim]"}`}>
-                ODDS{sortKey === "odds" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
-              </span>
+              {showOdds && (
+                <span onClick={() => handleHeaderSort("odds")} className={`shrink-0 min-w-[2.5rem] cursor-pointer hover:text-foreground transition-colors ${sortKey === "odds" ? "text-foreground" : "text-[--color-dim]"}`}>
+                  ODDS{sortKey === "odds" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
+                </span>
+              )}
               <span onClick={() => handleHeaderSort("team")} className={`flex-1 min-w-0 cursor-pointer hover:text-foreground transition-colors ${sortKey === "team" ? "text-foreground" : "text-[--color-dim]"}`}>
                 TEAM{sortKey === "team" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
               </span>
@@ -644,15 +648,17 @@ export function BottomTray({
                         ) : <span className="text-xs">&nbsp;</span>}
                       </div>
                       {/* Col: Odds + spread */}
-                      <div className="flex flex-col items-start shrink-0 gap-0.5 min-w-[2.5rem]">
-                        {away && event.odds ? (
-                          <>
-                            <span className={`font-mono text-xs tabular-nums ${isCloseOdds ? "text-[#facc15] font-semibold" : "text-[--color-dim]"}`}>{event.odds.away_win}%</span>
-                            <span className={`font-mono text-xs tabular-nums ${isCloseOdds ? "text-[#facc15] font-semibold" : "text-[--color-dim]"}`}>{event.odds.home_win}%</span>
-                            <span className={`font-mono text-[10px] ${isCloseOdds ? "text-[#facc15]" : "text-[--color-dim]"}`}>±{spread}</span>
-                          </>
-                        ) : <span className="text-xs">&nbsp;</span>}
-                      </div>
+                      {showOdds && (
+                        <div className="flex flex-col items-start shrink-0 gap-0.5 min-w-[2.5rem]">
+                          {away && event.odds ? (
+                            <>
+                              <span className={`font-mono text-xs tabular-nums ${isCloseOdds ? "text-[#facc15] font-semibold" : "text-[--color-dim]"}`}>{event.odds.away_win}%</span>
+                              <span className={`font-mono text-xs tabular-nums ${isCloseOdds ? "text-[#facc15] font-semibold" : "text-[--color-dim]"}`}>{event.odds.home_win}%</span>
+                              <span className={`font-mono text-[10px] ${isCloseOdds ? "text-[#facc15]" : "text-[--color-dim]"}`}>±{spread}</span>
+                            </>
+                          ) : <span className="text-xs">&nbsp;</span>}
+                        </div>
+                      )}
                       {/* Col: Team */}
                       <div className="flex-1 min-w-0 flex flex-col gap-0.5">
                         {away ? (

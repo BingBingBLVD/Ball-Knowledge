@@ -197,6 +197,13 @@ export default function Home() {
     }
   }, []);
 
+  const showOdds = useMemo(() => {
+    const today = new Date(todayEST() + "T00:00:00");
+    const selected = new Date(currentDate + "T00:00:00");
+    const diffDays = Math.round((selected.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    return diffDays <= 3;
+  }, [currentDate]);
+
   const bottomPadding = trayState === "collapsed" ? 56 : trayState === "peek" ? Math.round(vh * 0.35) : Math.round(vh * 0.85);
 
   return (
@@ -238,6 +245,7 @@ export default function Home() {
           onTrayStateChange={handleTrayStateChange}
           userLocation={userLocation}
           allAirports={data.allAirports ?? []}
+          showOdds={showOdds}
         />
       )}
 
