@@ -120,7 +120,7 @@ async function searchHotelsNearVenue(
     checkoutDate.setDate(checkoutDate.getDate() + 1);
     const checkout = checkoutDate.toISOString().split("T")[0];
 
-    return data.results.slice(0, 5).map((place: {
+    return data.results.slice(0, 8).map((place: {
       name: string;
       vicinity: string;
       rating?: number;
@@ -154,7 +154,7 @@ async function searchHotelsNearVenue(
         lyftEstimate: lyftLow === lyftHigh ? `~$${lyftLow}` : `~$${lyftLow}–${lyftHigh}`,
         directionsUrl: `https://www.google.com/maps/dir/?api=1&origin=${hLat},${hLng}&destination=${venueLat},${venueLng}`,
       };
-    });
+    }).sort((a: HotelSuggestion, b: HotelSuggestion) => a.distanceMiles - b.distanceMiles).slice(0, 5);
   } catch {
     return [];
   }

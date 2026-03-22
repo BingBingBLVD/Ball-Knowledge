@@ -575,7 +575,7 @@ function RampageContent() {
                         </div>
                         <div className="flex items-center gap-2 text-[10px] text-[--color-dim] border-t border-white/5 pt-1 mt-0.5">
                           <MapPin className="size-2.5 text-amber-400/60 shrink-0" />
-                          <span className="text-foreground">{h.distanceMiles} mi</span>
+                          <span className="text-foreground">{h.distanceMiles} mi from {hotels.venue}</span>
                           <span>·</span>
                           <Car className="size-2.5 shrink-0" />
                           <span>{h.driveMinutes} min</span>
