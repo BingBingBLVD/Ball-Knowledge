@@ -75,6 +75,8 @@ interface HotelSuggestion {
   distanceMiles: number;
   driveMinutes: number;
   walkMinutes: number;
+  transitMinutes: number | null;
+  transitFare: string | null;
   transitDirectionsUrl: string;
   uberEstimate: string;
   lyftEstimate: string;
@@ -1071,15 +1073,15 @@ export function BottomTray({
                                       )}
                                       <span className="text-emerald-400">{h.estimatedPrice}</span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-[10px] text-[--color-dim] border-t border-white/8 pt-1 mt-0.5">
-                                      <MapPin className="size-2.5 text-amber-400/60 shrink-0" />
-                                      <span className="text-foreground">{h.distanceMiles} mi</span>
+                                    <div className="flex items-center gap-2 text-[10px] text-[--color-dim] border-t border-white/8 pt-1 mt-0.5 flex-wrap">
+                                      <span className="flex items-center gap-1"><MapPin className="size-2.5 text-amber-400/60 shrink-0" /><span className="text-foreground">{h.distanceMiles} mi</span></span>
                                       <span>·</span>
-                                      <Car className="size-2.5 shrink-0" />
-                                      <span>{h.driveMinutes} min</span>
+                                      <span className="flex items-center gap-1"><Car className="size-2.5 shrink-0" />{h.driveMinutes} min</span>
+                                      {h.transitMinutes != null && (
+                                        <><span>·</span><span className="flex items-center gap-1"><Bus className="size-2.5 shrink-0" />{h.transitMinutes} min{h.transitFare && <span className="text-emerald-400">{h.transitFare}</span>}</span></>
+                                      )}
                                       <span>·</span>
-                                      <Footprints className="size-2.5 shrink-0" />
-                                      <span>{h.walkMinutes} min</span>
+                                      <span className="flex items-center gap-1"><Footprints className="size-2.5 shrink-0" />{h.walkMinutes} min</span>
                                     </div>
                                     <div className="flex items-center gap-2 text-[10px] text-[--color-dim]">
                                       <span>UBER <span className="text-emerald-400">{h.uberEstimate}</span></span>

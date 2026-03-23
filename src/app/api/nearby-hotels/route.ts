@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getTravelTimes } from "@/lib/driving";
 
 interface HotelSuggestion {
   name: string;
@@ -12,6 +13,8 @@ interface HotelSuggestion {
   distanceMiles: number;
   driveMinutes: number;
   walkMinutes: number;
+  transitMinutes: number | null;
+  transitFare: string | null;
   transitDirectionsUrl: string;
   uberEstimate: string;
   lyftEstimate: string;
@@ -59,7 +62,7 @@ export async function GET(req: NextRequest) {
     checkoutDate.setDate(checkoutDate.getDate() + 1);
     const checkout = checkoutDate.toISOString().split("T")[0];
 
-    const hotels: HotelSuggestion[] = data.results.slice(0, 8).map((place: {
+    const topPlaces = data.results.slice(0, 8).map((place: {
       name: string;
       vicinity: string;
       rating?: number;
@@ -69,14 +72,33 @@ export async function GET(req: NextRequest) {
       const hLat = place.geometry.location.lat;
       const hLng = place.geometry.location.lng;
       const dist = haversineMiles(hLat, hLng, venueLat, venueLng);
-      const roadMiles = dist * 1.3;
-      const driveMin = Math.max(3, Math.round((roadMiles / 25) * 60));
-      const uberLow = Math.max(7, Math.round(2.5 + 1.5 * roadMiles + 0.25 * driveMin));
-      const uberHigh = Math.round(uberLow * 1.3);
-      const lyftLow = Math.max(6, Math.round(2.0 + 1.35 * roadMiles + 0.20 * driveMin));
-      const lyftHigh = Math.round(lyftLow * 1.3);
+      return { place, hLat, hLng, dist };
+    }).sort((a: { dist: number }, b: { dist: number }) => a.dist - b.dist).slice(0, 5);
 
+    // Fetch real travel times (drive + transit) for each hotel in parallel
+    const travelResults = await Promise.all(
+      topPlaces.map((p: { hLat: number; hLng: number }) =>
+        getTravelTimes(p.hLat, p.hLng, venueLat, venueLng).catch(() => null)
+      )
+    );
+
+    const hotels: HotelSuggestion[] = topPlaces.map((entry: { place: { name: string; vicinity: string; rating?: number; price_level?: number }; hLat: number; hLng: number; dist: number }, i: number) => {
+      const { place, hLat, hLng, dist } = entry;
+      const times = travelResults[i];
+      const roadMiles = dist * 1.3;
+      const driveMin = times?.driveMinutes ?? Math.max(3, Math.round((roadMiles / 25) * 60));
       const walkMin = Math.max(1, Math.round(dist * 20));
+
+      const uberEstimate = times?.uberEstimate ?? (() => {
+        const low = Math.max(7, Math.round(2.5 + 1.5 * roadMiles + 0.25 * driveMin));
+        const high = Math.round(low * 1.3);
+        return low === high ? `~$${low}` : `~$${low}–${high}`;
+      })();
+      const lyftEstimate = times?.lyftEstimate ?? (() => {
+        const low = Math.max(6, Math.round(2.0 + 1.35 * roadMiles + 0.20 * driveMin));
+        const high = Math.round(low * 1.3);
+        return low === high ? `~$${low}` : `~$${low}–${high}`;
+      })();
 
       return {
         name: place.name,
@@ -90,12 +112,14 @@ export async function GET(req: NextRequest) {
         distanceMiles: Math.round(dist * 10) / 10,
         driveMinutes: driveMin,
         walkMinutes: walkMin,
+        transitMinutes: times?.transitMinutes ?? null,
+        transitFare: times?.transitFare ?? null,
         transitDirectionsUrl: `https://www.google.com/maps/dir/?api=1&origin=${hLat},${hLng}&destination=${venueLat},${venueLng}&travelmode=transit`,
-        uberEstimate: uberLow === uberHigh ? `~$${uberLow}` : `~$${uberLow}–${uberHigh}`,
-        lyftEstimate: lyftLow === lyftHigh ? `~$${lyftLow}` : `~$${lyftLow}–${lyftHigh}`,
+        uberEstimate: uberEstimate ?? `~$${Math.max(7, Math.round(2.5 + 1.5 * roadMiles))}`,
+        lyftEstimate: lyftEstimate ?? `~$${Math.max(6, Math.round(2.0 + 1.35 * roadMiles))}`,
         directionsUrl: `https://www.google.com/maps/dir/?api=1&origin=${hLat},${hLng}&destination=${venueLat},${venueLng}`,
       };
-    }).sort((a: HotelSuggestion, b: HotelSuggestion) => a.distanceMiles - b.distanceMiles).slice(0, 5);
+    });
 
     return NextResponse.json({ hotels });
   } catch {
