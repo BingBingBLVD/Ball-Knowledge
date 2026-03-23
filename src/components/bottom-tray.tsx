@@ -1512,38 +1512,38 @@ export function BottomTray({
                         {transitTab === "flights" && airports.length > 0 && <TransitRows stops={airports} icon={Plane} vLat={event.lat!} vLng={event.lng!} enriched={enriched} enriching={enriching} onEnrich={(stop) => handleEnrich(event.lat!, event.lng!, stop, event.date_time_utc)} onRouteFocus={onRouteFocus} isAnimating={false} venueName={event.venue} colorClass="text-[--color-flight]" tipoffUtc={event.date_time_utc} />}
                         {transitTab === "trains" && trains.length > 0 && <TransitRows stops={trains} icon={TrainFront} vLat={event.lat!} vLng={event.lng!} enriched={enriched} enriching={enriching} onEnrich={(stop) => handleEnrich(event.lat!, event.lng!, stop, event.date_time_utc)} onRouteFocus={onRouteFocus} isAnimating={false} venueName={event.venue} colorClass="text-[--color-train]" tipoffUtc={event.date_time_utc} />}
                         {transitTab === "buses" && buses.length > 0 && <TransitRows stops={buses} icon={BusFront} vLat={event.lat!} vLng={event.lng!} enriched={enriched} enriching={enriching} onEnrich={(stop) => handleEnrich(event.lat!, event.lng!, stop, event.date_time_utc)} onRouteFocus={onRouteFocus} isAnimating={false} venueName={event.venue} colorClass="text-[--color-bus]" tipoffUtc={event.date_time_utc} />}
+
+                        {/* Airport Status (subsection) */}
+                        {(() => {
+                          const aptCodes = airports.map((a) => a.code);
+                          const delayKey = aptCodes.sort().join(",");
+                          const delays = airportDelays[delayKey];
+                          const dLoading = delaysLoading.has(delayKey);
+                          if (aptCodes.length === 0 || (!delays && !dLoading)) return null;
+                          return (
+                            <div className="mt-6">
+                              <h3 className="text-base font-semibold text-neutral-800 mb-3">Airport status</h3>
+                              {dLoading && !delays && <div className="flex items-center gap-2 text-sm text-neutral-500"><Loader2 className="size-4 animate-spin" /> Checking delays...</div>}
+                              {delays && (
+                                <div className="flex flex-wrap gap-2">
+                                  {delays.map((d) => {
+                                    const maxDelay = Math.max(d.departureDel ?? 0, d.arrivalDel ?? 0);
+                                    const hasDelay = maxDelay > 0;
+                                    return (
+                                      <div key={d.code} className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold ${hasDelay ? "bg-amber-50 border border-amber-200 text-amber-600" : "bg-neutral-50 text-neutral-900"}`}>
+                                        {d.code}
+                                        <span className={`size-2 rounded-full ${hasDelay ? "bg-amber-400" : "bg-emerald-500"}`} />
+                                        {hasDelay && <span className="text-xs font-medium">Delays +{maxDelay}m</span>}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </div>
                     )}
-
-                    {/* Airport Status */}
-                    {(() => {
-                      const aptCodes = airports.map((a) => a.code);
-                      const delayKey = aptCodes.sort().join(",");
-                      const delays = airportDelays[delayKey];
-                      const dLoading = delaysLoading.has(delayKey);
-                      if (aptCodes.length === 0 || (!delays && !dLoading)) return null;
-                      return (
-                        <div className="py-8 border-b border-neutral-200">
-                          <h2 className="text-[22px] font-semibold text-neutral-900 mb-4">Airport status</h2>
-                          {dLoading && !delays && <div className="flex items-center gap-2 text-sm text-neutral-500"><Loader2 className="size-4 animate-spin" /> Checking delays...</div>}
-                          {delays && (
-                            <div className="flex flex-wrap gap-2">
-                              {delays.map((d) => {
-                                const maxDelay = Math.max(d.departureDel ?? 0, d.arrivalDel ?? 0);
-                                const hasDelay = maxDelay > 0;
-                                return (
-                                  <div key={d.code} className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold ${hasDelay ? "bg-amber-50 border border-amber-200 text-amber-600" : "bg-neutral-50 text-neutral-900"}`}>
-                                    {d.code}
-                                    <span className={`size-2 rounded-full ${hasDelay ? "bg-amber-400" : "bg-emerald-500"}`} />
-                                    {hasDelay && <span className="text-xs font-medium">Delays +{maxDelay}m</span>}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })()}
 
                     {/* Bag Storage */}
                     {(() => {
