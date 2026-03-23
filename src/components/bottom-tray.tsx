@@ -1201,39 +1201,52 @@ export function BottomTray({
 
                 {/* Scrollable content */}
                 <div className="flex-1 overflow-y-auto no-scrollbar px-5 pb-8">
-                  {/* Hero row: Time + Price + Odds */}
-                  <div className="flex items-start gap-6 py-5 border-b border-white/5">
-                    <div>
-                      <div className="text-[11px] font-mono text-[--color-dim] uppercase tracking-widest mb-1">Tipoff</div>
-                      <div className="text-2xl font-bold font-mono text-foreground">{formatTime(event.local_time ?? event.est_time, event.tz)}</div>
-                      {showLocal && <div className="text-sm font-mono text-[--color-dim]">{userLocal.text} your time</div>}
+                  {/* Hero stats grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-5 border-b border-white/5">
+                    <div className="bg-white/5 rounded-xl p-3">
+                      <div className="text-[10px] font-mono text-[--color-dim] uppercase tracking-widest mb-1">Tipoff</div>
+                      <div className="text-xl font-bold font-mono text-foreground">{formatTime(event.local_time ?? event.est_time, event.tz)}</div>
+                      {showLocal && <div className="text-xs font-mono text-[--color-dim] mt-0.5">{userLocal.text} your time</div>}
                     </div>
                     {price != null && (
-                      <div>
-                        <div className="text-[11px] font-mono text-[--color-dim] uppercase tracking-widest mb-1">From</div>
-                        <div className={`text-2xl font-bold font-mono ${price < 30 ? "text-emerald-400" : price < 80 ? "text-emerald-300/80" : "text-foreground"}`}>${price}</div>
+                      <div className="bg-white/5 rounded-xl p-3">
+                        <div className="text-[10px] font-mono text-[--color-dim] uppercase tracking-widest mb-1">From</div>
+                        <div className={`text-xl font-bold font-mono ${price < 30 ? "text-emerald-400" : price < 80 ? "text-emerald-300/80" : "text-foreground"}`}>${price}</div>
                         {event.espn_price?.available != null && event.espn_price.available > 0 && (
-                          <div className={`text-xs font-mono ${event.espn_price.available < 1000 ? "text-[#facc15]" : "text-[--color-dim]"}`}>{event.espn_price.available} left</div>
+                          <div className={`text-xs font-mono mt-0.5 ${event.espn_price.available < 1000 ? "text-[#facc15]" : "text-[--color-dim]"}`}>{event.espn_price.available} left</div>
                         )}
                       </div>
                     )}
-                    {event.odds && (
-                      <div>
-                        <div className="text-[11px] font-mono text-[--color-dim] uppercase tracking-widest mb-1">Odds</div>
-                        <div className="text-sm font-mono text-[--color-dim]">
-                          <span>{away} <span className="text-foreground font-bold">{event.odds.away_win}%</span></span>
-                          <span className="mx-2 text-white/20">|</span>
-                          <span>{home} <span className="text-foreground font-bold">{event.odds.home_win}%</span></span>
+                    {event.odds && away && (
+                      <div className="bg-white/5 rounded-xl p-3">
+                        <div className="text-[10px] font-mono text-[--color-dim] uppercase tracking-widest mb-1">Win Probability</div>
+                        <div className="space-y-1 mt-1">
+                          <div className="flex items-center justify-between text-xs font-mono">
+                            <span className="text-[--color-dim]">{away}</span>
+                            <span className="text-foreground font-bold">{event.odds.away_win}%</span>
+                          </div>
+                          <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                            <div className="h-full rounded-full bg-[--primary]" style={{ width: `${event.odds.away_win}%` }} />
+                          </div>
+                          <div className="flex items-center justify-between text-xs font-mono">
+                            <span className="text-[--color-dim]">{home}</span>
+                            <span className="text-foreground font-bold">{event.odds.home_win}%</span>
+                          </div>
                         </div>
                       </div>
                     )}
-                    {event.away_record && event.home_record && (
-                      <div>
-                        <div className="text-[11px] font-mono text-[--color-dim] uppercase tracking-widest mb-1">Record</div>
-                        <div className="text-sm font-mono text-[--color-dim]">
-                          <span>{event.away_record}</span>
-                          <span className="mx-2 text-white/20">vs</span>
-                          <span>{event.home_record}</span>
+                    {event.away_record && event.home_record && away && (
+                      <div className="bg-white/5 rounded-xl p-3">
+                        <div className="text-[10px] font-mono text-[--color-dim] uppercase tracking-widest mb-1">Season Record</div>
+                        <div className="space-y-1 mt-1">
+                          <div className="flex items-center justify-between text-xs font-mono">
+                            <span className="text-[--color-dim]">{away}</span>
+                            <span className="text-foreground font-bold tabular-nums">{event.away_record}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs font-mono">
+                            <span className="text-[--color-dim]">{home}</span>
+                            <span className="text-foreground font-bold tabular-nums">{event.home_record}</span>
+                          </div>
                         </div>
                       </div>
                     )}
