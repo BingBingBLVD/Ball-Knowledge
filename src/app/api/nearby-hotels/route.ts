@@ -110,7 +110,7 @@ export async function GET(req: NextRequest) {
         vicinity: place.vicinity,
         rating: place.rating ?? null,
         priceLevel: place.price_level ?? null,
-        estimatedPrice: place.price_level ? PRICE_LEVEL_MAP[place.price_level] ?? "Unknown" : "Check price",
+        estimatedPrice: place.price_level ? PRICE_LEVEL_MAP[place.price_level] ?? "—" : "—",
         bookingUrl: `https://www.google.com/travel/hotels/?q=hotels+near+${encodeURIComponent(venueName)}&dates=${date},${checkout}`,
         photoUrl,
         lat: hLat,

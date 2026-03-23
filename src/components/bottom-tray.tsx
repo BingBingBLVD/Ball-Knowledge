@@ -741,7 +741,7 @@ export function BottomTray({
   }, [venuePhotos, photosLoading]);
 
   // Nearby parking state
-  interface ParkingSpot { name: string; vicinity: string; lat: number; lng: number; distanceMiles: number; walkMinutes: number; rating: number | null; totalRatings: number; openNow: boolean | null; priceLevel: string | null; estimatedPrice: string | null; spotHeroUrl: string; directionsUrl: string }
+  interface ParkingSpot { name: string; vicinity: string; lat: number; lng: number; distanceMiles: number; walkMinutes: number; rating: number | null; totalRatings: number; openNow: boolean | null; priceLevel: string | null; estimatedPrice: string | null; photoUrl: string | null; spotHeroUrl: string; directionsUrl: string }
   const [nearbyParking, setNearbyParking] = useState<Record<string, ParkingSpot[]>>({});
   const [parkingLoading, setParkingLoading] = useState<Set<string>>(new Set());
   const parkingFailed = useRef<Set<string>>(new Set());
@@ -1424,10 +1424,26 @@ export function BottomTray({
                         <div className="py-8 border-b border-neutral-200">
                           <h2 className="text-[22px] font-semibold text-neutral-900 mb-4">Airport status</h2>
                           {dLoading && !delays && <div className="flex items-center gap-2 text-sm text-neutral-500"><Loader2 className="size-4 animate-spin" /> Checking delays...</div>}
-                          {delays && <div className="space-y-3">{delays.map((d) => {
-                            const hasDelay = (d.departureDel != null && d.departureDel > 0) || (d.arrivalDel != null && d.arrivalDel > 0);
-                            return (<div key={d.code} className="flex items-center justify-between py-2"><span className="text-base font-semibold text-neutral-900">{d.code}</span>{hasDelay ? (<div className="flex items-center gap-3">{d.departureDel != null && d.departureDel > 0 && <span className="text-sm text-amber-600 font-medium">DEP +{d.departureDel}min</span>}{d.arrivalDel != null && d.arrivalDel > 0 && <span className="text-sm text-amber-600 font-medium">ARR +{d.arrivalDel}min</span>}</div>) : <span className="text-sm text-emerald-600 font-medium">On time</span>}</div>);
-                          })}</div>}
+                          {delays && (
+                            <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-6 px-6 pb-2">
+                              {delays.map((d) => {
+                                const hasDelay = (d.departureDel != null && d.departureDel > 0) || (d.arrivalDel != null && d.arrivalDel > 0);
+                                return (
+                                  <div key={d.code} className="shrink-0 min-w-[240px] flex-1 rounded-xl border border-neutral-200 p-4 text-center">
+                                    <div className="text-lg font-bold text-neutral-900">{d.code}</div>
+                                    {hasDelay ? (
+                                      <div className="mt-1 space-y-0.5">
+                                        {d.departureDel != null && d.departureDel > 0 && <div className="text-sm text-amber-600 font-medium">Departures +{d.departureDel} min</div>}
+                                        {d.arrivalDel != null && d.arrivalDel > 0 && <div className="text-sm text-amber-600 font-medium">Arrivals +{d.arrivalDel} min</div>}
+                                      </div>
+                                    ) : (
+                                      <div className="text-sm text-emerald-600 font-medium mt-1">On time</div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
                       );
                     })()}
@@ -1450,7 +1466,7 @@ export function BottomTray({
                             return (<div key={lt.stopCode} className="flex items-center justify-between py-3 border-b border-neutral-100 last:border-0">
                               <div>
                                 <div className="text-base font-semibold text-neutral-900">{lt.stopCode}</div>
-                                <div className="text-xs text-neutral-500">→ {lt.stopName || lt.stopCode}</div>
+                                <div className="text-xs text-neutral-500">{lt.stopName || lt.stopCode} bound</div>
                               </div>
                               {lt.available && depStr ? (
                                 <div className="text-right">
@@ -1501,7 +1517,10 @@ export function BottomTray({
                       const arriveByEpoch = event.date_time_utc ? Math.floor((new Date(event.date_time_utc).getTime() - 45 * 60 * 1000) / 1000) : undefined;
                       return (
                         <div className="py-8 border-b border-neutral-200">
-                          <h2 className="text-[22px] font-semibold text-neutral-900 mb-4">Where to stay</h2>
+                          <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-[22px] font-semibold text-neutral-900">Where to stay</h2>
+                            {hotels && hotels.length > 0 && <a href={hotels[0].bookingUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-neutral-900 underline hover:text-neutral-600">Browse more on Google</a>}
+                          </div>
                           {loading && !hotels && <div className="flex items-center gap-2 text-sm text-neutral-500"><Loader2 className="size-4 animate-spin" /> Loading...</div>}
                           {hotels && hotels.length > 0 && (
                             <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-6 px-6 pb-2">
@@ -1547,23 +1566,31 @@ export function BottomTray({
                             <h2 className="text-[22px] font-semibold text-neutral-900">Parking</h2>
                             {spots && spots.length > 0 && <a href={spots[0].spotHeroUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-neutral-900 underline hover:text-neutral-600">Reserve on SpotHero</a>}
                           </div>
-                          <p className="text-sm text-neutral-500 mb-5">Spots open during event hours (2h before to 2h after)</p>
+                          <p className="text-sm text-neutral-500 mb-4">Spots open during event hours (2h before to 2h after)</p>
                           {pLoading && !spots && <div className="flex items-center gap-2 text-sm text-neutral-500"><Loader2 className="size-4 animate-spin" /> Finding parking...</div>}
-                          {spots && spots.length > 0 && <div className="divide-y divide-neutral-100">{spots.map((p, i) => (
-                            <a key={i} href={p.directionsUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between py-4 no-underline hover:bg-neutral-50 -mx-3 px-3 rounded-lg transition-colors">
-                              <div className="min-w-0 flex-1">
-                                <div className="text-[15px] font-medium text-neutral-900 truncate">{p.name}</div>
-                                <div className="flex items-center gap-3 mt-1 text-sm text-neutral-500">
-                                  <span className="flex items-center gap-1"><Footprints className="size-3.5" /> {p.walkMinutes} min walk</span>
-                                  {p.rating && <span className="flex items-center gap-0.5"><Star className="size-3.5 text-neutral-900" /> {p.rating}</span>}
-                                </div>
-                              </div>
-                              <div className="text-right shrink-0 ml-4">
-                                {p.estimatedPrice && <div className="text-[15px] font-semibold text-neutral-900">{p.estimatedPrice}</div>}
-                                <div className="text-xs text-neutral-500">est. event rate</div>
-                              </div>
-                            </a>
-                          ))}</div>}
+                          {spots && spots.length > 0 && (
+                            <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-6 px-6 pb-2">
+                              {spots.map((p, i) => (
+                                <a key={i} href={p.directionsUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 w-[200px] rounded-xl overflow-hidden hover:shadow-lg transition-shadow no-underline block group">
+                                  <div className="h-[120px] bg-neutral-100 overflow-hidden">
+                                    {p.photoUrl ? (
+                                      <img src={p.photoUrl} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center text-neutral-400"><ParkingSquare className="size-8" /></div>
+                                    )}
+                                  </div>
+                                  <div className="p-3">
+                                    <div className="text-sm font-semibold text-neutral-900 truncate">{p.name}</div>
+                                    <div className="flex items-center gap-2 mt-1 text-xs text-neutral-500">
+                                      <span className="flex items-center gap-0.5"><Footprints className="size-3" /> {p.walkMinutes}m walk</span>
+                                      {p.rating && <span className="flex items-center gap-0.5"><Star className="size-3 text-neutral-900" /> {p.rating}</span>}
+                                    </div>
+                                    {p.estimatedPrice && <div className="text-sm font-semibold text-neutral-900 mt-1">{p.estimatedPrice}</div>}
+                                  </div>
+                                </a>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       );
                     })()}

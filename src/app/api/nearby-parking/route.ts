@@ -12,6 +12,7 @@ export interface ParkingSpot {
   openNow: boolean | null;
   priceLevel: string | null;
   estimatedPrice: string | null;
+  photoUrl: string | null;
   spotHeroUrl: string;
   directionsUrl: string;
 }
@@ -70,6 +71,7 @@ export async function GET(req: NextRequest) {
         rating?: number;
         user_ratings_total?: number;
         price_level?: number;
+        photos?: { photo_reference: string }[];
         opening_hours?: { open_now?: boolean };
         geometry: { location: { lat: number; lng: number } };
       }) => {
@@ -92,6 +94,9 @@ export async function GET(req: NextRequest) {
           estimatedPrice = "$5–15";
         }
 
+        const photoRef = place.photos?.[0]?.photo_reference;
+        const photoUrl = photoRef ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${photoRef}&key=${apiKey}` : null;
+
         return {
           name: place.name,
           vicinity: place.vicinity || "",
@@ -104,6 +109,7 @@ export async function GET(req: NextRequest) {
           openNow: place.opening_hours?.open_now ?? null,
           priceLevel: place.price_level != null ? PRICE_MAP[place.price_level] ?? null : null,
           estimatedPrice,
+          photoUrl,
           spotHeroUrl: spotHeroBase,
           directionsUrl: `https://www.google.com/maps/dir/?api=1&destination=${pLat},${pLng}&travelmode=driving`,
         };
