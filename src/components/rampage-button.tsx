@@ -171,8 +171,8 @@ export function RampageButton({
             onClick={handleToggle}
             className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full shadow-md hover:shadow-lg transition-all ${
               rampage.active
-                ? "bg-blue-50 border border-blue-300 text-blue-600"
-                : "bg-white border border-neutral-200 text-neutral-500 hover:text-blue-600 hover:border-blue-300"
+                ? "bg-blue-50 border border-blue-200 text-blue-500"
+                : "bg-white border border-neutral-200 text-neutral-500 hover:text-blue-500 hover:border-blue-200"
             }`}
           >
             <Zap className="size-4" />
@@ -192,7 +192,7 @@ export function RampageButton({
               </button>
               <button
                 onClick={handlePlanRampage}
-                className="flex items-center gap-1 px-4 py-2.5 rounded-full bg-blue-500 text-white shadow-md text-xs font-semibold hover:bg-blue-600 transition-all"
+                className="flex items-center gap-1 px-4 py-2.5 rounded-full bg-blue-400 text-white shadow-md text-xs font-semibold hover:bg-blue-500 transition-all"
               >
                 PLAN
                 <ArrowRight className="size-3.5" />
@@ -280,7 +280,7 @@ export function RampageButton({
               </button>
               <button
                 onClick={handleStartSelecting}
-                className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm font-semibold shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 hover:brightness-105 active:scale-[0.98] transition-all"
+                className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-400 to-blue-500 text-white text-sm font-semibold shadow-lg shadow-blue-400/25 hover:shadow-xl hover:shadow-blue-400/30 hover:brightness-105 active:scale-[0.98] transition-all"
               >
                 <MapPin className="size-4" />
                 {gameCount > 0 ? "Back to Map" : "Start Selecting Games"}
