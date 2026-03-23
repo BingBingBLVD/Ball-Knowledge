@@ -893,7 +893,7 @@ export function BottomTray({
         {/* Column headers — clickable to sort */}
         {trayState !== "collapsed" && (
           <div className="px-6 py-1.5 border-b border-[--primary]/10 overflow-x-auto no-scrollbar bg-black/[0.02]">
-            <div className="flex items-center gap-2.5 text-[9px] font-mono tracking-widest uppercase" style={{ minWidth: visibleColumns.size > 3 ? "600px" : undefined }}>
+            <div className="flex items-center gap-2.5 text-[9px] font-semibold tracking-widest uppercase" style={{ minWidth: visibleColumns.size > 3 ? "600px" : undefined }}>
               {visibleColumns.has("ticket") && (
                 <span onClick={() => handleHeaderSort("price")} className={`shrink-0 min-w-[2.5rem] cursor-pointer hover:text-foreground transition-colors ${sortKey === "price" ? "text-[--primary] font-semibold" : "text-[--color-dim]"}`}>
                   TICKET{sortKey === "price" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
@@ -1133,7 +1133,7 @@ export function BottomTray({
                       {/* Col: Stadium */}
                       {visibleColumns.has("stadium") && (
                         <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-                          <span className="text-[11px] text-[--color-dim] font-mono truncate">{event.venue}</span>
+                          <span className="text-[11px] text-[--color-dim] truncate">{event.venue}</span>
                           <span className={`text-[10px] font-mono truncate ${dist != null && dist < 250 ? "text-amber-600" : "text-[--color-dim]"}`}>{event.city}, {event.state}{dist != null ? ` · ${Math.round(dist)}mi` : ""}</span>
                         </div>
                       )}
@@ -1203,7 +1203,7 @@ export function BottomTray({
                       ) : (
                         <h2 className="text-lg font-bold uppercase tracking-tight text-foreground">{event.name}</h2>
                       )}
-                      <div className="flex items-center gap-3 mt-0.5 text-sm text-[--color-dim] font-mono">
+                      <div className="flex items-center gap-3 mt-0.5 text-sm text-[--color-dim]">
                         <span>{event.venue}</span>
                         <span>{event.city}, {event.state}</span>
                         {dist != null && <span>{Math.round(dist)}mi away</span>}
@@ -1220,13 +1220,13 @@ export function BottomTray({
                   {/* Hero stats grid */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-5 border-b border-black/5">
                     <div className="bg-black/5 rounded-xl p-3">
-                      <div className="text-[10px] font-mono text-[--color-dim] uppercase tracking-widest mb-1">Tipoff</div>
+                      <div className="text-[10px] font-semibold text-[--color-dim] uppercase tracking-widest mb-1">Tipoff</div>
                       <div className="text-xl font-bold font-mono text-foreground">{formatTime(event.local_time ?? event.est_time, event.tz)}</div>
                       {showLocal && <div className="text-xs font-mono text-[--color-dim] mt-0.5">{userLocal.text} your time</div>}
                     </div>
                     {price != null && (
                       <div className="bg-black/5 rounded-xl p-3">
-                        <div className="text-[10px] font-mono text-[--color-dim] uppercase tracking-widest mb-1">From</div>
+                        <div className="text-[10px] font-semibold text-[--color-dim] uppercase tracking-widest mb-1">From</div>
                         <div className={`text-xl font-bold font-mono ${price < 30 ? "text-emerald-600" : price < 80 ? "text-emerald-700" : "text-foreground"}`}>${price}</div>
                         {event.espn_price?.available != null && event.espn_price.available > 0 && (
                           <div className={`text-xs font-mono mt-0.5 ${event.espn_price.available < 1000 ? "text-amber-600" : "text-[--color-dim]"}`}>{event.espn_price.available} left</div>
@@ -1235,7 +1235,7 @@ export function BottomTray({
                     )}
                     {event.odds && away && (
                       <div className="bg-black/5 rounded-xl p-3">
-                        <div className="text-[10px] font-mono text-[--color-dim] uppercase tracking-widest mb-1">Win Probability</div>
+                        <div className="text-[10px] font-semibold text-[--color-dim] uppercase tracking-widest mb-1">Win Probability</div>
                         <div className="space-y-1 mt-1">
                           <div className="flex items-center justify-between text-xs font-mono">
                             <span className="text-[--color-dim]">{away}</span>
@@ -1254,7 +1254,7 @@ export function BottomTray({
                     )}
                     {event.away_record && event.home_record && away && (
                       <div className="bg-black/5 rounded-xl p-3">
-                        <div className="text-[10px] font-mono text-[--color-dim] uppercase tracking-widest mb-1">Record & Odds</div>
+                        <div className="text-[10px] font-semibold text-[--color-dim] uppercase tracking-widest mb-1">Record & Odds</div>
                         <div className="space-y-1.5 mt-1">
                           <div className="flex items-center justify-between text-xs font-mono">
                             <span className="text-[--color-dim]">{away}</span>
@@ -1288,7 +1288,7 @@ export function BottomTray({
                     const relevantHours = hours ?? [];
                     return (
                       <div className="py-5 border-b border-black/5">
-                        <h3 className="text-xs font-mono uppercase tracking-widest text-[--color-dim] mb-3 flex items-center gap-2"><Thermometer className="size-4" /> Game Day Weather</h3>
+                        <h3 className="text-xs font-semibold uppercase tracking-widest text-[--color-dim] mb-3 flex items-center gap-2"><Thermometer className="size-4" /> Game Day Weather</h3>
                         {wLoading && !hours && <div className="flex items-center gap-2 text-sm text-[--color-dim]"><Loader2 className="size-4 animate-spin" /> Loading weather...</div>}
                         {relevantHours.length > 0 && (
                           <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
@@ -1318,7 +1318,7 @@ export function BottomTray({
                   {/* Section: Getting There */}
                   {(airports.length > 0 || trains.length > 0 || buses.length > 0) && (
                     <div className="py-5 border-b border-black/5">
-                      <h3 className="text-xs font-mono uppercase tracking-widest text-[--color-dim] mb-1 flex items-center gap-2"><Map className="size-4" /> Getting There</h3>
+                      <h3 className="text-xs font-semibold uppercase tracking-widest text-[--color-dim] mb-1 flex items-center gap-2"><Map className="size-4" /> Getting There</h3>
                       <p className="text-[10px] text-[--color-dim]/60 font-mono mb-3">Travel times target arrival 45 min before tipoff</p>
                       {/* Tab toggle */}
                       <div className="flex rounded-lg bg-black/5 p-0.5 mb-3">
@@ -1330,7 +1330,7 @@ export function BottomTray({
                           <button
                             key={tab.key}
                             onClick={(e) => { e.stopPropagation(); setTransitTab(tab.key); }}
-                            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-xs font-mono font-semibold transition-all ${
+                            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-xs font-semibold transition-all ${
                               transitTab === tab.key
                                 ? "bg-black/5 text-foreground shadow-sm"
                                 : "text-[--color-dim] hover:text-foreground"
@@ -1358,7 +1358,7 @@ export function BottomTray({
                     if (aptCodes.length === 0 || (!delays && !dLoading)) return null;
                     return (
                       <div className="py-5 border-b border-black/5">
-                        <h3 className="text-xs font-mono uppercase tracking-widest text-[--color-dim] mb-3 flex items-center gap-2"><Plane className="size-4" /> Airport Status</h3>
+                        <h3 className="text-xs font-semibold uppercase tracking-widest text-[--color-dim] mb-3 flex items-center gap-2"><Plane className="size-4" /> Airport Status</h3>
                         {dLoading && !delays && <div className="flex items-center gap-2 text-sm text-[--color-dim]"><Loader2 className="size-4 animate-spin" /> Checking delays...</div>}
                         {delays && <div className="space-y-2">{delays.map((d) => {
                           const hasDelay = (d.departureDel != null && d.departureDel > 0) || (d.arrivalDel != null && d.arrivalDel > 0);
@@ -1377,7 +1377,7 @@ export function BottomTray({
                     if (!ltData && !ltLoading) return null;
                     return (
                       <div className="py-5 border-b border-black/5">
-                        <h3 className="text-xs font-mono uppercase tracking-widest text-[--color-dim] mb-3 flex items-center gap-2"><Timer className="size-4" /> Last Transit Home</h3>
+                        <h3 className="text-xs font-semibold uppercase tracking-widest text-[--color-dim] mb-3 flex items-center gap-2"><Timer className="size-4" /> Last Transit Home</h3>
                         {ltLoading && !ltData && <div className="flex items-center gap-2 text-sm text-[--color-dim]"><Loader2 className="size-4 animate-spin" /> Checking schedules...</div>}
                         {ltData && ltData.length > 0 && <div className="space-y-2">{ltData.map((lt) => {
                           const depTime = lt.lastDeparture ? new Date(lt.lastDeparture) : null;
@@ -1397,7 +1397,7 @@ export function BottomTray({
                     const prohibited = policy?.items.filter((i) => !i.allowed) ?? [];
                     return (
                       <div className="py-5 border-b border-black/5">
-                        <h3 className="text-xs font-mono uppercase tracking-widest text-[--color-dim] mb-3 flex items-center gap-2"><ShieldCheck className="size-4" /> Venue Policy</h3>
+                        <h3 className="text-xs font-semibold uppercase tracking-widest text-[--color-dim] mb-3 flex items-center gap-2"><ShieldCheck className="size-4" /> Venue Policy</h3>
                         {loading && !policy && <div className="flex items-center gap-2 text-sm text-[--color-dim]"><Loader2 className="size-4 animate-spin" /> Loading policy...</div>}
                         {policy && (<div>
                           <div className="text-sm font-mono text-[--color-dim] mb-2">{policy.clearBagRequired && <span className="text-amber-600 font-semibold">Clear bag required</span>}{policy.maxBagSize && <span>{policy.clearBagRequired ? " · " : ""}Max {policy.maxBagSize}</span>}</div>
@@ -1419,11 +1419,11 @@ export function BottomTray({
                     const arriveByEpoch = event.date_time_utc ? Math.floor((new Date(event.date_time_utc).getTime() - 45 * 60 * 1000) / 1000) : undefined;
                     return (
                       <div className="py-5 border-b border-black/5">
-                        <h3 className="text-xs font-mono uppercase tracking-widest text-[--color-dim] mb-3 flex items-center gap-2"><Hotel className="size-4" /> Nearby Hotels</h3>
+                        <h3 className="text-xs font-semibold uppercase tracking-widest text-[--color-dim] mb-3 flex items-center gap-2"><Hotel className="size-4" /> Nearby Hotels</h3>
                         {loading && !hotels && <div className="flex items-center gap-2 text-sm text-[--color-dim]"><Loader2 className="size-4 animate-spin" /> Loading hotels...</div>}
                         {hotels && hotels.length > 0 && <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{hotels.map((h, hi) => (
                           <div key={hi} className="rounded-xl bg-black/5 p-3 space-y-2">
-                            <a href={h.bookingUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-foreground hover:text-amber-600 transition-colors no-underline block truncate">{h.name}</a>
+                            <a href={h.bookingUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-bold text-foreground hover:text-amber-600 transition-colors no-underline block truncate">{h.name}</a>
                             <div className="flex items-center gap-3 text-xs font-mono">
                               {h.rating && <span className="flex items-center gap-0.5 text-amber-600"><Star className="size-3" /> {h.rating}</span>}
                               <span className="text-emerald-600">{h.estimatedPrice}</span>
@@ -1451,7 +1451,7 @@ export function BottomTray({
                     return (
                       <div className="py-5 border-b border-black/5">
                         <div className="flex items-center justify-between mb-3">
-                          <h3 className="text-xs font-mono uppercase tracking-widest text-[--color-dim] flex items-center gap-2"><ParkingSquare className="size-4" /> Parking</h3>
+                          <h3 className="text-xs font-semibold uppercase tracking-widest text-[--color-dim] flex items-center gap-2"><ParkingSquare className="size-4" /> Parking</h3>
                           {spots && spots.length > 0 && <a href={spots[0].spotHeroUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] font-mono text-cyan-600 hover:text-cyan-600 no-underline flex items-center gap-1">Reserve on SpotHero <ExternalLink className="size-3" /></a>}
                         </div>
                         {pLoading && !spots && <div className="flex items-center gap-2 text-sm text-[--color-dim]"><Loader2 className="size-4 animate-spin" /> Finding parking...</div>}
@@ -1481,7 +1481,7 @@ export function BottomTray({
                     if (!news && !nLoading) return null;
                     return (
                       <details className="py-5 border-b border-black/5 group">
-                        <summary className="text-xs font-mono uppercase tracking-widest text-[--color-dim] flex items-center gap-2 cursor-pointer list-none select-none">
+                        <summary className="text-xs font-semibold uppercase tracking-widest text-[--color-dim] flex items-center gap-2 cursor-pointer list-none select-none">
                           <Newspaper className="size-4" /> Local News
                           {news && news.length > 0 && <span className="text-[10px] opacity-60">({news.length})</span>}
                           <ChevronDown className="size-4 ml-auto transition-transform group-open:rotate-180" />
@@ -1490,7 +1490,7 @@ export function BottomTray({
                           {nLoading && !news && <div className="flex items-center gap-2 text-sm text-[--color-dim]"><Loader2 className="size-4 animate-spin" /> Loading news...</div>}
                           {news && news.length > 0 && <div className="space-y-2">{news.map((n, i) => (
                             <a key={i} href={n.link} target="_blank" rel="noopener noreferrer" className="block rounded-lg hover:bg-black/5 px-3 py-2 no-underline transition-colors">
-                              <div className="text-sm text-foreground leading-snug">{n.title}</div>
+                              <div className="text-sm text-foreground leading-snug font-medium">{n.title}</div>
                               <div className="flex items-center gap-3 mt-1 text-[10px] text-[--color-dim] font-mono">
                                 <span>{n.source}</span>
                                 {n.published && <span>{new Date(n.published).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>}
@@ -1506,7 +1506,7 @@ export function BottomTray({
 
                   {/* Section: Links */}
                   <div className="py-5 border-b border-black/5">
-                    <h3 className="text-xs font-mono uppercase tracking-widest text-[--color-dim] mb-3 flex items-center gap-2"><Ticket className="size-4" /> Tickets & Links</h3>
+                    <h3 className="text-xs font-semibold uppercase tracking-widest text-[--color-dim] mb-3 flex items-center gap-2"><Ticket className="size-4" /> Tickets & Links</h3>
                     <div className="flex flex-wrap gap-2">
                       {[
                         { label: "Ticketmaster", href: event.url },
@@ -1516,7 +1516,7 @@ export function BottomTray({
                         { label: "ESPN", href: `https://www.espn.com/nba/scoreboard/_/date/${date.replace(/-/g, "")}` },
                         venuePolicies[event.venue]?.websiteUrl ? { label: "Venue", href: venuePolicies[event.venue].websiteUrl } : null,
                       ].filter(Boolean).map((link) => (
-                        <a key={link!.label} href={link!.href} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-full bg-black/5 hover:bg-black/5 text-xs font-mono text-[--color-dim] hover:text-foreground no-underline transition-colors inline-flex items-center gap-1">
+                        <a key={link!.label} href={link!.href} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-full bg-black/5 hover:bg-black/5 text-xs font-medium text-[--color-dim] hover:text-foreground no-underline transition-colors inline-flex items-center gap-1">
                           {link!.label} <ArrowUpRight className="size-3" />
                         </a>
                       ))}
@@ -1539,12 +1539,12 @@ export function BottomTray({
                           fetch("/api/cow", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, data: cow }) }).catch(() => {});
                           router.push(`/rampage?cow=${id}`);
                         }}
-                        className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl font-mono text-base font-semibold tracking-wider bg-[--primary] text-[--primary-foreground] shadow-lg hover:brightness-110 transition-all press-scale"
+                        className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl text-base font-bold tracking-wider bg-[--primary] text-[--primary-foreground] shadow-lg hover:brightness-110 transition-all press-scale"
                       >
                         <Navigation className="size-5" /> RUN IT!
                       </button>
                     ) : (
-                      <div className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl font-mono text-sm text-[--color-dim] bg-black/[0.03] border border-black/5">
+                      <div className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl text-sm text-[--color-dim] bg-black/[0.03] border border-black/5">
                         SET LOCATION TO PLAN ROUTE
                       </div>
                     )}
