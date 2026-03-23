@@ -260,7 +260,7 @@ function TransitRows({
         return (
           <div
             key={stop.code}
-            className="rounded-xl bg-white/5 p-3 font-mono"
+            className="rounded-xl bg-black/5 p-3 font-mono"
           >
             {/* Header: code + distance */}
             <div className="flex items-center gap-2 mb-2">
@@ -284,7 +284,7 @@ function TransitRows({
                   <a
                     href={gmapsUrl(vLat, vLng, stop.lat, stop.lng, "driving", arriveByEpoch)}
                     target="_blank" rel="noopener noreferrer"
-                    className="block rounded-lg bg-white/5 hover:bg-white/10 py-2.5 px-3 no-underline transition-colors"
+                    className="block rounded-lg bg-black/5 hover:bg-black/5 py-2.5 px-3 no-underline transition-colors"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <div className="flex items-center gap-2 mb-1.5">
@@ -292,7 +292,7 @@ function TransitRows({
                       <span className="text-xs font-bold text-foreground">{formatDriveTime(times.driveMinutes)}</span>
                       <span className="text-[10px] text-[--color-dim]">Drive</span>
                     </div>
-                    <div className="flex items-center gap-3 text-[10px] border-t border-white/5 pt-1.5">
+                    <div className="flex items-center gap-3 text-[10px] border-t border-black/5 pt-1.5">
                       <span className="text-[--color-dim] cursor-pointer" onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(uberDeepLink(vLat, vLng, stop.lat, stop.lng), "_blank"); }}>
                         <span className="font-bold">UBER</span> <span className="text-emerald-400">{times.uberEstimate ? `~${extractUpperBound(times.uberEstimate)}` : "--"}</span>
                       </span>
@@ -301,7 +301,7 @@ function TransitRows({
                       </span>
                     </div>
                   </a>
-                  <div className="rounded-lg overflow-hidden border border-white/5">
+                  <div className="rounded-lg overflow-hidden border border-black/5">
                     <iframe
                       className="w-full h-[180px]"
                       style={{ colorScheme: "light" }}
@@ -317,7 +317,7 @@ function TransitRows({
                     <a
                       href={gmapsUrl(vLat, vLng, stop.lat, stop.lng, "transit", arriveByEpoch)}
                       target="_blank" rel="noopener noreferrer"
-                      className="block rounded-lg bg-white/5 hover:bg-white/10 py-2.5 px-3 no-underline transition-colors"
+                      className="block rounded-lg bg-black/5 hover:bg-black/5 py-2.5 px-3 no-underline transition-colors"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <div className="flex items-center gap-2">
@@ -327,7 +327,7 @@ function TransitRows({
                       </div>
                       <div className="text-[10px] text-emerald-400 mt-1">{times.transitFare ?? "No fare info"}</div>
                     </a>
-                    <div className="rounded-lg overflow-hidden border border-white/5">
+                    <div className="rounded-lg overflow-hidden border border-black/5">
                       <iframe
                         className="w-full h-[180px]"
                         loading="lazy"
@@ -820,13 +820,13 @@ export function BottomTray({
     >
       <div className="h-full panel rounded-t-lg flex flex-col">
         {/* Header bar */}
-        <div className="flex items-center select-none border-b border-white/8">
+        <div className="flex items-center select-none border-b border-black/5">
           {/* Search */}
-          <div className="flex-1 min-w-0 border-r border-white/5">
+          <div className="flex-1 min-w-0 border-r border-black/5">
             <SearchBar value={search} onChange={onSearchChange} onLocationChange={onLocationChange} />
           </div>
           {/* Filters */}
-          <div className="relative shrink-0 border-r border-white/5" ref={filterRef}>
+          <div className="relative shrink-0 border-r border-black/5" ref={filterRef}>
             <button
               onClick={() => setShowFilters((v) => !v)}
               className={`flex items-center gap-1.5 font-mono text-xs tracking-wider px-3 py-2.5 transition-colors ${
@@ -843,22 +843,22 @@ export function BottomTray({
                 onClick={(e) => { e.stopPropagation(); setShowFilters(false); }}
               >
                 <div
-                  className="w-64 rounded-xl border border-white/10 panel-elevated shadow-2xl py-2"
+                  className="w-64 rounded-xl border border-black/8 panel-elevated shadow-2xl py-2"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <div className="px-4 py-2 text-xs font-mono tracking-widest text-foreground uppercase border-b border-white/8 font-semibold">
+                  <div className="px-4 py-2 text-xs font-mono tracking-widest text-foreground uppercase border-b border-black/5 font-semibold">
                     Columns
                   </div>
                   {ALL_COLUMNS.map((col) => (
                     <button
                       key={col.id}
                       onClick={() => toggleColumn(col.id)}
-                      className="flex items-center gap-3 w-full px-4 py-2.5 text-sm font-mono hover:bg-white/5 transition-all"
+                      className="flex items-center gap-3 w-full px-4 py-2.5 text-sm font-mono hover:bg-black/5 transition-all"
                     >
                       <span className={`size-5 rounded-md border-2 flex items-center justify-center transition-all ${
                         visibleColumns.has(col.id)
                           ? "bg-[--primary] border-[--primary] text-white shadow-md shadow-[--primary]/25"
-                          : "border-white/25 bg-white/[0.04]"
+                          : "border-black/15 bg-black/[0.03]"
                       }`}>
                         {visibleColumns.has(col.id) && <Check className="size-3" />}
                       </span>
@@ -884,7 +884,7 @@ export function BottomTray({
           {/* Expand/collapse */}
           <button
             onClick={cycleTray}
-            className="shrink-0 px-2 py-2.5 hover:bg-white/5 transition-colors border-l border-white/5"
+            className="shrink-0 px-2 py-2.5 hover:bg-black/5 transition-colors border-l border-black/5"
           >
             <ChevronUp className={`size-4 text-[--color-dim] transition-transform ${trayState === "expanded" ? "rotate-180" : ""}`} />
           </button>
@@ -892,7 +892,7 @@ export function BottomTray({
 
         {/* Column headers — clickable to sort */}
         {trayState !== "collapsed" && (
-          <div className="px-6 py-1.5 border-b border-[--primary]/10 overflow-x-auto no-scrollbar bg-white/[0.02]">
+          <div className="px-6 py-1.5 border-b border-[--primary]/10 overflow-x-auto no-scrollbar bg-black/[0.02]">
             <div className="flex items-center gap-2.5 text-[9px] font-mono tracking-widest uppercase" style={{ minWidth: visibleColumns.size > 3 ? "600px" : undefined }}>
               {visibleColumns.has("ticket") && (
                 <span onClick={() => handleHeaderSort("price")} className={`shrink-0 min-w-[2.5rem] cursor-pointer hover:text-foreground transition-colors ${sortKey === "price" ? "text-[--primary] font-semibold" : "text-[--color-dim]"}`}>
@@ -977,7 +977,7 @@ export function BottomTray({
                       ? "border-l-2 border-[--color-rampage] bg-[--color-rampage]/8 shadow-lg shadow-[--color-rampage]/5"
                       : isSelected || isHovered
                         ? "shadow-lg"
-                        : "hover:bg-white/[0.04]"
+                        : "hover:bg-black/[0.03]"
                   }`}
                   style={isHovered && !isSelected && !isRampageSelected ? { borderColor: "white" } : undefined}
                   onClick={() => {
@@ -1182,7 +1182,7 @@ export function BottomTray({
               onClick={closePopover}
             >
               {/* Backdrop */}
-              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+              <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
 
               {/* Panel */}
               <div
@@ -1190,9 +1190,9 @@ export function BottomTray({
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Drag handle + close */}
-                <div className="sticky top-0 z-10 bg-[--background] border-b border-white/5">
+                <div className="sticky top-0 z-10 bg-[--background] border-b border-black/5">
                   <div className="flex justify-center pt-3 pb-1">
-                    <div className="w-10 h-1 rounded-full bg-white/20" />
+                    <div className="w-10 h-1 rounded-full bg-black/15" />
                   </div>
                   <div className="flex items-center justify-between px-5 pb-3">
                     <div>
@@ -1209,7 +1209,7 @@ export function BottomTray({
                         {dist != null && <span>{Math.round(dist)}mi away</span>}
                       </div>
                     </div>
-                    <button onClick={closePopover} className="p-2 rounded-full hover:bg-white/10 transition-colors">
+                    <button onClick={closePopover} className="p-2 rounded-full hover:bg-black/5 transition-colors">
                       <X className="size-5 text-[--color-dim]" />
                     </button>
                   </div>
@@ -1218,14 +1218,14 @@ export function BottomTray({
                 {/* Scrollable content */}
                 <div className="flex-1 overflow-y-auto no-scrollbar px-5 pb-8">
                   {/* Hero stats grid */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-5 border-b border-white/5">
-                    <div className="bg-white/5 rounded-xl p-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-5 border-b border-black/5">
+                    <div className="bg-black/5 rounded-xl p-3">
                       <div className="text-[10px] font-mono text-[--color-dim] uppercase tracking-widest mb-1">Tipoff</div>
                       <div className="text-xl font-bold font-mono text-foreground">{formatTime(event.local_time ?? event.est_time, event.tz)}</div>
                       {showLocal && <div className="text-xs font-mono text-[--color-dim] mt-0.5">{userLocal.text} your time</div>}
                     </div>
                     {price != null && (
-                      <div className="bg-white/5 rounded-xl p-3">
+                      <div className="bg-black/5 rounded-xl p-3">
                         <div className="text-[10px] font-mono text-[--color-dim] uppercase tracking-widest mb-1">From</div>
                         <div className={`text-xl font-bold font-mono ${price < 30 ? "text-emerald-400" : price < 80 ? "text-emerald-300/80" : "text-foreground"}`}>${price}</div>
                         {event.espn_price?.available != null && event.espn_price.available > 0 && (
@@ -1234,14 +1234,14 @@ export function BottomTray({
                       </div>
                     )}
                     {event.odds && away && (
-                      <div className="bg-white/5 rounded-xl p-3">
+                      <div className="bg-black/5 rounded-xl p-3">
                         <div className="text-[10px] font-mono text-[--color-dim] uppercase tracking-widest mb-1">Win Probability</div>
                         <div className="space-y-1 mt-1">
                           <div className="flex items-center justify-between text-xs font-mono">
                             <span className="text-[--color-dim]">{away}</span>
                             <span className="text-foreground font-bold">{event.odds.away_win}%</span>
                           </div>
-                          <div className="h-2 rounded-full bg-white/10 overflow-hidden flex">
+                          <div className="h-2 rounded-full bg-black/5 overflow-hidden flex">
                             <div className="h-full rounded-l-full bg-emerald-500" style={{ width: `${event.odds.away_win}%` }} />
                             <div className="h-full rounded-r-full bg-amber-500" style={{ width: `${event.odds.home_win}%` }} />
                           </div>
@@ -1253,7 +1253,7 @@ export function BottomTray({
                       </div>
                     )}
                     {event.away_record && event.home_record && away && (
-                      <div className="bg-white/5 rounded-xl p-3">
+                      <div className="bg-black/5 rounded-xl p-3">
                         <div className="text-[10px] font-mono text-[--color-dim] uppercase tracking-widest mb-1">Record & Odds</div>
                         <div className="space-y-1.5 mt-1">
                           <div className="flex items-center justify-between text-xs font-mono">
@@ -1287,7 +1287,7 @@ export function BottomTray({
                     if (!hours && !wLoading) return null;
                     const relevantHours = hours ?? [];
                     return (
-                      <div className="py-5 border-b border-white/5">
+                      <div className="py-5 border-b border-black/5">
                         <h3 className="text-xs font-mono uppercase tracking-widest text-[--color-dim] mb-3 flex items-center gap-2"><Thermometer className="size-4" /> Game Day Weather</h3>
                         {wLoading && !hours && <div className="flex items-center gap-2 text-sm text-[--color-dim]"><Loader2 className="size-4 animate-spin" /> Loading weather...</div>}
                         {relevantHours.length > 0 && (
@@ -1299,7 +1299,7 @@ export function BottomTray({
                               const tipoffHr = event.date_time_utc ? new Date(event.date_time_utc).getHours() : -1;
                               const isTipoff = hr === tipoffHr;
                               return (
-                                <div key={h.time} className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg text-[11px] font-mono shrink-0 min-w-[52px] ${isTipoff ? "bg-[--primary]/15 ring-1 ring-[--primary]/30" : "bg-white/5"}`}>
+                                <div key={h.time} className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg text-[11px] font-mono shrink-0 min-w-[52px] ${isTipoff ? "bg-[--primary]/15 ring-1 ring-[--primary]/30" : "bg-black/5"}`}>
                                   <span className={`font-semibold ${isTipoff ? "text-[--primary]" : "text-[--color-dim]"}`}>{hr12}{ampm}</span>
                                   <WeatherIcon code={h.weatherCode} className="size-4 text-foreground" />
                                   <span className="text-foreground font-bold">{h.temp}°</span>
@@ -1317,11 +1317,11 @@ export function BottomTray({
 
                   {/* Section: Getting There */}
                   {(airports.length > 0 || trains.length > 0 || buses.length > 0) && (
-                    <div className="py-5 border-b border-white/5">
+                    <div className="py-5 border-b border-black/5">
                       <h3 className="text-xs font-mono uppercase tracking-widest text-[--color-dim] mb-1 flex items-center gap-2"><Map className="size-4" /> Getting There</h3>
                       <p className="text-[10px] text-[--color-dim]/60 font-mono mb-3">Travel times target arrival 45 min before tipoff</p>
                       {/* Tab toggle */}
-                      <div className="flex rounded-lg bg-white/5 p-0.5 mb-3">
+                      <div className="flex rounded-lg bg-black/5 p-0.5 mb-3">
                         {([
                           { key: "flights" as const, label: "Flights", icon: Plane, count: airports.length },
                           { key: "trains" as const, label: "Trains", icon: TrainFront, count: trains.length },
@@ -1332,7 +1332,7 @@ export function BottomTray({
                             onClick={(e) => { e.stopPropagation(); setTransitTab(tab.key); }}
                             className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-xs font-mono font-semibold transition-all ${
                               transitTab === tab.key
-                                ? "bg-white/10 text-foreground shadow-sm"
+                                ? "bg-black/5 text-foreground shadow-sm"
                                 : "text-[--color-dim] hover:text-foreground"
                             }`}
                           >
@@ -1357,7 +1357,7 @@ export function BottomTray({
                     const dLoading = delaysLoading.has(delayKey);
                     if (aptCodes.length === 0 || (!delays && !dLoading)) return null;
                     return (
-                      <div className="py-5 border-b border-white/5">
+                      <div className="py-5 border-b border-black/5">
                         <h3 className="text-xs font-mono uppercase tracking-widest text-[--color-dim] mb-3 flex items-center gap-2"><Plane className="size-4" /> Airport Status</h3>
                         {dLoading && !delays && <div className="flex items-center gap-2 text-sm text-[--color-dim]"><Loader2 className="size-4 animate-spin" /> Checking delays...</div>}
                         {delays && <div className="space-y-2">{delays.map((d) => {
@@ -1376,7 +1376,7 @@ export function BottomTray({
                     const ltLoading = lastTransitLoading.has(ltKey);
                     if (!ltData && !ltLoading) return null;
                     return (
-                      <div className="py-5 border-b border-white/5">
+                      <div className="py-5 border-b border-black/5">
                         <h3 className="text-xs font-mono uppercase tracking-widest text-[--color-dim] mb-3 flex items-center gap-2"><Timer className="size-4" /> Last Transit Home</h3>
                         {ltLoading && !ltData && <div className="flex items-center gap-2 text-sm text-[--color-dim]"><Loader2 className="size-4 animate-spin" /> Checking schedules...</div>}
                         {ltData && ltData.length > 0 && <div className="space-y-2">{ltData.map((lt) => {
@@ -1396,7 +1396,7 @@ export function BottomTray({
                     const allowed = policy?.items.filter((i) => i.allowed) ?? [];
                     const prohibited = policy?.items.filter((i) => !i.allowed) ?? [];
                     return (
-                      <div className="py-5 border-b border-white/5">
+                      <div className="py-5 border-b border-black/5">
                         <h3 className="text-xs font-mono uppercase tracking-widest text-[--color-dim] mb-3 flex items-center gap-2"><ShieldCheck className="size-4" /> Venue Policy</h3>
                         {loading && !policy && <div className="flex items-center gap-2 text-sm text-[--color-dim]"><Loader2 className="size-4 animate-spin" /> Loading policy...</div>}
                         {policy && (<div>
@@ -1418,11 +1418,11 @@ export function BottomTray({
                     if (!hotels && !loading) return null;
                     const arriveByEpoch = event.date_time_utc ? Math.floor((new Date(event.date_time_utc).getTime() - 45 * 60 * 1000) / 1000) : undefined;
                     return (
-                      <div className="py-5 border-b border-white/5">
+                      <div className="py-5 border-b border-black/5">
                         <h3 className="text-xs font-mono uppercase tracking-widest text-[--color-dim] mb-3 flex items-center gap-2"><Hotel className="size-4" /> Nearby Hotels</h3>
                         {loading && !hotels && <div className="flex items-center gap-2 text-sm text-[--color-dim]"><Loader2 className="size-4 animate-spin" /> Loading hotels...</div>}
                         {hotels && hotels.length > 0 && <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{hotels.map((h, hi) => (
-                          <div key={hi} className="rounded-xl bg-white/5 p-3 space-y-2">
+                          <div key={hi} className="rounded-xl bg-black/5 p-3 space-y-2">
                             <a href={h.bookingUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-foreground hover:text-amber-400 transition-colors no-underline block truncate">{h.name}</a>
                             <div className="flex items-center gap-3 text-xs font-mono">
                               {h.rating && <span className="flex items-center gap-0.5 text-amber-400"><Star className="size-3" /> {h.rating}</span>}
@@ -1449,14 +1449,14 @@ export function BottomTray({
                     const pLoading = parkingLoading.has(parkKey);
                     if (!spots && !pLoading) return null;
                     return (
-                      <div className="py-5 border-b border-white/5">
+                      <div className="py-5 border-b border-black/5">
                         <div className="flex items-center justify-between mb-3">
                           <h3 className="text-xs font-mono uppercase tracking-widest text-[--color-dim] flex items-center gap-2"><ParkingSquare className="size-4" /> Parking</h3>
                           {spots && spots.length > 0 && <a href={spots[0].spotHeroUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] font-mono text-cyan-400 hover:text-cyan-300 no-underline flex items-center gap-1">Reserve on SpotHero <ExternalLink className="size-3" /></a>}
                         </div>
                         {pLoading && !spots && <div className="flex items-center gap-2 text-sm text-[--color-dim]"><Loader2 className="size-4 animate-spin" /> Finding parking...</div>}
                         {spots && spots.length > 0 && <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">{spots.map((p, i) => (
-                          <a key={i} href={p.directionsUrl} target="_blank" rel="noopener noreferrer" className="rounded-lg bg-white/5 hover:bg-white/10 transition-colors p-2.5 no-underline block">
+                          <a key={i} href={p.directionsUrl} target="_blank" rel="noopener noreferrer" className="rounded-lg bg-black/5 hover:bg-black/5 transition-colors p-2.5 no-underline block">
                             <div className="flex items-center justify-between">
                               <div className="text-xs font-mono text-foreground font-semibold truncate">{p.name}</div>
                               {p.priceLevel && <span className="text-emerald-400 text-[10px] font-mono font-bold shrink-0 ml-1">{p.priceLevel}</span>}
@@ -1480,7 +1480,7 @@ export function BottomTray({
                     const nLoading = newsLoading.has(newsKey);
                     if (!news && !nLoading) return null;
                     return (
-                      <details className="py-5 border-b border-white/5 group">
+                      <details className="py-5 border-b border-black/5 group">
                         <summary className="text-xs font-mono uppercase tracking-widest text-[--color-dim] flex items-center gap-2 cursor-pointer list-none select-none">
                           <Newspaper className="size-4" /> Local News
                           {news && news.length > 0 && <span className="text-[10px] opacity-60">({news.length})</span>}
@@ -1489,7 +1489,7 @@ export function BottomTray({
                         <div className="mt-3">
                           {nLoading && !news && <div className="flex items-center gap-2 text-sm text-[--color-dim]"><Loader2 className="size-4 animate-spin" /> Loading news...</div>}
                           {news && news.length > 0 && <div className="space-y-2">{news.map((n, i) => (
-                            <a key={i} href={n.link} target="_blank" rel="noopener noreferrer" className="block rounded-lg hover:bg-white/5 px-3 py-2 no-underline transition-colors">
+                            <a key={i} href={n.link} target="_blank" rel="noopener noreferrer" className="block rounded-lg hover:bg-black/5 px-3 py-2 no-underline transition-colors">
                               <div className="text-sm text-foreground leading-snug">{n.title}</div>
                               <div className="flex items-center gap-3 mt-1 text-[10px] text-[--color-dim] font-mono">
                                 <span>{n.source}</span>
@@ -1505,7 +1505,7 @@ export function BottomTray({
                   })()}
 
                   {/* Section: Links */}
-                  <div className="py-5 border-b border-white/5">
+                  <div className="py-5 border-b border-black/5">
                     <h3 className="text-xs font-mono uppercase tracking-widest text-[--color-dim] mb-3 flex items-center gap-2"><Ticket className="size-4" /> Tickets & Links</h3>
                     <div className="flex flex-wrap gap-2">
                       {[
@@ -1516,7 +1516,7 @@ export function BottomTray({
                         { label: "ESPN", href: `https://www.espn.com/nba/scoreboard/_/date/${date.replace(/-/g, "")}` },
                         venuePolicies[event.venue]?.websiteUrl ? { label: "Venue", href: venuePolicies[event.venue].websiteUrl } : null,
                       ].filter(Boolean).map((link) => (
-                        <a key={link!.label} href={link!.href} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 text-xs font-mono text-[--color-dim] hover:text-foreground no-underline transition-colors inline-flex items-center gap-1">
+                        <a key={link!.label} href={link!.href} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-full bg-black/5 hover:bg-black/5 text-xs font-mono text-[--color-dim] hover:text-foreground no-underline transition-colors inline-flex items-center gap-1">
                           {link!.label} <ArrowUpRight className="size-3" />
                         </a>
                       ))}
@@ -1544,7 +1544,7 @@ export function BottomTray({
                         <Navigation className="size-5" /> RUN IT!
                       </button>
                     ) : (
-                      <div className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl font-mono text-sm text-[--color-dim] bg-white/[0.03] border border-white/5">
+                      <div className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl font-mono text-sm text-[--color-dim] bg-black/[0.03] border border-black/5">
                         SET LOCATION TO PLAN ROUTE
                       </div>
                     )}
