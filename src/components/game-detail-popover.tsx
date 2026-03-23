@@ -976,29 +976,31 @@ export function GameDetailPopover({
                       <h3 className="text-base font-semibold text-neutral-800 mb-3">{sLabel}</h3>
                       {sdLoading && !sdData && <div className="flex items-center gap-2 text-sm text-neutral-500"><Loader2 className="size-4 animate-spin" /> Checking schedules...</div>}
                       {sdData && relevant.length === 0 && <p className="text-sm text-neutral-500">No departures found for this date.</p>}
-                      {relevant.map((station) => {
-                        const deps = station.departures.filter((dep) => dep.mode === wantMode).slice(0, 8);
-                        if (deps.length === 0) return null;
-                        return (
-                          <div key={station.code} className="mb-4 last:mb-0">
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className="text-sm font-semibold text-neutral-800">{station.name}</span>
-                              <span className="text-xs text-neutral-500">{station.code}</span>
-                            </div>
-                            <div className="space-y-1">
-                              {deps.map((dep, i) => (
-                                <div key={i} className="flex items-center gap-3 rounded-lg bg-neutral-50 px-3 py-2">
-                                  <span className="text-sm font-semibold text-neutral-900 w-[72px] shrink-0">{dep.departTime}</span>
-                                  <div className="min-w-0 flex-1">
-                                    <div className="text-sm text-neutral-800 truncate">{dep.headsign || dep.destination}</div>
-                                    <div className="text-xs text-neutral-500">{dep.carrier} · {dep.routeName}</div>
-                                  </div>
+                      {relevant.length > 0 && (
+                        <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory no-scrollbar">
+                          {relevant.map((station) => {
+                            const deps = station.departures.filter((dep) => dep.mode === wantMode).slice(0, 10);
+                            if (deps.length === 0) return null;
+                            return (
+                              <div key={station.code} className="snap-start shrink-0 w-[220px] rounded-xl border border-neutral-200 bg-white overflow-hidden">
+                                <div className="px-4 py-3 border-b border-neutral-100 bg-neutral-50">
+                                  <div className="text-sm font-bold text-neutral-900">{station.name}</div>
+                                  <div className="text-[11px] font-medium text-neutral-500 tracking-wide">{station.code}</div>
                                 </div>
-                              ))}
-                            </div>
-                          </div>
-                        );
-                      })}
+                                <div className="divide-y divide-neutral-100">
+                                  {deps.map((dep, i) => (
+                                    <div key={i} className="px-4 py-2.5">
+                                      <div className="text-sm font-bold text-neutral-900">{dep.departTime}</div>
+                                      <div className="text-sm text-neutral-700 truncate">{dep.headsign || dep.destination}</div>
+                                      <div className="text-[11px] text-neutral-400">{dep.carrier} · {dep.routeName}</div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   );
                 })()}

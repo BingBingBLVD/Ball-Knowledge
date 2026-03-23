@@ -160,7 +160,7 @@ export function LocationButton({
       {/* Toggle button */}
       <button
         onClick={() => { setOpen(!open); setAddressMode(false); setQuery(""); setSuggestions([]); }}
-        className={`flex items-center gap-1.5 px-3 py-2 rounded-full bg-white border shadow-md hover:shadow-lg transition-all ${
+        className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-white border shadow-md hover:shadow-lg transition-all ${
           userLocation
             ? "border-neutral-200 text-neutral-900"
             : "border-neutral-200 text-neutral-500"

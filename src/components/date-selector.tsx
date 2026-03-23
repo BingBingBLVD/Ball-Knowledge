@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRampage } from "@/lib/rampage-context";
 
@@ -114,11 +114,49 @@ export function DateSelector({
     return () => document.removeEventListener("mousedown", handleClick);
   }, [open]);
 
+  // Swipe / drag to change date (small screens where chevrons are hidden)
+  const swipeRef = useRef<{ startX: number; startY: number; swiped: boolean } | null>(null);
+  const SWIPE_THRESHOLD = 40;
+
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
+    swipeRef.current = { startX: e.clientX, startY: e.clientY, swiped: false };
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  }, []);
+
+  const onPointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      const s = swipeRef.current;
+      if (!s || s.swiped) return;
+      const dx = e.clientX - s.startX;
+      const dy = Math.abs(e.clientY - s.startY);
+      // Only count horizontal swipes
+      if (dy > Math.abs(dx)) return;
+      if (dx < -SWIPE_THRESHOLD && hasNext) {
+        s.swiped = true;
+        onDateChange(availableDates[idx + 1]);
+      } else if (dx > SWIPE_THRESHOLD && hasPrev) {
+        s.swiped = true;
+        onDateChange(availableDates[idx - 1]);
+      }
+    },
+    [hasPrev, hasNext, idx, availableDates, onDateChange],
+  );
+
+  const onPointerUp = useCallback(
+    (e: React.PointerEvent) => {
+      const wasSwiped = swipeRef.current?.swiped;
+      swipeRef.current = null;
+      // If it was a tap (no swipe), toggle calendar
+      if (!wasSwiped) setOpen((o) => !o);
+    },
+    [],
+  );
+
   return (
     <div ref={ref} className="relative">
       <div className="flex items-center gap-0.5 px-2 py-1.5 shrink-0">
-        {/* Prev arrow — hidden on very small screens */}
-        <div className="hidden min-[360px]:flex flex-col items-center">
+        {/* Prev arrow — hidden on small screens */}
+        <div className="hidden min-[867px]:flex flex-col items-center">
           <button
             onClick={() => {
               if (hasPrev) onDateChange(availableDates[idx - 1]);
@@ -135,10 +173,12 @@ export function DateSelector({
           )}
         </div>
 
-        {/* Center date — clickable */}
-        <button
-          onClick={() => setOpen((o) => !o)}
-          className="text-center min-w-[120px] px-1 rounded hover:bg-neutral-100 transition-colors py-0.5"
+        {/* Center date — tap to open calendar, swipe to change date */}
+        <div
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          className="text-center min-w-[120px] px-1 rounded hover:bg-neutral-100 transition-colors py-0.5 cursor-pointer select-none touch-pan-y"
         >
           <div className="text-sm font-semibold leading-tight text-neutral-900">
             {formatDateMono(currentDate)}
@@ -146,10 +186,10 @@ export function DateSelector({
           <div className="text-xs text-neutral-500 leading-tight">
             {gameCount} games
           </div>
-        </button>
+        </div>
 
-        {/* Next arrow — hidden on very small screens */}
-        <div className="hidden min-[360px]:flex flex-col items-center">
+        {/* Next arrow — hidden on small screens */}
+        <div className="hidden min-[867px]:flex flex-col items-center">
           <button
             onClick={() => {
               if (hasNext) onDateChange(availableDates[idx + 1]);
@@ -170,11 +210,11 @@ export function DateSelector({
       {/* Calendar dropdown — centered overlay */}
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
           onClick={() => setOpen(false)}
         >
           <div
-            className="bg-white rounded-xl border border-neutral-200 p-4 shadow-xl min-w-[300px]"
+            className="bg-white rounded-xl border border-neutral-200 p-4 shadow-xl min-w-[300px] animate-in fade-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Month nav */}

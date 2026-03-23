@@ -49,6 +49,7 @@ import {
   Tv,
   HeartPulse,
   Luggage,
+  Wifi,
   Plus,
   Minus,
 } from "lucide-react";
@@ -710,6 +711,38 @@ export function BottomTray({
     }
   }, [airportDelays, delaysLoading]);
 
+  // Station departures state (trains & buses)
+  interface StationDeparture { carrier: string; routeName: string; headsign: string; mode: "bus" | "train"; departMinutes: number; departTime: string; destination: string }
+  interface StationDepartureResult { code: string; name: string; departures: StationDeparture[] }
+  const [stationDepartures, setStationDepartures] = useState<Record<string, StationDepartureResult[]>>({});
+  const [stationDepsLoading, setStationDepsLoading] = useState<Set<string>>(new Set());
+  const stationDepsFailed = useRef<Set<string>>(new Set());
+
+  const handleStationDepsLoad = useCallback(async (stops: { code: string; name: string; lat: number; lng: number }[], gameDate: string) => {
+    const key = stops.map((s) => s.code).sort().join(",") + "|" + gameDate;
+    if (!key || stationDepartures[key] || stationDepsLoading.has(key) || stationDepsFailed.current.has(key)) return key;
+    setStationDepsLoading((prev) => new Set(prev).add(key));
+    try {
+      const stopsJson = encodeURIComponent(JSON.stringify(stops.slice(0, 10)));
+      const res = await fetch(`/api/station-departures?stops=${stopsJson}&date=${gameDate}`);
+      if (res.ok) {
+        const data = await res.json();
+        setStationDepartures((prev) => ({ ...prev, [key]: data.stations }));
+      } else {
+        stationDepsFailed.current.add(key);
+      }
+    } catch {
+      stationDepsFailed.current.add(key);
+    } finally {
+      setStationDepsLoading((prev) => {
+        const next = new Set(prev);
+        next.delete(key);
+        return next;
+      });
+    }
+    return key;
+  }, [stationDepartures, stationDepsLoading]);
+
   // Local news state
   interface NewsItem { title: string; link: string; source: string; published: string; snippet: string }
   const [localNews, setLocalNews] = useState<Record<string, NewsItem[]>>({});
@@ -1089,6 +1122,11 @@ export function BottomTray({
                       handleWeatherLoad(vLat, vLng, event.est_date || date);
                       const aptCodes = (event.nearbyAirports ?? []).map((a) => a.code);
                       if (aptCodes.length > 0) handleDelaysLoad(aptCodes);
+                      const transitStopsForDeps = [
+                        ...(event.nearbyTrainStations ?? []).map((s) => ({ code: s.code, name: s.name, lat: s.lat, lng: s.lng })),
+                        ...(event.nearbyBusStations ?? []).map((s) => ({ code: s.code, name: s.name, lat: s.lat, lng: s.lng })),
+                      ];
+                      if (transitStopsForDeps.length > 0) handleStationDepsLoad(transitStopsForDeps, event.est_date || date);
                       handleNewsLoad(event.city, event.state, event.venue);
                       handlePhotosLoad(event.venue, vLat, vLng);
                       handleParkingLoad(event.venue, vLat, vLng, event.est_date || date);
@@ -1513,8 +1551,8 @@ export function BottomTray({
                         {transitTab === "trains" && trains.length > 0 && <TransitRows stops={trains} icon={TrainFront} vLat={event.lat!} vLng={event.lng!} enriched={enriched} enriching={enriching} onEnrich={(stop) => handleEnrich(event.lat!, event.lng!, stop, event.date_time_utc)} onRouteFocus={onRouteFocus} isAnimating={false} venueName={event.venue} colorClass="text-[--color-train]" tipoffUtc={event.date_time_utc} />}
                         {transitTab === "buses" && buses.length > 0 && <TransitRows stops={buses} icon={BusFront} vLat={event.lat!} vLng={event.lng!} enriched={enriched} enriching={enriching} onEnrich={(stop) => handleEnrich(event.lat!, event.lng!, stop, event.date_time_utc)} onRouteFocus={onRouteFocus} isAnimating={false} venueName={event.venue} colorClass="text-[--color-bus]" tipoffUtc={event.date_time_utc} />}
 
-                        {/* Airport Status (subsection) */}
-                        {(() => {
+                        {/* Airport Status (flights tab only) */}
+                        {transitTab === "flights" && (() => {
                           const aptCodes = airports.map((a) => a.code);
                           const delayKey = aptCodes.sort().join(",");
                           const delays = airportDelays[delayKey];
@@ -1534,6 +1572,53 @@ export function BottomTray({
                                         {d.code}
                                         <span className={`size-2 rounded-full ${hasDelay ? "bg-amber-400" : "bg-emerald-500"}`} />
                                         {hasDelay && <span className="text-xs font-medium">Delays +{maxDelay}m</span>}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
+
+                        {/* Station Departures (trains/buses tabs) */}
+                        {(transitTab === "trains" || transitTab === "buses") && (() => {
+                          const wantMode = transitTab === "trains" ? "train" : "bus";
+                          const sLabel = transitTab === "trains" ? "Amtrak departures" : "Bus departures";
+                          const allStops = [
+                            ...(event.nearbyTrainStations ?? []).map((s) => ({ code: s.code, name: s.name, lat: s.lat, lng: s.lng })),
+                            ...(event.nearbyBusStations ?? []).map((s) => ({ code: s.code, name: s.name, lat: s.lat, lng: s.lng })),
+                          ];
+                          const sdKey = allStops.map((s) => s.code).sort().join(",") + "|" + (event.est_date || date);
+                          const sdData = stationDepartures[sdKey];
+                          const sdLoading = stationDepsLoading.has(sdKey);
+                          const relevant = sdData?.filter((s) => s.departures.some((dep) => dep.mode === wantMode)) ?? [];
+                          if (!sdLoading && relevant.length === 0 && !sdData) return null;
+                          return (
+                            <div className="mt-6">
+                              <h3 className="text-base font-semibold text-neutral-800 mb-3">{sLabel}</h3>
+                              {sdLoading && !sdData && <div className="flex items-center gap-2 text-sm text-neutral-500"><Loader2 className="size-4 animate-spin" /> Checking schedules...</div>}
+                              {sdData && relevant.length === 0 && <p className="text-sm text-neutral-500">No departures found for this date.</p>}
+                              {relevant.length > 0 && (
+                                <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory no-scrollbar">
+                                  {relevant.map((station) => {
+                                    const deps = station.departures.filter((dep) => dep.mode === wantMode).slice(0, 10);
+                                    if (deps.length === 0) return null;
+                                    return (
+                                      <div key={station.code} className="snap-start shrink-0 w-[220px] rounded-xl border border-neutral-200 bg-white overflow-hidden">
+                                        <div className="px-4 py-3 border-b border-neutral-100 bg-neutral-50">
+                                          <div className="text-sm font-bold text-neutral-900">{station.name}</div>
+                                          <div className="text-[11px] font-medium text-neutral-500 tracking-wide">{station.code}</div>
+                                        </div>
+                                        <div className="divide-y divide-neutral-100">
+                                          {deps.map((dep, i) => (
+                                            <div key={i} className="px-4 py-2.5">
+                                              <div className="text-sm font-bold text-neutral-900">{dep.departTime}</div>
+                                              <div className="text-sm text-neutral-700 truncate">{dep.headsign || dep.destination}</div>
+                                              <div className="text-[11px] text-neutral-400">{dep.carrier} · {dep.routeName}</div>
+                                            </div>
+                                          ))}
+                                        </div>
                                       </div>
                                     );
                                   })}
@@ -1639,6 +1724,10 @@ export function BottomTray({
                                 {policy.maxBagSize && <span>{policy.clearBagRequired ? " · " : ""}Max {policy.maxBagSize}</span>}
                               </div>
                             )}
+                            <div className="flex items-start gap-2 text-sm text-neutral-700 mb-4 p-3 bg-blue-50 rounded-xl border border-blue-200">
+                              <Wifi className="size-4 shrink-0 mt-0.5 text-blue-600" />
+                              <span>{policy.wifiInfo || "WiFi availability unsure"}</span>
+                            </div>
                             <div className="grid grid-cols-2 gap-6">
                               {allowed.length > 0 && <div><h3 className="text-sm font-semibold text-neutral-900 mb-2">Allowed</h3><div className="space-y-2">{allowed.map((item) => <div key={item.name} className="flex items-start gap-2 text-sm text-neutral-600"><Check className="size-4 shrink-0 mt-0.5 text-emerald-600" /><span>{item.name}</span></div>)}</div></div>}
                               {prohibited.length > 0 && <div><h3 className="text-sm font-semibold text-neutral-900 mb-2">Not allowed</h3><div className="space-y-2">{prohibited.map((item) => <div key={item.name} className="flex items-start gap-2 text-sm text-neutral-600"><Ban className="size-4 shrink-0 mt-0.5 text-red-500" /><span>{item.name}</span></div>)}</div></div>}

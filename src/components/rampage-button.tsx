@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Zap, MapPin, Navigation, Loader2, Search, X, ArrowRight, Trash2 } from "lucide-react";
+import { Zap, MapPin, Navigation, Loader2, Search, X, ArrowRight } from "lucide-react";
 import { useRampage } from "@/lib/rampage-context";
 import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 import { useRouter } from "next/navigation";
@@ -32,8 +32,8 @@ export function RampageButton({
 }) {
   const rampage = useRampage();
   const router = useRouter();
-  const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [showModal, setShowModal] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   // Address search state for start/end
   const [editingField, setEditingField] = useState<"start" | "end" | null>(null);
@@ -54,21 +54,6 @@ export function RampageButton({
       geocoderRef.current = new google.maps.Geocoder();
     });
   }, []);
-
-  // Close on outside click
-  useEffect(() => {
-    if (!open) return;
-    function handleClick(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false);
-        setEditingField(null);
-        setQuery("");
-        setSuggestions([]);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [open]);
 
   useEffect(() => {
     if (editingField && inputRef.current) inputRef.current.focus();
@@ -144,11 +129,18 @@ export function RampageButton({
 
   function handleToggle() {
     if (!rampage.active) {
+      // Activate rampage and show the location modal
       rampage.toggleRampage(userLocation);
-      setOpen(true);
+      setShowModal(true);
     } else {
-      setOpen(!open);
+      // Re-open modal to edit locations
+      setShowModal(true);
     }
+  }
+
+  function handleStartSelecting() {
+    setShowModal(false);
+    resetModalState();
   }
 
   function handlePlanRampage() {
@@ -158,141 +150,146 @@ export function RampageButton({
 
   function handleCancel() {
     onCancelRampage();
-    setOpen(false);
+    setShowModal(false);
+    resetModalState();
+  }
+
+  function resetModalState() {
+    setEditingField(null);
+    setQuery("");
+    setSuggestions([]);
   }
 
   const gameCount = rampage.selectedGames.size;
-  const sortedGames = rampage.sortedGames;
 
   return (
-    <div ref={containerRef} className="fixed top-4 left-4 z-20">
-      {/* Toggle button + PLAN shortcut */}
-      <div className="flex items-center gap-1.5">
-        <button
-          onClick={handleToggle}
-          className={`flex items-center gap-1.5 px-3 py-2 rounded-full shadow-md hover:shadow-lg transition-all ${
-            rampage.active
-              ? "bg-blue-50 border border-blue-300 text-blue-600"
-              : "bg-white border border-neutral-200 text-neutral-500 hover:text-blue-600 hover:border-blue-300"
-          }`}
-        >
-          <Zap className="size-4" />
-          {rampage.active && (
-            <span className="text-[11px] font-semibold tracking-wider">
-              {gameCount > 0 ? `${gameCount} GAME${gameCount !== 1 ? "S" : ""}` : "RAMPAGE"}
-            </span>
+    <>
+      {/* Pill buttons — fixed top-left */}
+      <div className="fixed top-4 left-4 z-20">
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={handleToggle}
+            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full shadow-md hover:shadow-lg transition-all ${
+              rampage.active
+                ? "bg-blue-50 border border-blue-300 text-blue-600"
+                : "bg-white border border-neutral-200 text-neutral-500 hover:text-blue-600 hover:border-blue-300"
+            }`}
+          >
+            <Zap className="size-4" />
+            {rampage.active && (
+              <span className="text-[11px] font-semibold tracking-wider">
+                {gameCount > 0 ? `${gameCount} GAME${gameCount !== 1 ? "S" : ""}` : "RAMPAGE"}
+              </span>
+            )}
+          </button>
+          {rampage.active && gameCount >= 1 && (
+            <>
+              <button
+                onClick={handleCancel}
+                className="flex items-center gap-1 px-3.5 py-2.5 rounded-full bg-white border border-neutral-200 shadow-md text-neutral-500 hover:text-neutral-900 text-xs font-semibold transition-all"
+              >
+                <X className="size-3.5" />
+              </button>
+              <button
+                onClick={handlePlanRampage}
+                className="flex items-center gap-1 px-4 py-2.5 rounded-full bg-blue-500 text-white shadow-md text-xs font-semibold hover:bg-blue-600 transition-all"
+              >
+                PLAN
+                <ArrowRight className="size-3.5" />
+              </button>
+            </>
           )}
-        </button>
-        {rampage.active && gameCount >= 1 && (
-          <>
-            <button
-              onClick={handleCancel}
-              className="flex items-center gap-1 px-2.5 py-2 rounded-full bg-white border border-neutral-200 shadow-md text-neutral-500 hover:text-neutral-900 text-xs font-semibold transition-all"
-            >
-              <X className="size-3.5" />
-            </button>
-            <button
-              onClick={handlePlanRampage}
-              className="flex items-center gap-1 px-3 py-2 rounded-full bg-blue-500 text-white shadow-md text-xs font-semibold hover:bg-blue-600 transition-all"
-            >
-              PLAN
-              <ArrowRight className="size-3.5" />
-            </button>
-          </>
-        )}
+        </div>
       </div>
 
-      {/* Dropdown */}
-      {open && rampage.active && (
-        <div className="absolute top-full left-0 mt-2 w-80 bg-white rounded-xl border border-neutral-200 shadow-xl overflow-hidden">
-          {/* Start location */}
-          <LocationRow
-            label="START"
-            location={rampage.startLocation}
-            editing={editingField === "start"}
-            locating={locatingField === "start"}
-            onEdit={() => { setEditingField("start"); setQuery(""); setSuggestions([]); }}
-            onGps={() => useGps("start")}
-            query={editingField === "start" ? query : ""}
-            onQueryChange={handleQueryChange}
-            suggestions={editingField === "start" ? suggestions : []}
-            onSelectSuggestion={selectSuggestion}
-            inputRef={editingField === "start" ? inputRef : undefined}
-          />
-
-          {/* Arrow separator */}
-          <div className="flex items-center justify-center py-1 border-b border-neutral-100">
-            <ArrowRight className="size-3 text-[--color-dim] rotate-90" />
-          </div>
-
-          {/* End location */}
-          <LocationRow
-            label="END"
-            location={rampage.endLocation}
-            editing={editingField === "end"}
-            locating={locatingField === "end"}
-            onEdit={() => { setEditingField("end"); setQuery(""); setSuggestions([]); }}
-            onGps={() => useGps("end")}
-            query={editingField === "end" ? query : ""}
-            onQueryChange={handleQueryChange}
-            suggestions={editingField === "end" ? suggestions : []}
-            onSelectSuggestion={selectSuggestion}
-            inputRef={editingField === "end" ? inputRef : undefined}
-          />
-
-          {/* Selected games list */}
-          {sortedGames.length > 0 && (
-            <div className="border-t border-neutral-100">
-              <div className="px-3 py-1.5 text-[10px] tracking-widest text-[--color-dim] uppercase">
-                Selected Games
+      {/* Centered modal overlay */}
+      {showModal && rampage.active && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              handleStartSelecting();
+            }
+          }}
+        >
+          <div
+            ref={modalRef}
+            className="w-full max-w-md mx-4 bg-white rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+          >
+            {/* Header */}
+            <div className="px-7 pt-7 pb-1">
+              <div className="flex items-center justify-between mb-1">
+                <h2 className="text-[22px] font-bold text-neutral-900 tracking-tight">Plan a Rampage</h2>
+                <button
+                  onClick={() => handleStartSelecting()}
+                  className="size-8 rounded-full border border-neutral-200 flex items-center justify-center hover:bg-neutral-50 hover:shadow-sm text-neutral-600 transition-all"
+                >
+                  <X className="size-4" />
+                </button>
               </div>
-              {sortedGames.map((g, i) => (
-                <div key={g.id} className="flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-neutral-50">
-                  <span className="size-5 shrink-0 rounded-full bg-[--color-rampage] text-white flex items-center justify-center text-[10px] font-bold">
-                    {i + 1}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-foreground truncate">{g.name.split(/\s+(?:vs?\.?|VS\.?)\s+/).join(" @ ")}</div>
-                    <div className="text-[10px] text-[--color-dim]">
-                      {new Date(g.est_date + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", weekday: "short" })}
-                      {" · "}{g.venue}
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => rampage.removeGame(g.est_date)}
-                    className="text-[--color-dim] hover:text-[--color-danger] transition-colors shrink-0"
-                  >
-                    <X className="size-3.5" />
-                  </button>
-                </div>
-              ))}
+              <p className="text-sm text-neutral-500">Where are you starting and ending?</p>
             </div>
-          )}
 
-          {/* Actions */}
-          <div className="border-t border-white/8 p-2 flex gap-2">
-            <button
-              onClick={handleCancel}
-              className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs text-[--color-dim] hover:text-foreground hover:bg-white/[0.06] transition-all"
-            >
-              <X className="size-3" /> CANCEL
-            </button>
-            <button
-              onClick={handlePlanRampage}
-              disabled={gameCount < 1}
-              className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
-                gameCount >= 1
-                  ? "bg-[--color-rampage] text-white shadow-md shadow-[--color-rampage]/20 hover:brightness-110"
-                  : "bg-white/[0.04] text-[--color-dim] cursor-not-allowed"
-              }`}
-            >
-              <Zap className="size-3.5" />
-              {gameCount >= 1 ? "PLAN RAMPAGE" : "SELECT A GAME"}
-            </button>
+            {/* Location fields */}
+            <div className="px-7 py-5 space-y-1">
+              <LocationRow
+                label="START"
+                location={rampage.startLocation}
+                editing={editingField === "start"}
+                locating={locatingField === "start"}
+                onEdit={() => { setEditingField("start"); setQuery(""); setSuggestions([]); }}
+                onGps={() => useGps("start")}
+                query={editingField === "start" ? query : ""}
+                onQueryChange={handleQueryChange}
+                suggestions={editingField === "start" ? suggestions : []}
+                onSelectSuggestion={selectSuggestion}
+                inputRef={editingField === "start" ? inputRef : undefined}
+                isFirst
+              />
+
+              {/* Connector line */}
+              <div className="flex items-center pl-[19px]">
+                <div className="w-px h-4 bg-neutral-200" />
+              </div>
+
+              <LocationRow
+                label="END"
+                location={rampage.endLocation}
+                editing={editingField === "end"}
+                locating={locatingField === "end"}
+                onEdit={() => { setEditingField("end"); setQuery(""); setSuggestions([]); }}
+                onGps={() => useGps("end")}
+                query={editingField === "end" ? query : ""}
+                onQueryChange={handleQueryChange}
+                suggestions={editingField === "end" ? suggestions : []}
+                onSelectSuggestion={selectSuggestion}
+                inputRef={editingField === "end" ? inputRef : undefined}
+              />
+            </div>
+
+            {/* Divider */}
+            <div className="border-t border-neutral-100" />
+
+            {/* Actions */}
+            <div className="px-7 py-5 flex items-center justify-between">
+              <button
+                onClick={handleCancel}
+                className="px-4 py-2.5 rounded-lg text-sm font-semibold text-neutral-900 underline underline-offset-2 decoration-neutral-300 hover:decoration-neutral-900 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleStartSelecting}
+                className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm font-semibold shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 hover:brightness-105 active:scale-[0.98] transition-all"
+              >
+                <MapPin className="size-4" />
+                {gameCount > 0 ? "Back to Map" : "Start Selecting Games"}
+              </button>
+            </div>
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
 
@@ -308,6 +305,7 @@ function LocationRow({
   suggestions,
   onSelectSuggestion,
   inputRef,
+  isFirst,
 }: {
   label: string;
   location: { lat: number; lng: number; label: string } | null;
@@ -320,57 +318,78 @@ function LocationRow({
   suggestions: Suggestion[];
   onSelectSuggestion: (s: Suggestion) => void;
   inputRef?: React.RefObject<HTMLInputElement | null>;
+  isFirst?: boolean;
 }) {
   return (
-    <div className="border-b border-neutral-100">
-      <div className="flex items-center gap-2 px-3 py-2.5">
-        <span className="text-[10px] tracking-widest text-[--color-dim] w-8 shrink-0">{label}</span>
+    <div>
+      <div className="flex items-center gap-3">
+        {/* Dot indicator */}
+        <div className={`size-[10px] shrink-0 rounded-full border-2 ${
+          location
+            ? "border-blue-500 bg-blue-500"
+            : "border-neutral-300 bg-white"
+        }`} />
+
         {editing ? (
-          <div className="flex-1 flex items-center gap-1.5 border border-white/10 rounded px-2 py-1">
-            <Search className="size-3 text-[--color-dim] shrink-0" />
+          <div className="flex-1 flex items-center gap-2 border border-neutral-300 rounded-xl px-3.5 py-3 bg-white shadow-sm focus-within:border-neutral-900 focus-within:shadow-md transition-all">
+            <Search className="size-4 text-neutral-400 shrink-0" />
             <input
               ref={inputRef}
               type="text"
-              placeholder="Type an address..."
+              placeholder="Search for a city or address..."
               value={query}
               onChange={(e) => onQueryChange(e.target.value)}
-              className="flex-1 bg-transparent border-none text-xs text-foreground placeholder:text-[--color-dim] focus:outline-none min-w-0"
+              className="flex-1 bg-transparent border-none text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none min-w-0"
             />
           </div>
         ) : (
           <button
             onClick={onEdit}
-            className="flex-1 text-left text-xs text-foreground hover:text-[--color-rampage] transition-colors truncate"
+            className={`flex-1 flex items-center gap-2 rounded-xl px-3.5 py-3 text-left transition-all ${
+              location
+                ? "bg-neutral-50 hover:bg-neutral-100 border border-neutral-200"
+                : "border border-dashed border-neutral-300 hover:border-neutral-900 hover:bg-neutral-50"
+            }`}
           >
             {location ? (
-              <span className="flex items-center gap-1">
-                <MapPin className="size-3 text-[--color-rampage] shrink-0" />
-                {location.label}
-              </span>
+              <>
+                <MapPin className="size-4 text-blue-500 shrink-0" />
+                <span className="text-sm font-medium text-neutral-900 truncate">{location.label}</span>
+              </>
             ) : (
-              <span className="text-[--color-dim]">Set location...</span>
+              <span className="text-sm text-neutral-500">
+                {isFirst ? "Where are you starting from?" : "Where do you want to end up?"}
+              </span>
             )}
           </button>
         )}
+
         <button
           onClick={onGps}
           disabled={locating}
-          className="shrink-0 text-[--color-dim] hover:text-[--color-rampage] transition-colors"
+          className="shrink-0 p-2 rounded-full text-neutral-400 hover:text-blue-500 hover:bg-blue-50 transition-all"
           title="Use current location"
         >
-          {locating ? <Loader2 className="size-3.5 animate-spin" /> : <Navigation className="size-3.5" />}
+          {locating ? <Loader2 className="size-4 animate-spin" /> : <Navigation className="size-4" />}
         </button>
       </div>
+
+      {/* Suggestions dropdown */}
       {suggestions.length > 0 && (
-        <div className="px-3 pb-2">
-          {suggestions.map((s) => (
+        <div className="ml-[22px] mt-1.5 border border-neutral-200 rounded-2xl overflow-hidden bg-white shadow-lg">
+          {suggestions.map((s, i) => (
             <button
               key={s.placeId}
               onClick={() => onSelectSuggestion(s)}
-              className="w-full text-left px-2 py-1.5 text-xs hover:bg-neutral-50 rounded transition-colors"
+              className={`w-full text-left px-4 py-3 hover:bg-neutral-50 transition-colors flex items-center gap-3 ${
+                i < suggestions.length - 1 ? "border-b border-neutral-100" : ""
+              }`}
             >
-              <div className="font-medium text-foreground">{s.main}</div>
-              <div className="text-[10px] text-[--color-dim]">{s.secondary}</div>
+              <MapPin className="size-4 text-neutral-400 shrink-0" />
+              <div>
+                <div className="text-sm font-medium text-neutral-900">{s.main}</div>
+                <div className="text-xs text-neutral-500">{s.secondary}</div>
+              </div>
             </button>
           ))}
         </div>

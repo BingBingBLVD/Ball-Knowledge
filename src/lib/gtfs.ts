@@ -200,6 +200,70 @@ export function findNearbyStops(
   return results.slice(0, maxResults);
 }
 
+// ── Station departures ────────────────────────────────────────────────────
+
+export interface StationDeparture {
+  carrier: string;        // "Amtrak" | "FlixBus" | "Greyhound"
+  routeName: string;
+  headsign: string;
+  mode: "bus" | "train";
+  departMinutes: number;  // minutes from midnight
+  departTime: string;     // "HH:MM AM/PM"
+  destination: string;    // last stop name on this trip
+}
+
+/**
+ * Get upcoming departures from a station on a given date.
+ * Matches by lat/lng proximity (< 0.5 mi).
+ */
+export function getStationDepartures(
+  lat: number,
+  lng: number,
+  dateYMD: string,
+): StationDeparture[] {
+  const d = load();
+  const dateInt = parseInt(dateYMD.replace(/-/g, ""), 10);
+
+  // Find matching GTFS stop(s) within 0.5 mi
+  const matchedStops = findNearbyStops(lat, lng, 0.5, 5);
+  if (matchedStops.length === 0) return [];
+
+  const stopIds = new Set(matchedStops.map((s) => s.id));
+  const departures: StationDeparture[] = [];
+
+  for (const trip of d.trips) {
+    if (!isServiceActive(trip.sv, dateInt)) continue;
+
+    for (let i = 0; i < trip.st.length; i++) {
+      const [stopId, , depMin] = trip.st[i];
+      if (!stopIds.has(stopId)) continue;
+      if (depMin < 0) continue;
+      // Skip if this is the last stop (no departure from here)
+      if (i === trip.st.length - 1) continue;
+
+      const lastStop = d.stops[trip.st[trip.st.length - 1][0]];
+      const hrs = Math.floor(depMin / 60) % 24;
+      const mins = depMin % 60;
+      const ampm = hrs >= 12 ? "PM" : "AM";
+      const h12 = hrs === 0 ? 12 : hrs > 12 ? hrs - 12 : hrs;
+
+      departures.push({
+        carrier: trip.c,
+        routeName: trip.r,
+        headsign: trip.h,
+        mode: trip.t === 2 ? "train" : "bus",
+        departMinutes: depMin,
+        departTime: `${h12}:${String(mins).padStart(2, "0")} ${ampm}`,
+        destination: lastStop?.n ?? trip.h,
+      });
+      break; // one departure per trip
+    }
+  }
+
+  departures.sort((a, b) => a.departMinutes - b.departMinutes);
+  return departures;
+}
+
 /** Compute YYYYMMDD int for the day before a given YYYYMMDD int. */
 function prevDateInt(dateInt: number): number {
   const y = Math.floor(dateInt / 10000);
