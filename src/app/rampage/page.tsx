@@ -20,8 +20,12 @@ import {
   Clock,
   Ticket,
   AlertTriangle,
+  ShieldCheck,
+  Check,
+  Ban,
 } from "lucide-react";
 import Link from "next/link";
+import type { VenuePolicy } from "@/lib/venue-policies";
 import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -204,6 +208,7 @@ function RampageContent() {
   const [error, setError] = useState<string | null>(null);
   const mapRef = useRef<HTMLDivElement>(null);
   const googleMapRef = useRef<google.maps.Map | null>(null);
+  const [venuePolicies, setVenuePolicies] = useState<Record<string, VenuePolicy>>({});
 
   // Load cow from localStorage
   useEffect(() => {
@@ -265,6 +270,21 @@ function RampageContent() {
 
     fetchRampage();
   }, [cow]);
+
+  // Fetch venue policies for all games
+  useEffect(() => {
+    if (!result) return;
+    const venues = [...new Set(result.games.map((g) => g.venue))];
+    for (const venue of venues) {
+      if (venuePolicies[venue]) continue;
+      fetch(`/api/venue-policy?venue=${encodeURIComponent(venue)}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data: VenuePolicy | null) => {
+          if (data) setVenuePolicies((prev) => ({ ...prev, [venue]: data }));
+        })
+        .catch(() => {});
+    }
+  }, [result]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Init map
   useEffect(() => {
@@ -555,6 +575,61 @@ function RampageContent() {
                   )}
                 </div>
               </div>
+
+              {/* Venue policy */}
+              {(() => {
+                const policy = venuePolicies[game.venue];
+                if (!policy) return null;
+                const allowed = policy.items.filter((i) => i.allowed);
+                const prohibited = policy.items.filter((i) => !i.allowed);
+                return (
+                  <div className="mt-2 rounded-xl panel-inset px-4 py-3">
+                    <div className="flex items-center gap-1.5 text-[10px] font-mono text-[--color-rampage]/70 tracking-widest mb-1.5">
+                      <ShieldCheck className="size-3" /> VENUE POLICY
+                    </div>
+                    <div className="text-[11px] font-mono text-[--color-dim]">
+                      {policy.clearBagRequired && (
+                        <span className="text-amber-400 font-semibold">Clear bag required</span>
+                      )}
+                      {policy.maxBagSize && (
+                        <span>{policy.clearBagRequired ? " · " : ""}Max {policy.maxBagSize}</span>
+                      )}
+                    </div>
+                    <div className="mt-1.5 flex gap-4 text-[11px] font-mono">
+                      {allowed.length > 0 && (
+                        <div className="flex-1 min-w-0 space-y-0.5">
+                          {allowed.map((item) => (
+                            <div key={item.name} className="flex items-start gap-1 text-emerald-400">
+                              <Check className="size-3 shrink-0 mt-0.5" />
+                              <span>{item.name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {prohibited.length > 0 && (
+                        <div className="flex-1 min-w-0 space-y-0.5">
+                          {prohibited.map((item) => (
+                            <div key={item.name} className="flex items-start gap-1 text-red-400">
+                              <Ban className="size-3 shrink-0 mt-0.5" />
+                              <span>{item.name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    {policy.policyUrl && (
+                      <a
+                        href={policy.policyUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-1.5 text-[10px] font-mono text-[--color-dim] hover:text-foreground underline inline-flex items-center gap-0.5"
+                      >
+                        View full policy <ArrowUpRight className="size-2.5" />
+                      </a>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Hotel suggestions */}
               {hotels && hotels.suggestions.length > 0 && (

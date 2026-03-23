@@ -315,7 +315,7 @@ export function BottomTray({
   const [isAnimating, setIsAnimating] = useState(false);
   const prevTrayState = useRef(trayState);
   const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
-  const [shownPolicies, setShownPolicies] = useState<Set<string>>(new Set());
+
 
   // Sort state
   const trayLsKey = "balltastic_tray";
@@ -941,7 +941,6 @@ export function BottomTray({
                       {(() => {
                         const policy = venuePolicies[event.venue];
                         const loading = policyLoading.has(event.venue);
-                        const expanded = shownPolicies.has(event.id);
                         const allowed = policy?.items.filter((i) => i.allowed) ?? [];
                         const prohibited = policy?.items.filter((i) => !i.allowed) ?? [];
 
@@ -951,26 +950,6 @@ export function BottomTray({
                               <div className="text-[10px] font-mono tracking-widest text-[--primary]/70 uppercase flex items-center gap-1">
                                 <ShieldCheck className="size-3 text-[--primary]" /> VENUE POLICY
                               </div>
-                              {policy && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setShownPolicies((prev) => {
-                                      const next = new Set(prev);
-                                      if (next.has(event.id)) next.delete(event.id);
-                                      else next.add(event.id);
-                                      return next;
-                                    });
-                                  }}
-                                  className={`text-[10px] font-mono px-2 py-1 rounded-md border backdrop-blur-sm transition-all ${
-                                    expanded
-                                      ? "border-amber-400/40 text-amber-400 bg-amber-400/15 font-semibold shadow-sm shadow-amber-400/10"
-                                      : "border-white/10 text-[--color-dim] bg-white/[0.03] hover:text-amber-400 hover:border-amber-400/25 hover:bg-amber-400/5"
-                                  }`}
-                                >
-                                  {expanded ? "Hide" : "Details"}
-                                </button>
-                              )}
                             </div>
                             {loading && !policy && (
                               <div className="flex items-center gap-1.5 mt-1.5 text-[11px] font-mono text-[--color-dim]">
@@ -979,7 +958,7 @@ export function BottomTray({
                             )}
                             {policy && (
                               <div className="mt-1">
-                                {/* Summary line — always visible */}
+                                {/* Summary line */}
                                 <div className="text-[11px] font-mono text-[--color-dim]">
                                   {policy.clearBagRequired && (
                                     <span className="text-amber-400 font-semibold">Clear bag required</span>
@@ -988,32 +967,30 @@ export function BottomTray({
                                     <span>{policy.clearBagRequired ? " · " : ""}Max {policy.maxBagSize}</span>
                                   )}
                                 </div>
-                                {/* Expanded details */}
-                                {expanded && (
-                                  <div className="mt-1.5 flex gap-4 text-[11px] font-mono">
-                                    {allowed.length > 0 && (
-                                      <div className="flex-1 min-w-0 space-y-0.5">
-                                        {allowed.map((item) => (
-                                          <div key={item.name} className="flex items-start gap-1 text-emerald-400">
-                                            <Check className="size-3 shrink-0 mt-0.5" />
-                                            <span>{item.name}</span>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    )}
-                                    {prohibited.length > 0 && (
-                                      <div className="flex-1 min-w-0 space-y-0.5">
-                                        {prohibited.map((item) => (
-                                          <div key={item.name} className="flex items-start gap-1 text-red-400">
-                                            <Ban className="size-3 shrink-0 mt-0.5" />
-                                            <span>{item.name}</span>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
-                                {expanded && policy.policyUrl && (
+                                {/* Details — always visible */}
+                                <div className="mt-1.5 flex gap-4 text-[11px] font-mono">
+                                  {allowed.length > 0 && (
+                                    <div className="flex-1 min-w-0 space-y-0.5">
+                                      {allowed.map((item) => (
+                                        <div key={item.name} className="flex items-start gap-1 text-emerald-400">
+                                          <Check className="size-3 shrink-0 mt-0.5" />
+                                          <span>{item.name}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                  {prohibited.length > 0 && (
+                                    <div className="flex-1 min-w-0 space-y-0.5">
+                                      {prohibited.map((item) => (
+                                        <div key={item.name} className="flex items-start gap-1 text-red-400">
+                                          <Ban className="size-3 shrink-0 mt-0.5" />
+                                          <span>{item.name}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                                {policy.policyUrl && (
                                   <a
                                     href={policy.policyUrl}
                                     target="_blank"
