@@ -261,7 +261,7 @@ function TransitRows({
         return (
           <div
             key={stop.code}
-            className="rounded-xl border border-neutral-200 shadow-sm p-4"
+            className="rounded-xl bg-neutral-50 p-4"
           >
             {/* Header: code + distance */}
             <div className="flex items-center gap-2 mb-2">
@@ -285,7 +285,7 @@ function TransitRows({
                   <a
                     href={gmapsUrl(vLat, vLng, stop.lat, stop.lng, "driving", arriveByEpoch)}
                     target="_blank" rel="noopener noreferrer"
-                    className="block rounded-lg border border-neutral-200 hover:shadow-md py-2.5 px-3 no-underline transition-shadow"
+                    className="block rounded-lg bg-neutral-50 hover:bg-neutral-100 py-2.5 px-3 no-underline transition-colors"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <div className="flex items-center gap-2 mb-1.5">
@@ -318,7 +318,7 @@ function TransitRows({
                     <a
                       href={gmapsUrl(vLat, vLng, stop.lat, stop.lng, "transit", arriveByEpoch)}
                       target="_blank" rel="noopener noreferrer"
-                      className="block rounded-lg border border-neutral-200 hover:shadow-md py-2.5 px-3 no-underline transition-shadow"
+                      className="block rounded-lg bg-neutral-50 hover:bg-neutral-100 py-2.5 px-3 no-underline transition-colors"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <div className="flex items-center gap-2">
