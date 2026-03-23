@@ -11,6 +11,7 @@ export interface ParkingSpot {
   totalRatings: number;
   openNow: boolean | null;
   priceLevel: string | null;
+  estimatedPrice: string | null;
   spotHeroUrl: string;
   directionsUrl: string;
 }
@@ -76,6 +77,21 @@ export async function GET(req: NextRequest) {
         const pLng = place.geometry.location.lng;
         const dist = haversineMiles(pLat, pLng, venueLat, venueLng);
         const walkMin = Math.max(1, Math.round(dist * 20));
+        // Estimate event parking price based on distance (closer = pricier)
+        const isFree = place.name.toLowerCase().includes("free") || place.price_level === 0;
+        let estimatedPrice: string | null = null;
+        if (isFree) {
+          estimatedPrice = "Free";
+        } else if (dist < 0.3) {
+          estimatedPrice = "$25–45";
+        } else if (dist < 0.6) {
+          estimatedPrice = "$15–30";
+        } else if (dist < 1) {
+          estimatedPrice = "$10–20";
+        } else {
+          estimatedPrice = "$5–15";
+        }
+
         return {
           name: place.name,
           vicinity: place.vicinity || "",
@@ -87,6 +103,7 @@ export async function GET(req: NextRequest) {
           totalRatings: place.user_ratings_total ?? 0,
           openNow: place.opening_hours?.open_now ?? null,
           priceLevel: place.price_level != null ? PRICE_MAP[place.price_level] ?? null : null,
+          estimatedPrice,
           spotHeroUrl: spotHeroBase,
           directionsUrl: `https://www.google.com/maps/dir/?api=1&destination=${pLat},${pLng}&travelmode=driving`,
         };

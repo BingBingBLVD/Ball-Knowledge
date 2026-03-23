@@ -740,7 +740,7 @@ export function BottomTray({
   }, [venuePhotos, photosLoading]);
 
   // Nearby parking state
-  interface ParkingSpot { name: string; vicinity: string; lat: number; lng: number; distanceMiles: number; walkMinutes: number; rating: number | null; totalRatings: number; openNow: boolean | null; priceLevel: string | null; spotHeroUrl: string; directionsUrl: string }
+  interface ParkingSpot { name: string; vicinity: string; lat: number; lng: number; distanceMiles: number; walkMinutes: number; rating: number | null; totalRatings: number; openNow: boolean | null; priceLevel: string | null; estimatedPrice: string | null; spotHeroUrl: string; directionsUrl: string }
   const [nearbyParking, setNearbyParking] = useState<Record<string, ParkingSpot[]>>({});
   const [parkingLoading, setParkingLoading] = useState<Set<string>>(new Set());
   const parkingFailed = useRef<Set<string>>(new Set());
@@ -1531,20 +1531,24 @@ export function BottomTray({
                       if (!spots && !pLoading) return null;
                       return (
                         <div className="py-8 border-b border-neutral-200">
-                          <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center justify-between mb-1">
                             <h2 className="text-[22px] font-semibold text-neutral-900">Parking</h2>
-                            {spots && spots.length > 0 && <a href={spots[0].spotHeroUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-neutral-900 underline font-semibold no-underline hover:text-neutral-600">Reserve on SpotHero</a>}
+                            {spots && spots.length > 0 && <a href={spots[0].spotHeroUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-neutral-900 underline hover:text-neutral-600">Reserve on SpotHero</a>}
                           </div>
+                          <p className="text-sm text-neutral-500 mb-5">Spots open during event hours (2h before to 2h after)</p>
                           {pLoading && !spots && <div className="flex items-center gap-2 text-sm text-neutral-500"><Loader2 className="size-4 animate-spin" /> Finding parking...</div>}
-                          {spots && spots.length > 0 && <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">{spots.map((p, i) => (
-                            <a key={i} href={p.directionsUrl} target="_blank" rel="noopener noreferrer" className="rounded-xl border border-neutral-200 p-3 hover:shadow-md transition-shadow no-underline block">
-                              <div className="flex items-center justify-between">
-                                <div className="text-sm font-semibold text-neutral-900 truncate">{p.name}</div>
-                                {p.priceLevel && <span className="text-emerald-600 text-xs font-semibold shrink-0 ml-1">{p.priceLevel}</span>}
+                          {spots && spots.length > 0 && <div className="divide-y divide-neutral-100">{spots.map((p, i) => (
+                            <a key={i} href={p.directionsUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between py-4 no-underline hover:bg-neutral-50 -mx-3 px-3 rounded-lg transition-colors">
+                              <div className="min-w-0 flex-1">
+                                <div className="text-[15px] font-medium text-neutral-900 truncate">{p.name}</div>
+                                <div className="flex items-center gap-3 mt-1 text-sm text-neutral-500">
+                                  <span className="flex items-center gap-1"><Footprints className="size-3.5" /> {p.walkMinutes} min walk</span>
+                                  {p.rating && <span className="flex items-center gap-0.5"><Star className="size-3.5 text-neutral-900" /> {p.rating}</span>}
+                                </div>
                               </div>
-                              <div className="text-xs text-neutral-500 mt-1">
-                                {p.walkMinutes} min walk to stadium
-                                {p.rating && <span> · <Star className="size-2.5 inline" /> {p.rating}</span>}
+                              <div className="text-right shrink-0 ml-4">
+                                {p.estimatedPrice && <div className="text-[15px] font-semibold text-neutral-900">{p.estimatedPrice}</div>}
+                                <div className="text-xs text-neutral-500">est. event rate</div>
                               </div>
                             </a>
                           ))}</div>}
