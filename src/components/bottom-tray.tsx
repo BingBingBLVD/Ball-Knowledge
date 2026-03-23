@@ -381,6 +381,7 @@ export function BottomTray({
   const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
   const [popoverEventId, setPopoverEventId] = useState<string | null>(null);
   const [popoverVisible, setPopoverVisible] = useState(false);
+  const [transitTab, setTransitTab] = useState<"flights" | "trains" | "buses">("flights");
 
   const openPopover = useCallback((id: string) => {
     setPopoverEventId(id);
@@ -1040,6 +1041,10 @@ export function BottomTray({
                       });
                     }
                     if (popoverEventId !== event.id) {
+                      // Auto-select first available transit tab
+                      if ((event.nearbyAirports ?? []).length > 0) setTransitTab("flights");
+                      else if ((event.nearbyTrainStations ?? []).length > 0) setTransitTab("trains");
+                      else if ((event.nearbyBusStations ?? []).length > 0) setTransitTab("buses");
                       openPopover(event.id);
                     } else {
                       closePopover();
@@ -1296,11 +1301,32 @@ export function BottomTray({
                     <div className="py-5 border-b border-white/5">
                       <h3 className="text-xs font-mono uppercase tracking-widest text-[--color-dim] mb-1 flex items-center gap-2"><Map className="size-4" /> Getting There</h3>
                       <p className="text-[10px] text-[--color-dim]/60 font-mono mb-3">Travel times target arrival 45 min before tipoff</p>
-                      <div className="space-y-1">
-                        {airports.length > 0 && <TransitRows stops={airports} icon={Plane} vLat={event.lat!} vLng={event.lng!} enriched={enriched} enriching={enriching} onEnrich={(stop) => handleEnrich(event.lat!, event.lng!, stop, event.date_time_utc)} onRouteFocus={onRouteFocus} isAnimating={false} venueName={event.venue} colorClass="text-[--color-flight]" tipoffUtc={event.date_time_utc} />}
-                        {trains.length > 0 && <TransitRows stops={trains} icon={TrainFront} vLat={event.lat!} vLng={event.lng!} enriched={enriched} enriching={enriching} onEnrich={(stop) => handleEnrich(event.lat!, event.lng!, stop, event.date_time_utc)} onRouteFocus={onRouteFocus} isAnimating={false} venueName={event.venue} colorClass="text-[--color-train]" tipoffUtc={event.date_time_utc} />}
-                        {buses.length > 0 && <TransitRows stops={buses} icon={BusFront} vLat={event.lat!} vLng={event.lng!} enriched={enriched} enriching={enriching} onEnrich={(stop) => handleEnrich(event.lat!, event.lng!, stop, event.date_time_utc)} onRouteFocus={onRouteFocus} isAnimating={false} venueName={event.venue} colorClass="text-[--color-bus]" tipoffUtc={event.date_time_utc} />}
+                      {/* Tab toggle */}
+                      <div className="flex rounded-lg bg-white/5 p-0.5 mb-3">
+                        {([
+                          { key: "flights" as const, label: "Flights", icon: Plane, count: airports.length },
+                          { key: "trains" as const, label: "Trains", icon: TrainFront, count: trains.length },
+                          { key: "buses" as const, label: "Buses", icon: BusFront, count: buses.length },
+                        ]).filter((t) => t.count > 0).map((tab) => (
+                          <button
+                            key={tab.key}
+                            onClick={(e) => { e.stopPropagation(); setTransitTab(tab.key); }}
+                            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-xs font-mono font-semibold transition-all ${
+                              transitTab === tab.key
+                                ? "bg-white/10 text-foreground shadow-sm"
+                                : "text-[--color-dim] hover:text-foreground"
+                            }`}
+                          >
+                            <tab.icon className="size-3.5" />
+                            {tab.label}
+                            <span className="text-[10px] opacity-60">({tab.count})</span>
+                          </button>
+                        ))}
                       </div>
+                      {/* Tab content */}
+                      {transitTab === "flights" && airports.length > 0 && <TransitRows stops={airports} icon={Plane} vLat={event.lat!} vLng={event.lng!} enriched={enriched} enriching={enriching} onEnrich={(stop) => handleEnrich(event.lat!, event.lng!, stop, event.date_time_utc)} onRouteFocus={onRouteFocus} isAnimating={false} venueName={event.venue} colorClass="text-[--color-flight]" tipoffUtc={event.date_time_utc} />}
+                      {transitTab === "trains" && trains.length > 0 && <TransitRows stops={trains} icon={TrainFront} vLat={event.lat!} vLng={event.lng!} enriched={enriched} enriching={enriching} onEnrich={(stop) => handleEnrich(event.lat!, event.lng!, stop, event.date_time_utc)} onRouteFocus={onRouteFocus} isAnimating={false} venueName={event.venue} colorClass="text-[--color-train]" tipoffUtc={event.date_time_utc} />}
+                      {transitTab === "buses" && buses.length > 0 && <TransitRows stops={buses} icon={BusFront} vLat={event.lat!} vLng={event.lng!} enriched={enriched} enriching={enriching} onEnrich={(stop) => handleEnrich(event.lat!, event.lng!, stop, event.date_time_utc)} onRouteFocus={onRouteFocus} isAnimating={false} venueName={event.venue} colorClass="text-[--color-bus]" tipoffUtc={event.date_time_utc} />}
                     </div>
                   )}
 
