@@ -34,6 +34,9 @@ import {
   HeartPulse,
   Beer,
   UtensilsCrossed,
+  Luggage,
+  Plus,
+  Minus,
 } from "lucide-react";
 import type { VenuePolicy } from "@/lib/venue-policies";
 
@@ -450,6 +453,9 @@ export function GameDetailPopover({
   const [delaysLoading, setDelaysLoading] = useState(false);
   const [lastTransit, setLastTransit] = useState<LastTransitInfo[] | null>(null);
   const [lastTransitLoading, setLastTransitLoading] = useState(false);
+  const [standardBags, setStandardBags] = useState(2);
+  const [compactBags, setCompactBags] = useState(0);
+  const [oddsizeBags, setOddsizeBags] = useState(0);
 
   // Transit enrichment state (on-demand)
   const [enriched, setEnriched] = useState<Record<string, { driveMinutes: number; transitMinutes: number | null; transitFare: string | null; uberEstimate: string | null; lyftEstimate: string | null }>>({});
@@ -729,30 +735,29 @@ export function GameDetailPopover({
             </div>
 
             {/* Key details row */}
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 pb-6 border-b border-neutral-200">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center gap-x-6 pb-6 border-b border-neutral-200 overflow-x-auto no-scrollbar">
+              <div className="flex items-center gap-2 shrink-0">
                 <Clock className="size-5 text-neutral-400" />
                 <div>
-                  <div className="text-sm font-semibold text-neutral-900">{formatTime(game.local_time ?? game.est_time, game.tz)}</div>
-                  <div className="text-xs text-neutral-500">{displayDate ? new Date(displayDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" }) : date}</div>
+                  <div className="text-sm font-semibold text-neutral-900 whitespace-nowrap">{formatTime(game.local_time ?? game.est_time, game.tz)} · {displayDate ? new Date(displayDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" }) : date}</div>
                   {showLocal && <div className="text-xs text-neutral-500">{userLocal.text} your time</div>}
                 </div>
               </div>
               {price != null && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   <Ticket className="size-5 text-neutral-400" />
                   <div>
-                    <div className={`text-sm font-semibold ${price < 30 ? "text-emerald-600" : "text-neutral-900"}`}>From ${price}</div>
+                    <div className={`text-sm font-semibold whitespace-nowrap ${price < 30 ? "text-emerald-600" : "text-neutral-900"}`}>From ${price}</div>
                     {game.espn_price?.available != null && game.espn_price.available > 0 && (
-                      <div className="text-xs text-neutral-500">{game.espn_price.available.toLocaleString()} left</div>
+                      <div className="text-xs text-neutral-500 whitespace-nowrap">{game.espn_price.available.toLocaleString()} left</div>
                     )}
                   </div>
                 </div>
               )}
               {game.away_record && game.home_record && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   <Star className="size-5 text-neutral-400" />
-                  <div className="text-sm">
+                  <div className="text-sm whitespace-nowrap">
                     <div className="font-semibold text-neutral-900">{home} {game.home_record}</div>
                     <div className="text-xs text-neutral-500">{away} {game.away_record}</div>
                   </div>
@@ -790,7 +795,7 @@ export function GameDetailPopover({
               if (!inj && !iLoading) return null;
               const statusColor = (s: string) => {
                 if (s === "Out") return "text-red-600 bg-red-50";
-                if (s === "Doubtful") return "text-violet-600 bg-violet-50";
+                if (s === "Doubtful") return "text-blue-600 bg-blue-50";
                 if (s === "Day-To-Day" || s === "Questionable") return "text-amber-600 bg-amber-50";
                 return "text-emerald-600 bg-emerald-50";
               };
@@ -930,6 +935,49 @@ export function GameDetailPopover({
               );
             })()}
 
+            {/* Bag Storage */}
+            {(() => {
+              if (!game.date_time_utc) return null;
+              const eventDate = new Date(game.date_time_utc);
+              if (isNaN(eventDate.getTime())) return null;
+              const from = new Date(eventDate.getTime() - 3 * 60 * 60 * 1000);
+              const to = new Date(eventDate.getTime() + 3 * 60 * 60 * 1000);
+              const bounceFmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}T${String(d.getHours()).padStart(2, "0")}${String(d.getMinutes()).padStart(2, "0")}`;
+              const lhFmt = (d: Date) => `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}${String(d.getHours()).padStart(2, "0")}${String(d.getMinutes()).padStart(2, "0")}`;
+              const query = `${game.venue}, ${game.city}, ${game.state}`;
+              const totalBags = standardBags + compactBags + oddsizeBags;
+              const bounceUrl = `https://bounce.com/s/?_aid=03b6908d-869d-48df-b8b3-22b6df73c3b1&from=${bounceFmt(from)}&to=${bounceFmt(to)}&query=${encodeURIComponent(query)}&standardBags=${standardBags}&compactBags=${compactBags}&oddsizeBags=${oddsizeBags}`;
+              const lhUrl = `https://app.luggagehero.com/home;location=${encodeURIComponent(game.city)};bags=${totalBags};from=${lhFmt(from)};to=${lhFmt(to)}?lh_landing_page_origin=${encodeURIComponent("https://luggagehero.com")}&lh_landing_page_path=%2F&lang=en`;
+              return (
+                <div className="py-8 border-b border-neutral-200">
+                  <h2 className="text-[22px] font-semibold text-neutral-900 mb-1">Bag storage</h2>
+                  <p className="text-sm text-neutral-500 mb-4">Drop your bags near the venue</p>
+                  <div className="space-y-3">
+                    {([["Standard bags", standardBags, setStandardBags], ["Compact bags", compactBags, setCompactBags], ["Odd-size bags", oddsizeBags, setOddsizeBags]] as [string, number, React.Dispatch<React.SetStateAction<number>>][]).map(([label, count, setter]) => (
+                      <div key={label} className="flex items-center justify-between">
+                        <span className="text-sm text-neutral-700">{label}</span>
+                        <div className="flex items-center gap-3">
+                          <button onClick={(e) => { e.stopPropagation(); setter((c) => Math.max(0, c - 1)); }} className="size-7 rounded-full border border-neutral-200 flex items-center justify-center hover:bg-neutral-50 disabled:opacity-30" disabled={count === 0}><Minus className="size-3.5" /></button>
+                          <span className="text-sm font-medium w-4 text-center">{count}</span>
+                          <button onClick={(e) => { e.stopPropagation(); setter((c) => c + 1); }} className="size-7 rounded-full border border-neutral-200 flex items-center justify-center hover:bg-neutral-50"><Plus className="size-3.5" /></button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {totalBags > 0 && (
+                    <div className="mt-4 flex gap-2">
+                      <a href={bounceUrl} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-neutral-900 text-white text-sm font-medium py-2.5 hover:bg-neutral-800 transition-colors">
+                        <Luggage className="size-4" /> Bounce <ArrowUpRight className="size-3.5" />
+                      </a>
+                      <a href={lhUrl} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-neutral-300 text-neutral-900 text-sm font-medium py-2.5 hover:bg-neutral-50 transition-colors">
+                        <Luggage className="size-4" /> LuggageHero <ArrowUpRight className="size-3.5" />
+                      </a>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
             {/* Last Transit Home */}
             {(() => {
               if (!game.date_time_utc) return null;
@@ -999,7 +1047,7 @@ export function GameDetailPopover({
                 <div className="py-8 border-b border-neutral-200">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-[22px] font-semibold text-neutral-900">Where to stay</h2>
-                    {h && h.length > 0 && <a href={h[0].bookingUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-neutral-900 underline hover:text-neutral-600">Browse more on Google</a>}
+                    {h && h.length > 0 && <a href={h[0].bookingUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-neutral-900 underline hover:text-neutral-600">More on Google</a>}
                   </div>
                   {loading && !h && <div className="flex items-center gap-2 text-sm text-neutral-500"><Loader2 className="size-4 animate-spin" /> Loading...</div>}
                   {h && h.length > 0 && (
@@ -1164,6 +1212,19 @@ export function GameDetailPopover({
                 "truTV": { url: "https://www.trutv.com/watchtrutv", icon: "https://www.google.com/s2/favicons?domain=trutv.com&sz=32" },
                 "NBA TV": { url: "https://www.nba.com/watch/nba-tv", icon: "https://www.google.com/s2/favicons?domain=nba.com&sz=32" },
                 "NBATV": { url: "https://www.nba.com/watch/nba-tv", icon: "https://www.google.com/s2/favicons?domain=nba.com&sz=32" },
+                "FanDuel SN DET": { url: "https://fanduelsportsnetwork.com/", icon: "https://www.google.com/s2/favicons?domain=fanduelsportsnetwork.com&sz=32" },
+                "GCSEN": { url: "https://www.nba.com/pelicans/broadcasting", icon: "https://www.google.com/s2/favicons?domain=nba.com&sz=32" },
+                "Pelicans.com": { url: "https://watch.pelicans.com", icon: "https://www.google.com/s2/favicons?domain=pelicans.com&sz=32" },
+              };
+              const getNetworkIcon = (name: string): string | null => {
+                if (name.startsWith("FanDuel SN")) return "https://www.google.com/s2/favicons?domain=fanduelsportsnetwork.com&sz=32";
+                if (name.startsWith("NBC Sports")) return "https://www.google.com/s2/favicons?domain=nbcsports.com&sz=32";
+                if (name.startsWith("Bally Sports")) return "https://www.google.com/s2/favicons?domain=ballysports.com&sz=32";
+                if (name.includes("MSG")) return "https://www.google.com/s2/favicons?domain=msgnetworks.com&sz=32";
+                if (name === "YES" || name === "YES Network") return "https://www.google.com/s2/favicons?domain=yesnetwork.com&sz=32";
+                if (name === "NESN" || name === "NESN+") return "https://www.google.com/s2/favicons?domain=nesn.com&sz=32";
+                if (name.endsWith(".com")) return `https://www.google.com/s2/favicons?domain=${name}&sz=32`;
+                return null;
               };
               const allNetworks = [...game.broadcasts!.national, ...game.broadcasts!.local];
               const isNational = game.broadcasts!.national.length > 0;
@@ -1174,6 +1235,7 @@ export function GameDetailPopover({
                   <div className="flex flex-wrap gap-2">
                     {allNetworks.map((name) => {
                       const link = streamLinks[name];
+                      const fallbackIcon = !link ? getNetworkIcon(name) : null;
                       return link ? (
                         <a key={name} href={link.url} target="_blank" rel="noopener noreferrer" className="px-4 py-2.5 rounded-lg border border-neutral-200 text-sm font-medium text-neutral-900 hover:bg-neutral-50 hover:shadow-sm no-underline transition-all inline-flex items-center gap-2">
                           <img src={link.icon} alt="" className="size-4 rounded-sm" />
@@ -1182,7 +1244,7 @@ export function GameDetailPopover({
                         </a>
                       ) : (
                         <span key={name} className="px-4 py-2.5 rounded-lg border border-neutral-200 text-sm font-medium text-neutral-900 inline-flex items-center gap-2">
-                          <Tv className="size-4 text-neutral-400" />
+                          {fallbackIcon ? <img src={fallbackIcon} alt="" className="size-4 rounded-sm" /> : <Tv className="size-4 text-neutral-400" />}
                           {name}
                         </span>
                       );

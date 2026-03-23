@@ -325,7 +325,7 @@ function RampageContent() {
       }
       result!.games.forEach((game, i) => {
         const el = document.createElement("div");
-        el.style.cssText = `width:28px;height:28px;border-radius:50%;background:#7c3aed;color:white;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2.5px solid white;box-shadow:0 2px 8px rgba(124,58,237,0.4);`;
+        el.style.cssText = `width:28px;height:28px;border-radius:50%;background:#3b82f6;color:white;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2.5px solid white;box-shadow:0 2px 8px rgba(59,130,246,0.4);`;
         el.textContent = String(i + 1);
         new google.maps.marker.AdvancedMarkerElement({ map, position: { lat: game.lat, lng: game.lng }, content: el });
         bounds.extend({ lat: game.lat, lng: game.lng }); points.push({ lat: game.lat, lng: game.lng });
@@ -337,7 +337,7 @@ function RampageContent() {
         bounds.extend(cow.endLocation); points.push(cow.endLocation);
       }
       if (points.length >= 2) {
-        new google.maps.Polyline({ path: points, geodesic: true, strokeColor: "#7c3aed", strokeOpacity: 0.6, strokeWeight: 3, map });
+        new google.maps.Polyline({ path: points, geodesic: true, strokeColor: "#3b82f6", strokeOpacity: 0.6, strokeWeight: 3, map });
       }
       map.fitBounds(bounds, { top: 20, right: 20, bottom: 20, left: 20 });
     }

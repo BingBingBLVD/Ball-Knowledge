@@ -117,8 +117,8 @@ export function DateSelector({
   return (
     <div ref={ref} className="relative">
       <div className="flex items-center gap-0.5 px-2 py-1.5 shrink-0">
-        {/* Prev arrow */}
-        <div className="flex flex-col items-center">
+        {/* Prev arrow — hidden on very small screens */}
+        <div className="hidden min-[360px]:flex flex-col items-center">
           <button
             onClick={() => {
               if (hasPrev) onDateChange(availableDates[idx - 1]);
@@ -148,8 +148,8 @@ export function DateSelector({
           </div>
         </button>
 
-        {/* Next arrow */}
-        <div className="flex flex-col items-center">
+        {/* Next arrow — hidden on very small screens */}
+        <div className="hidden min-[360px]:flex flex-col items-center">
           <button
             onClick={() => {
               if (hasNext) onDateChange(availableDates[idx + 1]);

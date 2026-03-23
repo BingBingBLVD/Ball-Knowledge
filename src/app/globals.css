@@ -61,14 +61,14 @@
   --input: rgba(0,0,0,0.05);
 
   /* Brand */
-  --primary: #7c3aed;
+  --primary: #3b82f6;
   --primary-foreground: #ffffff;
   --secondary: rgba(255,255,255,0.6);
   --secondary-foreground: #1a1a2e;
   --accent: rgba(255,255,255,0.5);
   --accent-foreground: #1a1a2e;
   --destructive: #ef4444;
-  --ring: #7c3aed;
+  --ring: #3b82f6;
 
   --radius: 0.375rem;
 
@@ -90,7 +90,7 @@
   /* App-specific semantic colors */
   --color-price: #059669;
   --color-live: #16a34a;
-  --color-flight: #7c3aed;
+  --color-flight: #3b82f6;
   --color-transit: #0891b2;
   --color-train: #2563eb;
   --color-bus: #059669;
@@ -102,9 +102,9 @@
   --color-dim: #6b7280;
 
   /* Rampage mode */
-  --color-rampage: #7c3aed;
-  --color-rampage-bright: #8b5cf6;
-  --color-rampage-dim: #6d28d9;
+  --color-rampage: #3b82f6;
+  --color-rampage-bright: #60a5fa;
+  --color-rampage-dim: #2563eb;
 }
 
 /* Dark mode alias — kept for shadcn compatibility but matches root */
@@ -246,8 +246,8 @@
 
 /* Rampage toggle glow */
 @keyframes rampage-glow {
-  0%, 100% { box-shadow: 0 0 4px var(--color-rampage), 0 0 8px rgba(139,92,246,0.3); }
-  50% { box-shadow: 0 0 8px var(--color-rampage), 0 0 16px rgba(139,92,246,0.4); }
+  0%, 100% { box-shadow: 0 0 4px var(--color-rampage), 0 0 8px rgba(59,130,246,0.3); }
+  50% { box-shadow: 0 0 8px var(--color-rampage), 0 0 16px rgba(59,130,246,0.4); }
 }
 .rampage-glow {
   animation: rampage-glow 2s ease-in-out infinite;
