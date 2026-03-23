@@ -451,6 +451,13 @@ export function BottomTray({
     setTimeout(() => setPopoverEventId(null), 300);
   }, [onGameSelect]);
 
+  // Open popover when selectedGameId is set (e.g. from URL param on page load)
+  useEffect(() => {
+    if (selectedGameId && !popoverEventId && games.some((g) => g.id === selectedGameId)) {
+      openPopover(selectedGameId);
+    }
+  }, [selectedGameId, popoverEventId, games, openPopover]);
+
   // Watch title visibility for sticky header
   useEffect(() => {
     const el = popoverTitleRef.current;
