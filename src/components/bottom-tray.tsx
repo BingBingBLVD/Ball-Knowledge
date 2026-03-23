@@ -1441,18 +1441,21 @@ export function BottomTray({
                       return (
                         <div className="py-8 border-b border-neutral-200">
                           <h2 className="text-[22px] font-semibold text-neutral-900 mb-1">Getting home</h2>
-                          <p className="text-sm text-neutral-500 mb-4">Last transit options after the game</p>
+                          <p className="text-sm text-neutral-500 mb-4">Latest post-game transit from {event.venue} to nearby stations</p>
                           {ltLoading && !ltData && <div className="flex items-center gap-2 text-sm text-neutral-500"><Loader2 className="size-4 animate-spin" /> Checking...</div>}
                           {ltData && ltData.length > 0 && <div className="space-y-3">{ltData.map((lt) => {
                             const depTime = lt.lastDeparture ? new Date(lt.lastDeparture) : null;
                             const depStr = depTime ? depTime.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }) : null;
-                            return (<div key={lt.stopCode} className="flex items-center justify-between py-2">
-                              <span className="text-base font-semibold text-neutral-900">{lt.stopCode}</span>
+                            return (<div key={lt.stopCode} className="flex items-center justify-between py-3 border-b border-neutral-100 last:border-0">
+                              <div>
+                                <div className="text-base font-semibold text-neutral-900">{lt.stopCode}</div>
+                                <div className="text-xs text-neutral-500">Venue → {lt.stopName || lt.stopCode} station</div>
+                              </div>
                               {lt.available && depStr ? (
                                 <div className="text-right">
-                                  <div className={`text-sm font-medium ${lt.warning ? "text-red-600" : "text-neutral-700"}`}>Last departure {depStr}</div>
-                                  {lt.durationMinutes && <div className="text-xs text-neutral-500">{lt.durationMinutes} min ride</div>}
-                                  {lt.warning && <div className="text-xs text-red-600 font-medium">May end before game</div>}
+                                  <div className={`text-sm font-medium ${lt.warning ? "text-red-600" : "text-neutral-700"}`}>Departs {depStr}</div>
+                                  {lt.durationMinutes && <div className="text-xs text-neutral-500">{lt.durationMinutes} min ride to station</div>}
+                                  {lt.warning && <div className="text-xs text-red-600 font-medium">Service may end before game</div>}
                                 </div>
                               ) : <span className="text-sm text-neutral-500">No late service</span>}
                             </div>);
