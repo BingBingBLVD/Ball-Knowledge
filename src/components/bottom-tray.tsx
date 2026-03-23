@@ -260,7 +260,7 @@ function TransitRows({
         return (
           <div
             key={stop.code}
-            className="rounded-xl bg-black/5 p-3"
+            className="rounded-xl border border-neutral-200 shadow-sm p-4"
           >
             {/* Header: code + distance */}
             <div className="flex items-center gap-2 mb-2">
@@ -284,7 +284,7 @@ function TransitRows({
                   <a
                     href={gmapsUrl(vLat, vLng, stop.lat, stop.lng, "driving", arriveByEpoch)}
                     target="_blank" rel="noopener noreferrer"
-                    className="block rounded-lg bg-black/5 hover:bg-black/5 py-2.5 px-3 no-underline transition-colors"
+                    className="block rounded-lg border border-neutral-200 hover:shadow-md py-2.5 px-3 no-underline transition-shadow"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <div className="flex items-center gap-2 mb-1.5">
@@ -317,7 +317,7 @@ function TransitRows({
                     <a
                       href={gmapsUrl(vLat, vLng, stop.lat, stop.lng, "transit", arriveByEpoch)}
                       target="_blank" rel="noopener noreferrer"
-                      className="block rounded-lg bg-black/5 hover:bg-black/5 py-2.5 px-3 no-underline transition-colors"
+                      className="block rounded-lg border border-neutral-200 hover:shadow-md py-2.5 px-3 no-underline transition-shadow"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <div className="flex items-center gap-2">
@@ -716,6 +716,29 @@ export function BottomTray({
     }
   }, [localNews, newsLoading]);
 
+  // Venue photos state
+  const [venuePhotos, setVenuePhotos] = useState<Record<string, string[]>>({});
+  const [photosLoading, setPhotosLoading] = useState<Set<string>>(new Set());
+  const photosFailed = useRef<Set<string>>(new Set());
+
+  const handlePhotosLoad = useCallback(async (venue: string, lat: number, lng: number) => {
+    if (venuePhotos[venue] || photosLoading.has(venue) || photosFailed.current.has(venue)) return;
+    setPhotosLoading((prev) => new Set(prev).add(venue));
+    try {
+      const res = await fetch(`/api/venue-photos?venue=${encodeURIComponent(venue)}&lat=${lat}&lng=${lng}`);
+      if (res.ok) {
+        const data = await res.json();
+        setVenuePhotos((prev) => ({ ...prev, [venue]: data.photos }));
+      } else {
+        photosFailed.current.add(venue);
+      }
+    } catch {
+      photosFailed.current.add(venue);
+    } finally {
+      setPhotosLoading((prev) => { const next = new Set(prev); next.delete(venue); return next; });
+    }
+  }, [venuePhotos, photosLoading]);
+
   // Nearby parking state
   interface ParkingSpot { name: string; vicinity: string; lat: number; lng: number; distanceMiles: number; walkMinutes: number; rating: number | null; totalRatings: number; openNow: boolean | null; priceLevel: string | null; spotHeroUrl: string; directionsUrl: string }
   const [nearbyParking, setNearbyParking] = useState<Record<string, ParkingSpot[]>>({});
@@ -1025,6 +1048,7 @@ export function BottomTray({
                       const aptCodes = (event.nearbyAirports ?? []).map((a) => a.code);
                       if (aptCodes.length > 0) handleDelaysLoad(aptCodes);
                       handleNewsLoad(event.city, event.state, event.venue);
+                      handlePhotosLoad(event.venue, vLat, vLng);
                       handleParkingLoad(event.venue, vLat, vLng, event.est_date || date);
                       if (event.date_time_utc) {
                         const transitStops = [
@@ -1221,11 +1245,44 @@ export function BottomTray({
                 {/* Scrollable content */}
                 <div className="flex-1 overflow-y-auto no-scrollbar">
                   <div className="max-w-3xl mx-auto px-6">
+                    {/* Venue photos — Airbnb grid */}
+                    {(() => {
+                      const photos = venuePhotos[event.venue];
+                      if (!photos || photos.length === 0) return null;
+                      return (
+                        <div className="rounded-xl overflow-hidden mt-6 mb-2">
+                          {photos.length >= 5 ? (
+                            <div className="grid grid-cols-4 grid-rows-2 gap-1.5 h-[320px]">
+                              <div className="col-span-2 row-span-2 relative">
+                                <img src={photos[0]} alt={event.venue} className="w-full h-full object-cover rounded-l-xl" />
+                              </div>
+                              <div className="relative"><img src={photos[1]} alt="" className="w-full h-full object-cover" /></div>
+                              <div className="relative"><img src={photos[2]} alt="" className="w-full h-full object-cover rounded-tr-xl" /></div>
+                              <div className="relative"><img src={photos[3]} alt="" className="w-full h-full object-cover" /></div>
+                              <div className="relative"><img src={photos[4]} alt="" className="w-full h-full object-cover rounded-br-xl" /></div>
+                            </div>
+                          ) : photos.length >= 3 ? (
+                            <div className="grid grid-cols-3 gap-1.5 h-[240px]">
+                              <div className="col-span-2 relative"><img src={photos[0]} alt={event.venue} className="w-full h-full object-cover rounded-l-xl" /></div>
+                              <div className="flex flex-col gap-1.5">
+                                <div className="flex-1 relative"><img src={photos[1]} alt="" className="w-full h-full object-cover rounded-tr-xl" /></div>
+                                <div className="flex-1 relative"><img src={photos[2]} alt="" className="w-full h-full object-cover rounded-br-xl" /></div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="h-[240px]">
+                              <img src={photos[0]} alt={event.venue} className="w-full h-full object-cover rounded-xl" />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+
                     {/* Title section */}
                     <div className="pt-8 pb-6">
                       {away ? (
                         <h1 className="text-[26px] font-bold text-neutral-900 leading-tight">
-                          {away} <span className="text-neutral-400 font-normal">at</span> {home}
+                          {away} <span className="text-neutral-400 font-normal">@</span> {home}
                         </h1>
                       ) : (
                         <h1 className="text-[26px] font-bold text-neutral-900 leading-tight">{event.name}</h1>
