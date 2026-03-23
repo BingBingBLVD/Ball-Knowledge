@@ -150,7 +150,7 @@ function HomeInner() {
       (pos) => {
         setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
       },
-      () => {},
+      () => { /* Geolocation denied or unavailable — fallback to manual location */ },
       { enableHighAccuracy: false, timeout: 10000 }
     );
   }, []);

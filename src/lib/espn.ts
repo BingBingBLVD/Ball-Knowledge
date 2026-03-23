@@ -97,7 +97,7 @@ export async function fetchEspnScoreboard(dates: string[]): Promise<EspnScoreboa
             const name = gb.media?.shortName ?? "";
             if (!name) continue;
             const market = gb.market?.type ?? "";
-            if (market === "National" || market === "Home" && (name === "ESPN" || name === "TNT" || name === "ABC" || name === "NBA TV")) {
+            if ((market === "National" || market === "Home") && (name === "ESPN" || name === "TNT" || name === "ABC" || name === "NBA TV")) {
               if (!national.includes(name)) national.push(name);
             } else {
               if (!local.includes(name)) local.push(name);

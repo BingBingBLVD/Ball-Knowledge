@@ -84,36 +84,37 @@ export async function GET(req: NextRequest) {
   // Also check a late departure (11 PM local-ish — 3.5h after tipoff as proxy)
   const lateEpoch = Math.floor((tipoffMs + 3.5 * 3600000) / 1000);
 
-  const results: LastTransitInfo[] = [];
+  const estGameEnd = tipoffMs + 2.5 * 3600000;
 
-  // Process stops sequentially to avoid rate limits (max ~6 stops)
-  for (const stop of stops.slice(0, 6)) {
-    // Check at game end time
-    const gameEndResult = await checkTransitAt(venueLat, venueLng, stop.lat, stop.lng, gameEndEpoch);
-    // Check late departure
-    const lateResult = await checkTransitAt(venueLat, venueLng, stop.lat, stop.lng, lateEpoch);
+  // Process stops in parallel (max 6 stops × 2 checks each)
+  const results: LastTransitInfo[] = await Promise.all(
+    stops.slice(0, 6).map(async (stop) => {
+      const [gameEndResult, lateResult] = await Promise.all([
+        checkTransitAt(venueLat, venueLng, stop.lat, stop.lng, gameEndEpoch),
+        checkTransitAt(venueLat, venueLng, stop.lat, stop.lng, lateEpoch),
+      ]);
 
-    // Use the later result that still has transit available
-    const best = lateResult ?? gameEndResult;
-    const lastDep = best?.departureTime ? best.departureTime : gameEndResult?.departureTime ?? null;
-    const lastArr = best?.arrivalTime ? best.arrivalTime : gameEndResult?.arrivalTime ?? null;
+      // Use the later result that still has transit available
+      const best = lateResult ?? gameEndResult;
+      const lastDep = best?.departureTime ? best.departureTime : gameEndResult?.departureTime ?? null;
+      const lastArr = best?.arrivalTime ? best.arrivalTime : gameEndResult?.arrivalTime ?? null;
 
-    // Warn if the last departure is before game likely ends (~2.5h after tipoff)
-    const estGameEnd = tipoffMs + 2.5 * 3600000;
-    const warning = lastDep != null && (lastDep * 1000) < estGameEnd;
+      // Warn if the last departure is before game likely ends (~2.5h after tipoff)
+      const warning = lastDep != null && (lastDep * 1000) < estGameEnd;
 
-    results.push({
-      stopCode: stop.code,
-      stopName: stop.name,
-      stopLat: stop.lat,
-      stopLng: stop.lng,
-      lastDeparture: lastDep ? new Date(lastDep * 1000).toISOString() : null,
-      lastArrival: lastArr ? new Date(lastArr * 1000).toISOString() : null,
-      durationMinutes: best?.durationMin ?? null,
-      available: best != null,
-      warning,
-    });
-  }
+      return {
+        stopCode: stop.code,
+        stopName: stop.name,
+        stopLat: stop.lat,
+        stopLng: stop.lng,
+        lastDeparture: lastDep ? new Date(lastDep * 1000).toISOString() : null,
+        lastArrival: lastArr ? new Date(lastArr * 1000).toISOString() : null,
+        durationMinutes: best?.durationMin ?? null,
+        available: best != null,
+        warning,
+      };
+    })
+  );
 
   cache.set(cacheKey, { data: results, ts: Date.now() });
   return NextResponse.json({ lastTransit: results });

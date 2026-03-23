@@ -83,7 +83,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ restaurants: [] });
   }
 
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? process.env.GOOGLE_MAPS_API_KEY ?? "";
+  const apiKey = process.env.GOOGLE_MAPS_API_KEY ?? process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
   if (!apiKey) return NextResponse.json({ restaurants: [] });
 
   const key = `${venueLat.toFixed(3)},${venueLng.toFixed(3)}`;

@@ -274,6 +274,7 @@ export async function searchRoutes(
   );
 
   for (const git of gtfsResults) {
+    if (git.legs.length === 0) continue;
     // Compute first mile: user → boarding stop
     const boardStop = git.legs[0];
     const firstMileMi = haversineMiles(
@@ -481,11 +482,15 @@ export async function searchRoutes(
   if (airportPairs.length > 0) {
     googleFlightsUrl = `https://www.google.com/travel/flights?q=Flights+to+${airportPairs[0].dest.code}+from+${airportPairs[0].orig.code}+on+${gameDate}`;
 
-    // Fetch flights for all airport pairs in parallel
+    // Fetch flights for all airport pairs in parallel (tolerate per-pair failures)
     const pairResults = await Promise.all(
       airportPairs.map(async ({ orig, dest }) => {
-        const flights = await fetchFlights(orig.code, dest.code, gameDate);
-        return flights.map(f => ({ flight: f, origApt: orig, destApt: dest }));
+        try {
+          const flights = await fetchFlights(orig.code, dest.code, gameDate);
+          return flights.map(f => ({ flight: f, origApt: orig, destApt: dest }));
+        } catch {
+          return [];
+        }
       })
     );
 
@@ -641,8 +646,12 @@ export async function searchRoutes(
       const batch = routeEntries.slice(i, i + BATCH_SIZE);
       const results = await Promise.all(
         batch.map(async ([key, { fromId, toId }]) => {
-          const trips = await fetchFlixTrips(fromId, toId, gameDate);
-          return [key, trips] as const;
+          try {
+            const trips = await fetchFlixTrips(fromId, toId, gameDate);
+            return [key, trips] as const;
+          } catch {
+            return [key, [] as Awaited<ReturnType<typeof fetchFlixTrips>>] as const;
+          }
         })
       );
       for (const [key, trips] of results) {
