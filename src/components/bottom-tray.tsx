@@ -1314,19 +1314,6 @@ export function BottomTray({
                           </div>
                         </div>
                       )}
-                      {event.broadcasts && (event.broadcasts.national.length > 0 || event.broadcasts.local.length > 0) && (
-                        <div className="flex items-center gap-2">
-                          <Tv className="size-5 text-neutral-400" />
-                          <div className="text-sm">
-                            {event.broadcasts.national.length > 0 && (
-                              <div className="font-semibold text-neutral-900">{event.broadcasts.national.join(", ")}</div>
-                            )}
-                            {event.broadcasts.local.length > 0 && (
-                              <div className="text-xs text-neutral-500">{event.broadcasts.local.join(", ")}</div>
-                            )}
-                          </div>
-                        </div>
-                      )}
                     </div>
 
                     {/* Odds section */}
@@ -1728,6 +1715,49 @@ export function BottomTray({
                               </div>
                             </>
                           )}
+                        </div>
+                      );
+                    })()}
+
+                    {/* Watch Online */}
+                    {event.broadcasts && (event.broadcasts.national.length > 0 || event.broadcasts.local.length > 0) && (() => {
+                      const streamLinks: Record<string, { url: string; icon: string }> = {
+                        "ESPN": { url: "https://www.espn.com/watch/", icon: "https://www.google.com/s2/favicons?domain=espn.com&sz=32" },
+                        "ESPN2": { url: "https://www.espn.com/watch/", icon: "https://www.google.com/s2/favicons?domain=espn.com&sz=32" },
+                        "ABC": { url: "https://abc.com/watch-live/", icon: "https://www.google.com/s2/favicons?domain=abc.com&sz=32" },
+                        "TNT": { url: "https://www.tntdrama.com/watchtnt", icon: "https://www.google.com/s2/favicons?domain=tntdrama.com&sz=32" },
+                        "truTV": { url: "https://www.trutv.com/watchtrutv", icon: "https://www.google.com/s2/favicons?domain=trutv.com&sz=32" },
+                        "NBA TV": { url: "https://www.nba.com/watch/nba-tv", icon: "https://www.google.com/s2/favicons?domain=nba.com&sz=32" },
+                        "NBATV": { url: "https://www.nba.com/watch/nba-tv", icon: "https://www.google.com/s2/favicons?domain=nba.com&sz=32" },
+                      };
+                      const allNetworks = [...event.broadcasts.national, ...event.broadcasts.local];
+                      const isNational = event.broadcasts.national.length > 0;
+                      return (
+                        <div className="py-8 border-b border-neutral-200">
+                          <h2 className="text-[22px] font-semibold text-neutral-900 mb-1">Watch online</h2>
+                          <p className="text-sm text-neutral-500 mb-4">{isNational ? "Nationally televised" : "Local broadcast"} — {isNational ? "catch the big game from anywhere" : "check local listings or NBA League Pass"}</p>
+                          <div className="flex flex-wrap gap-2">
+                            {allNetworks.map((name) => {
+                              const link = streamLinks[name];
+                              return link ? (
+                                <a key={name} href={link.url} target="_blank" rel="noopener noreferrer" className="px-4 py-2.5 rounded-lg border border-neutral-200 text-sm font-medium text-neutral-900 hover:bg-neutral-50 hover:shadow-sm no-underline transition-all inline-flex items-center gap-2">
+                                  <img src={link.icon} alt="" className="size-4 rounded-sm" />
+                                  {name}
+                                  <ArrowUpRight className="size-3.5 text-neutral-400" />
+                                </a>
+                              ) : (
+                                <span key={name} className="px-4 py-2.5 rounded-lg border border-neutral-200 text-sm font-medium text-neutral-900 inline-flex items-center gap-2">
+                                  <Tv className="size-4 text-neutral-400" />
+                                  {name}
+                                </span>
+                              );
+                            })}
+                            <a href="https://www.nba.com/watch/league-pass" target="_blank" rel="noopener noreferrer" className="px-4 py-2.5 rounded-lg border border-neutral-200 text-sm font-medium text-neutral-900 hover:bg-neutral-50 hover:shadow-sm no-underline transition-all inline-flex items-center gap-2">
+                              <img src="https://www.google.com/s2/favicons?domain=nba.com&sz=32" alt="" className="size-4 rounded-sm" />
+                              NBA League Pass
+                              <ArrowUpRight className="size-3.5 text-neutral-400" />
+                            </a>
+                          </div>
                         </div>
                       );
                     })()}

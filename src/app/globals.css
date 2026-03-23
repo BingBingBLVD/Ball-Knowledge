@@ -61,14 +61,14 @@
   --input: rgba(0,0,0,0.05);
 
   /* Brand */
-  --primary: #b8860b;
+  --primary: #7c3aed;
   --primary-foreground: #ffffff;
   --secondary: rgba(255,255,255,0.6);
   --secondary-foreground: #1a1a2e;
   --accent: rgba(255,255,255,0.5);
   --accent-foreground: #1a1a2e;
   --destructive: #ef4444;
-  --ring: #b8860b;
+  --ring: #7c3aed;
 
   --radius: 0.375rem;
 
