@@ -278,49 +278,46 @@ function TransitRows({
               </a>
               <span className="text-xs text-[--color-dim]">{distMi} mi away</span>
             </div>
-            {/* Transport grid */}
+            {/* Transport options */}
             {times ? (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div className={`grid gap-2 ${times.transitMinutes != null ? "grid-cols-2" : "grid-cols-1"}`}>
+                {/* Drive card with Uber/Lyft nested */}
                 <a
                   href={gmapsUrl(vLat, vLng, stop.lat, stop.lng, "driving", arriveByEpoch)}
                   target="_blank" rel="noopener noreferrer"
-                  className="flex flex-col items-center gap-0.5 rounded-lg bg-white/5 hover:bg-white/10 py-2 px-1 no-underline transition-colors"
+                  className="rounded-lg bg-white/5 hover:bg-white/10 py-2.5 px-3 no-underline transition-colors"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <Car className="size-4 text-[--color-dim]" />
-                  <span className="text-xs font-bold text-foreground">{formatDriveTime(times.driveMinutes)}</span>
-                  <span className="text-[10px] text-[--color-dim]">Drive</span>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <Car className="size-4 text-[--color-dim]" />
+                    <span className="text-xs font-bold text-foreground">{formatDriveTime(times.driveMinutes)}</span>
+                    <span className="text-[10px] text-[--color-dim]">Drive</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-[10px] border-t border-white/5 pt-1.5">
+                    <span className="text-[--color-dim]" onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(uberDeepLink(vLat, vLng, stop.lat, stop.lng), "_blank"); }}>
+                      <span className="font-bold">UBER</span> <span className="text-emerald-400">{times.uberEstimate ? `~${extractUpperBound(times.uberEstimate)}` : "--"}</span>
+                    </span>
+                    <span className="text-[--color-dim]" onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(lyftDeepLink(vLat, vLng, stop.lat, stop.lng), "_blank"); }}>
+                      <span className="font-bold">LYFT</span> <span className="text-emerald-400">{times.lyftEstimate ? `~${extractUpperBound(times.lyftEstimate)}` : "--"}</span>
+                    </span>
+                  </div>
                 </a>
+                {/* Transit card */}
                 {times.transitMinutes != null && (
                   <a
                     href={gmapsUrl(vLat, vLng, stop.lat, stop.lng, "transit", arriveByEpoch)}
                     target="_blank" rel="noopener noreferrer"
-                    className="flex flex-col items-center gap-0.5 rounded-lg bg-white/5 hover:bg-white/10 py-2 px-1 no-underline transition-colors"
+                    className="rounded-lg bg-white/5 hover:bg-white/10 py-2.5 px-3 no-underline transition-colors flex flex-col justify-center"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <Bus className="size-4 text-[--color-dim]" />
-                    <span className="text-xs font-bold text-foreground">{formatDriveTime(times.transitMinutes)}</span>
-                    <span className="text-[10px] text-emerald-400">{times.transitFare ?? "--"}</span>
+                    <div className="flex items-center gap-2">
+                      <Bus className="size-4 text-[--color-dim]" />
+                      <span className="text-xs font-bold text-foreground">{formatDriveTime(times.transitMinutes)}</span>
+                      <span className="text-[10px] text-[--color-dim]">Transit</span>
+                    </div>
+                    <div className="text-[10px] text-emerald-400 mt-1">{times.transitFare ?? "No fare info"}</div>
                   </a>
                 )}
-                <a
-                  href={uberDeepLink(vLat, vLng, stop.lat, stop.lng)}
-                  target="_blank" rel="noopener noreferrer"
-                  className="flex flex-col items-center gap-0.5 rounded-lg bg-white/5 hover:bg-white/10 py-2 px-1 no-underline transition-colors"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <span className="text-[10px] font-bold text-[--color-dim]">UBER</span>
-                  <span className="text-xs font-bold text-emerald-400">{times.uberEstimate ? `~${extractUpperBound(times.uberEstimate)}` : "--"}</span>
-                </a>
-                <a
-                  href={lyftDeepLink(vLat, vLng, stop.lat, stop.lng)}
-                  target="_blank" rel="noopener noreferrer"
-                  className="flex flex-col items-center gap-0.5 rounded-lg bg-white/5 hover:bg-white/10 py-2 px-1 no-underline transition-colors"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <span className="text-[10px] font-bold text-[--color-dim]">LYFT</span>
-                  <span className="text-xs font-bold text-emerald-400">{times.lyftEstimate ? `~${extractUpperBound(times.lyftEstimate)}` : "--"}</span>
-                </a>
               </div>
             ) : (
               <button
@@ -1232,16 +1229,26 @@ export function BottomTray({
                     )}
                     {event.away_record && event.home_record && away && (
                       <div className="bg-white/5 rounded-xl p-3">
-                        <div className="text-[10px] font-mono text-[--color-dim] uppercase tracking-widest mb-1">Season Record</div>
-                        <div className="space-y-1 mt-1">
+                        <div className="text-[10px] font-mono text-[--color-dim] uppercase tracking-widest mb-1">Record & Odds</div>
+                        <div className="space-y-1.5 mt-1">
                           <div className="flex items-center justify-between text-xs font-mono">
                             <span className="text-[--color-dim]">{away}</span>
-                            <span className="text-foreground font-bold tabular-nums">{event.away_record}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-foreground font-bold tabular-nums">{event.away_record}</span>
+                              {event.odds && <span className="text-[--color-dim] tabular-nums">{event.odds.away_win}%</span>}
+                            </div>
                           </div>
                           <div className="flex items-center justify-between text-xs font-mono">
                             <span className="text-[--color-dim]">{home}</span>
-                            <span className="text-foreground font-bold tabular-nums">{event.home_record}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-foreground font-bold tabular-nums">{event.home_record}</span>
+                              {event.odds && <span className="text-[--color-dim] tabular-nums">{event.odds.home_win}%</span>}
+                            </div>
                           </div>
+                          {event.odds && (() => {
+                            const spread = Math.abs(event.odds.away_win - event.odds.home_win);
+                            return <div className="text-[10px] text-[--color-dim] text-center mt-0.5">Spread ±{spread}</div>;
+                          })()}
                         </div>
                       </div>
                     )}
