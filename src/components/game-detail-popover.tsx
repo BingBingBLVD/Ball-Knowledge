@@ -34,8 +34,6 @@ import {
   HeartPulse,
   Beer,
   UtensilsCrossed,
-  Newspaper,
-  Map,
 } from "lucide-react";
 import type { VenuePolicy } from "@/lib/venue-policies";
 
@@ -293,9 +291,9 @@ function TransitRows({
   enriched,
   enriching,
   onEnrich,
-  onRouteFocus,
-  isAnimating,
-  venueName,
+  onRouteFocus: _onRouteFocus,
+  isAnimating: _isAnimating,
+  venueName: _venueName,
   colorClass,
   tipoffUtc,
 }: {
@@ -595,7 +593,7 @@ export function GameDetailPopover({
           .finally(() => setLastTransitLoading(false));
       }
     }
-  }, [game, date]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [game, date]);
 
   // Transit enrichment handler
   const handleEnrich = useCallback(async (stop: TransitStop) => {
