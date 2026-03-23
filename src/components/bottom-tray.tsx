@@ -1683,7 +1683,7 @@ export function BottomTray({
                                         <span className="flex items-center gap-0.5"><Footprints className="size-3" /> {r.walkMinutes}m walk</span>
                                         {r.rating && <span className="flex items-center gap-0.5"><Star className="size-3 text-neutral-900" /> {r.rating}</span>}
                                       </div>
-                                      {r.priceLevel && <div className="text-xs text-neutral-500 mt-1">{r.priceLevel}</div>}
+                                      {r.priceLevel && <div className="text-xs text-neutral-500 mt-1">{r.priceLevel} {r.priceLevel === "$" ? "($5–15)" : r.priceLevel === "$$" ? "($15–30)" : r.priceLevel === "$$$" ? "($30–60)" : r.priceLevel === "$$$$" ? "($60+)" : ""}</div>}
                                     </div>
                                   </a>
                                 ))}
@@ -1713,7 +1713,7 @@ export function BottomTray({
                                         <span className="flex items-center gap-0.5"><Footprints className="size-3" /> {r.walkMinutes}m walk</span>
                                         {r.rating && <span className="flex items-center gap-0.5"><Star className="size-3 text-neutral-900" /> {r.rating}</span>}
                                       </div>
-                                      {r.priceLevel && <div className="text-xs text-neutral-500 mt-1">{r.priceLevel}</div>}
+                                      {r.priceLevel && <div className="text-xs text-neutral-500 mt-1">{r.priceLevel} {r.priceLevel === "$" ? "($5–15)" : r.priceLevel === "$$" ? "($15–30)" : r.priceLevel === "$$$" ? "($30–60)" : r.priceLevel === "$$$$" ? "($60+)" : ""}</div>}
                                     </div>
                                   </a>
                                 ))}
