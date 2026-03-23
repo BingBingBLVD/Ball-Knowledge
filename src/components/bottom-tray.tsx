@@ -1156,8 +1156,8 @@ export function BottomTray({
                       </div>
 
                       {/* Time + records */}
-                      <div className="flex items-center gap-3 mt-1.5 text-sm text-neutral-500">
-                        <span className="text-neutral-900 font-medium">{formatTime(event.local_time ?? event.est_time, event.tz)}</span>
+                      <div className="flex items-center gap-2 mt-1 text-xs text-neutral-400">
+                        <span className="text-neutral-600 font-medium">{formatTime(event.local_time ?? event.est_time, event.tz)}</span>
                         {showLocal && <span>{userLocal.text}</span>}
                         {event.away_record && event.home_record && (
                           <span>{event.away_record} vs {event.home_record}</span>

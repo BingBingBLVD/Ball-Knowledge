@@ -456,8 +456,8 @@ function RampageContent() {
                       {away ? <>{away} <span className="text-neutral-400 font-normal">@</span> {home}</> : game.name}
                     </div>
                     <div className="text-sm text-neutral-500 mt-0.5">{game.venue} · {game.city}, {game.state}</div>
-                    <div className="flex items-center gap-3 mt-1.5 text-sm text-neutral-500">
-                      <span className="text-neutral-900 font-medium">{formatTime(game.local_time ?? game.est_time, game.tz)}</span>
+                    <div className="flex items-center gap-2 mt-1 text-xs text-neutral-400">
+                      <span className="text-neutral-600 font-medium">{formatTime(game.local_time ?? game.est_time, game.tz)}</span>
                       {(() => { const u = formatUserLocalTime(game.date_time_utc); return u && u.tz !== (game.tz ?? "ET") ? <span>{u.text}</span> : null; })()}
                       {game.away_record && game.home_record && <span>{game.away_record} vs {game.home_record}</span>}
                       {game.odds && <span>{game.odds.away_win}–{game.odds.home_win}%</span>}
