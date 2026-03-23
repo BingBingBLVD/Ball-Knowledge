@@ -1076,9 +1076,9 @@ export function BottomTray({
                                     <div className="flex items-center gap-2 text-[10px] text-[--color-dim] border-t border-white/8 pt-1 mt-0.5 flex-wrap">
                                       <span className="flex items-center gap-1"><MapPin className="size-2.5 text-amber-400/60 shrink-0" /><span className="text-foreground">{h.distanceMiles} mi</span></span>
                                       <span>·</span>
-                                      <span className="flex items-center gap-1"><Car className="size-2.5 shrink-0" />{h.driveMinutes} min</span>
+                                      <a href={h.directionsUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-cyan-400 transition-colors"><Car className="size-2.5 shrink-0" />{h.driveMinutes} min</a>
                                       {h.transitMinutes != null && (
-                                        <><span>·</span><span className="flex items-center gap-1"><Bus className="size-2.5 shrink-0" />{h.transitMinutes} min{h.transitFare && <span className="text-emerald-400">{h.transitFare}</span>}</span></>
+                                        <><span>·</span><a href={h.transitDirectionsUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-cyan-400 transition-colors"><Bus className="size-2.5 shrink-0" />{h.transitMinutes} min{h.transitFare && <span className="text-emerald-400">{h.transitFare}</span>}</a></>
                                       )}
                                       <span>·</span>
                                       <span className="flex items-center gap-1"><Footprints className="size-2.5 shrink-0" />{h.walkMinutes} min</span>
@@ -1086,24 +1086,6 @@ export function BottomTray({
                                     <div className="flex items-center gap-2 text-[10px] text-[--color-dim]">
                                       <span>UBER <span className="text-emerald-400">{h.uberEstimate}</span></span>
                                       <span>LYFT <span className="text-emerald-400">{h.lyftEstimate}</span></span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <a
-                                        href={h.directionsUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-[10px] text-cyan-400/70 hover:text-cyan-400 inline-flex items-center gap-0.5 transition-colors"
-                                      >
-                                        DRIVE <ArrowUpRight className="size-2.5" />
-                                      </a>
-                                      <a
-                                        href={h.transitDirectionsUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-[10px] text-cyan-400/70 hover:text-cyan-400 inline-flex items-center gap-0.5 transition-colors"
-                                      >
-                                        TRANSIT <ArrowUpRight className="size-2.5" />
-                                      </a>
                                     </div>
                                   </div>
                                 ))}
