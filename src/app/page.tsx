@@ -122,9 +122,8 @@ function HomeInner() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  // Request geolocation only if no saved location
+  // Request geolocation on page load
   useEffect(() => {
-    if (userLocation) return;
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
