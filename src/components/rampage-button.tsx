@@ -198,8 +198,8 @@ export function RampageButton({
             onClick={handleToggle}
             className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full shadow-md hover:shadow-lg transition-all ${
               rampage.active
-                ? "bg-blue-50 border border-blue-200 text-blue-500"
-                : "bg-white border border-neutral-200 text-neutral-500 hover:text-blue-500 hover:border-blue-200"
+                ? "bg-neutral-100 border border-neutral-300 text-neutral-900"
+                : "bg-white border border-neutral-200 text-neutral-500 hover:text-neutral-900 hover:border-neutral-300"
             }`}
           >
             <Zap className="size-4" />
@@ -219,7 +219,7 @@ export function RampageButton({
               </button>
               <button
                 onClick={handlePlanRampage}
-                className="flex items-center gap-1 px-4 py-2.5 rounded-full bg-blue-400 text-white shadow-md text-xs font-semibold hover:bg-blue-500 transition-all"
+                className="flex items-center gap-1 px-4 py-2.5 rounded-full bg-neutral-900 text-white shadow-md text-xs font-semibold hover:bg-neutral-800 transition-all"
               >
                 PLAN
                 <ArrowRight className="size-3.5" />
@@ -307,7 +307,7 @@ export function RampageButton({
               </button>
               <button
                 onClick={handleStartSelecting}
-                className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-400 to-blue-500 text-white text-sm font-semibold shadow-lg shadow-blue-400/25 hover:shadow-xl hover:shadow-blue-400/30 hover:brightness-105 active:scale-[0.98] transition-all"
+                className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-neutral-900 text-white text-sm font-semibold shadow-lg shadow-neutral-900/25 hover:shadow-xl hover:shadow-neutral-900/30 hover:bg-neutral-800 active:scale-[0.98] transition-all"
               >
                 <MapPin className="size-4" />
                 {gameCount > 0 ? "Back to Map" : "Start Selecting Games"}
@@ -353,7 +353,7 @@ function LocationRow({
         {/* Dot indicator */}
         <div className={`size-[10px] shrink-0 rounded-full border-2 ${
           location
-            ? "border-blue-500 bg-blue-500"
+            ? "border-neutral-900 bg-neutral-900"
             : "border-neutral-300 bg-white"
         }`} />
 
@@ -380,7 +380,7 @@ function LocationRow({
           >
             {location ? (
               <>
-                <MapPin className="size-4 text-blue-500 shrink-0" />
+                <MapPin className="size-4 text-neutral-900 shrink-0" />
                 <span className="text-sm font-medium text-neutral-900 truncate">{location.label}</span>
               </>
             ) : (
@@ -394,7 +394,7 @@ function LocationRow({
         <button
           onClick={onGps}
           disabled={locating}
-          className="shrink-0 p-2 rounded-full text-neutral-400 hover:text-blue-500 hover:bg-blue-50 transition-all"
+          className="shrink-0 p-2 rounded-full text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 transition-all"
           title="Use current location"
         >
           {locating ? <Loader2 className="size-4 animate-spin" /> : <Navigation className="size-4" />}

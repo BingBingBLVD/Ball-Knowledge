@@ -1083,8 +1083,8 @@ export function BottomTray({
                   onMouseLeave={() => onVenueHover?.(null)}
                   className={`card-enter transition-all cursor-pointer ${
                     isWide
-                      ? `rounded-2xl bg-neutral-50/60 p-4 hover:bg-neutral-100/60 ${isRampageSelected ? "ring-2 ring-blue-400 bg-blue-50" : ""} ${isHovered ? "shadow-lg shadow-neutral-900/10 bg-neutral-100/60" : ""}`
-                      : `py-5 ${isRampageSelected ? "bg-blue-50 -mx-4 px-4 border-l-3 border-blue-400" : ""} ${isHovered ? "shadow-lg shadow-neutral-900/10 -mx-4 px-4 rounded-2xl bg-neutral-50/60" : ""}`
+                      ? `rounded-2xl bg-neutral-50/60 p-4 hover:bg-neutral-100/60 ${isRampageSelected ? "ring-2 ring-neutral-900 bg-neutral-100" : ""} ${isHovered ? "shadow-lg shadow-neutral-900/10 bg-neutral-100/60" : ""}`
+                      : `py-5 ${isRampageSelected ? "bg-neutral-100 -mx-4 px-4 border-l-3 border-neutral-900" : ""} ${isHovered ? "shadow-lg shadow-neutral-900/10 -mx-4 px-4 rounded-2xl bg-neutral-50/60" : ""}`
                   }`}
                   onClick={() => {
                     // RAMPAGE mode: toggle game selection
@@ -1206,7 +1206,7 @@ export function BottomTray({
                     {rampage.active && (
                       <div className="shrink-0 pt-1">
                         {isRampageSelected ? (
-                          <CheckCircle2 className="size-5 text-blue-500" />
+                          <CheckCircle2 className="size-5 text-neutral-900" />
                         ) : (
                           <Circle className="size-5 text-neutral-300" />
                         )}
@@ -1323,7 +1323,7 @@ export function BottomTray({
                           router.push(`/rampage?cow=${id}`);
                         }}
                         disabled={!userLocation || !event.est_time}
-                        className="px-5 py-2.5 rounded-lg text-sm font-semibold bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                        className="px-5 py-2.5 rounded-lg text-sm font-semibold bg-neutral-900 text-white hover:bg-neutral-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                       >
                         RUN IT!
                       </button>
