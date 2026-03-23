@@ -20,6 +20,9 @@ import {
   Map,
   Circle,
   CheckCircle2,
+  Hotel,
+  Star,
+  MapPin,
 } from "lucide-react";
 import type { VenuePolicy } from "@/lib/venue-policies";
 import { SearchBar } from "./search-bar";
@@ -54,6 +57,22 @@ interface GameEvent {
   nearbyAirports?: TransitStop[];
   nearbyTrainStations?: TransitStop[];
   nearbyBusStations?: TransitStop[];
+}
+
+interface HotelSuggestion {
+  name: string;
+  vicinity: string;
+  rating: number | null;
+  priceLevel: number | null;
+  estimatedPrice: string;
+  bookingUrl: string;
+  lat: number;
+  lng: number;
+  distanceMiles: number;
+  driveMinutes: number;
+  uberEstimate: string;
+  lyftEstimate: string;
+  directionsUrl: string;
 }
 
 function formatTimeEST(time: string | null) {
@@ -483,6 +502,33 @@ export function BottomTray({
     }
   }, [venuePolicies, policyLoading]);
 
+  // Nearby hotels state
+  const [nearbyHotels, setNearbyHotels] = useState<Record<string, HotelSuggestion[]>>({});
+  const [hotelsLoading, setHotelsLoading] = useState<Set<string>>(new Set());
+  const hotelsFailed = useRef<Set<string>>(new Set());
+
+  const handleHotelsLoad = useCallback(async (venueName: string, venueLat: number, venueLng: number, gameDate: string) => {
+    if (nearbyHotels[venueName] || hotelsLoading.has(venueName) || hotelsFailed.current.has(venueName)) return;
+    setHotelsLoading((prev) => new Set(prev).add(venueName));
+    try {
+      const res = await fetch(`/api/nearby-hotels?venueName=${encodeURIComponent(venueName)}&venueLat=${venueLat}&venueLng=${venueLng}&date=${gameDate}`);
+      if (res.ok) {
+        const data = await res.json();
+        setNearbyHotels((prev) => ({ ...prev, [venueName]: data.hotels }));
+      } else {
+        hotelsFailed.current.add(venueName);
+      }
+    } catch {
+      hotelsFailed.current.add(venueName);
+    } finally {
+      setHotelsLoading((prev) => {
+        const next = new Set(prev);
+        next.delete(venueName);
+        return next;
+      });
+    }
+  }, [nearbyHotels, hotelsLoading]);
+
   // Auto-scroll and expand when a marker is clicked (selectedVenue changes)
   useEffect(() => {
     if (!selectedVenue || trayState === "collapsed") return;
@@ -734,6 +780,7 @@ export function BottomTray({
                         handleEnrich(vLat, vLng, s);
                       }
                       handlePolicyLoad(event.venue);
+                      handleHotelsLoad(event.venue, vLat, vLng, event.est_date || date);
                       const venueGames = games.filter((g) => g.venue === event.venue);
                       onVenueClick({
                         venue: event.venue,
@@ -980,6 +1027,68 @@ export function BottomTray({
                             )}
                           </div>
                         ) : null;
+                      })()}
+
+                      {/* Nearby hotels section */}
+                      {(() => {
+                        const hotels = nearbyHotels[event.venue];
+                        const loading = hotelsLoading.has(event.venue);
+
+                        if (!hotels && !loading) return null;
+
+                        return (
+                          <div className="mt-2">
+                            <div className="text-[10px] font-mono tracking-widest text-amber-400/70 uppercase flex items-center gap-1 mb-1.5">
+                              <Hotel className="size-3 text-amber-400" /> NEARBY HOTELS
+                            </div>
+                            {loading && !hotels && (
+                              <div className="flex items-center gap-1.5 text-[11px] font-mono text-[--color-dim]">
+                                <Loader2 className="size-3 animate-spin" /> Loading hotels...
+                              </div>
+                            )}
+                            {hotels && hotels.length > 0 && (
+                              <div className="flex gap-2 overflow-x-auto no-scrollbar">
+                                {hotels.map((h, hi) => (
+                                  <div
+                                    key={hi}
+                                    className="flex flex-col gap-1 text-[11px] font-mono rounded-lg panel px-2.5 py-2 min-w-[12rem] shrink-0"
+                                  >
+                                    <a href={h.bookingUrl} target="_blank" rel="noopener noreferrer" className="hover:text-amber-400 transition-colors">
+                                      <span className="text-xs font-semibold text-foreground truncate block">{h.name}</span>
+                                    </a>
+                                    <div className="flex items-center gap-2">
+                                      {h.rating && (
+                                        <span className="flex items-center gap-0.5 text-amber-400">
+                                          <Star className="size-2.5" /> {h.rating}
+                                        </span>
+                                      )}
+                                      <span className="text-emerald-400">{h.estimatedPrice}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-[10px] text-[--color-dim] border-t border-white/8 pt-1 mt-0.5">
+                                      <MapPin className="size-2.5 text-amber-400/60 shrink-0" />
+                                      <span className="text-foreground">{h.distanceMiles} mi from {event.venue}</span>
+                                      <span>·</span>
+                                      <Car className="size-2.5 shrink-0" />
+                                      <span>{h.driveMinutes} min</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-[10px] text-[--color-dim]">
+                                      <span>UBER <span className="text-emerald-400">{h.uberEstimate}</span></span>
+                                      <span>LYFT <span className="text-emerald-400">{h.lyftEstimate}</span></span>
+                                    </div>
+                                    <a
+                                      href={h.directionsUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-[10px] text-cyan-400/70 hover:text-cyan-400 inline-flex items-center gap-0.5 transition-colors"
+                                    >
+                                      DIRECTIONS <ArrowUpRight className="size-2.5" />
+                                    </a>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
                       })()}
 
                       {/* Take Me button — saves a 1-game cow and navigates to rampage */}

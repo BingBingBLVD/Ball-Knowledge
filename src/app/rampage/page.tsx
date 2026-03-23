@@ -361,7 +361,7 @@ function RampageContent() {
       <div className="min-h-dvh bg-[#0a0a0f] flex flex-col items-center justify-center gap-3">
         <div className="panel-elevated rounded-xl px-8 py-6 flex flex-col items-center gap-3">
           <Loader2 className="size-8 text-[--color-rampage] animate-spin" />
-          <p className="text-sm text-[--color-dim] font-mono">Planning your rampage...</p>
+          <p className="text-sm text-[--color-dim] font-mono">QMBOing...</p>
         </div>
       </div>
     );
@@ -431,7 +431,7 @@ function RampageContent() {
       {/* Timeline */}
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-3">
         {/* Start card */}
-        <div className="flex items-center gap-3 px-4 py-3 rounded-xl panel-elevated">
+        <div className="flex items-center gap-3 px-4 py-3 rounded-xl mt-3">
           <div className="size-8 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
             <MapPin className="size-4 text-emerald-400" />
           </div>
@@ -463,7 +463,7 @@ function RampageContent() {
               <TravelLegCard leg={leg} cheapest={cheapest} />
 
               {/* Game card — matches home page style */}
-              <div className="rounded-xl panel-elevated overflow-hidden">
+              <div className="rounded-xl overflow-hidden">
                 <div className="px-4 py-3">
                   <div className="flex items-start gap-3">
                     {/* Number badge */}
@@ -558,7 +558,7 @@ function RampageContent() {
 
               {/* Hotel suggestions */}
               {hotels && hotels.suggestions.length > 0 && (
-                <div className="mt-2 rounded-xl panel-inset px-4 py-3">
+                <div className="mt-2 rounded-xl px-4 py-3">
                   <div className="flex items-center gap-1.5 text-[10px] font-mono text-amber-400/70 tracking-widest mb-1.5">
                     <Hotel className="size-3" /> NEARBY HOTELS
                   </div>
@@ -617,7 +617,7 @@ function RampageContent() {
         })()}
 
         {/* End card */}
-        <div className="flex items-center gap-3 px-4 py-3 rounded-xl panel-elevated">
+        <div className="flex items-center gap-3 px-4 py-3 rounded-xl">
           <div className="size-8 rounded-full bg-red-500/20 flex items-center justify-center shrink-0">
             <MapPin className="size-4 text-red-400" />
           </div>
@@ -669,7 +669,7 @@ function TravelLegCard({ leg, cheapest }: { leg: RampageLeg; cheapest: Itinerary
   const t = leg.transitOption;
 
   return (
-    <div className="my-2 rounded-xl panel-inset px-4 py-3">
+    <div className="my-2 rounded-xl px-4 py-3">
       {/* Summary header */}
       <div className="flex items-center gap-2 text-[11px] font-mono text-[--color-dim] mb-2">
         <span className="text-foreground font-semibold">{leg.from.name}</span>
