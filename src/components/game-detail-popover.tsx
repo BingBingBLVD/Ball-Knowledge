@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   X,
@@ -11,42 +11,94 @@ import {
   Hotel,
   Car,
   Bus,
+  Plane,
+  TrainFront,
+  BusFront,
   Footprints,
   Check,
   Ban,
-  ShieldCheck,
+  Loader2,
+  RefreshCw,
+  Cloud,
+  Sun,
+  CloudRain,
+  CloudSnow,
+  CloudLightning,
+  Droplets,
+  CloudDrizzle,
+  CloudFog,
+  CloudSun,
+  ChevronDown,
+  ParkingSquare,
+  Tv,
+  HeartPulse,
+  Beer,
+  UtensilsCrossed,
+  Newspaper,
+  Map,
 } from "lucide-react";
 import type { VenuePolicy } from "@/lib/venue-policies";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-export interface PopoverGame {
+export interface TransitStop {
+  code: string;
+  name: string;
+  lat: number;
+  lng: number;
+  driveMinutes?: number;
+  transitMinutes?: number | null;
+}
+
+export interface RouteFocus {
+  venueLat: number;
+  venueLng: number;
+  airportLat: number;
+  airportLng: number;
+  airportCode: string;
+  venueName: string;
+  pinOnly?: boolean;
+}
+
+export interface GameEvent {
   id: string;
   name: string;
-  venue: string;
-  city: string;
-  state: string;
-  est_date: string;
+  url: string;
+  est_date?: string;
   est_time: string | null;
   local_time?: string | null;
   tz?: string | null;
   date_time_utc?: string | null;
+  venue: string;
+  city: string;
+  state: string;
+  lat: number | null;
+  lng: number | null;
   min_price: { amount: number; currency: string } | null;
-  espn_price?: { amount: number; available: number; url: string | null } | null;
-  odds?: { away_team: string; home_team: string; away_win: number; home_win: number; kalshi_event: string } | null;
+  odds?: {
+    away_team: string;
+    home_team: string;
+    away_win: number;
+    home_win: number;
+    kalshi_event: string;
+  } | null;
   away_record?: string | null;
   home_record?: string | null;
-  url?: string;
+  espn_price?: { amount: number; available: number; url: string | null } | null;
+  broadcasts?: { national: string[]; local: string[] } | null;
+  nearbyAirports?: TransitStop[];
+  nearbyTrainStations?: TransitStop[];
+  nearbyBusStations?: TransitStop[];
 }
 
-export interface PopoverHotel {
+interface HotelSuggestion {
   name: string;
   vicinity: string;
   rating: number | null;
   priceLevel: number | null;
   estimatedPrice: string;
   bookingUrl: string;
-  photoUrl?: string | null;
+  photoUrl: string | null;
   lat: number;
   lng: number;
   distanceMiles: number;
@@ -60,15 +112,95 @@ export interface PopoverHotel {
   directionsUrl: string;
 }
 
+interface HourlyWeather {
+  time: string;
+  temp: number;
+  feelsLike: number;
+  precip: number;
+  precipProb: number;
+  weatherCode: number;
+  windSpeed: number;
+  humidity: number;
+}
+
+interface AirportDelay {
+  code: string;
+  name: string;
+  delayIndex: number | null;
+  departureDel: number | null;
+  arrivalDel: number | null;
+  reasons: string[];
+}
+
+interface NewsItem {
+  title: string;
+  link: string;
+  source: string;
+  published: string;
+  snippet: string;
+}
+
+interface ParkingSpot {
+  name: string;
+  vicinity: string;
+  lat: number;
+  lng: number;
+  distanceMiles: number;
+  walkMinutes: number;
+  rating: number | null;
+  totalRatings: number;
+  openNow: boolean | null;
+  priceLevel: string | null;
+  estimatedPrice: string | null;
+  photoUrl: string | null;
+  spotHeroUrl: string;
+  directionsUrl: string;
+}
+
+interface RestaurantSpot {
+  name: string;
+  vicinity: string;
+  lat: number;
+  lng: number;
+  distanceMiles: number;
+  walkMinutes: number;
+  rating: number | null;
+  totalRatings: number;
+  priceLevel: string | null;
+  photoUrl: string | null;
+  yelpUrl: string;
+  directionsUrl: string;
+  category: "pregame" | "postgame";
+}
+
+interface PlayerInjury {
+  name: string;
+  position: string;
+  team: string;
+  teamAbbr: string;
+  status: string;
+  description: string;
+}
+
+interface LastTransitInfo {
+  stopCode: string;
+  stopName: string;
+  stopLat: number;
+  stopLng: number;
+  lastDeparture: string | null;
+  lastArrival: string | null;
+  durationMinutes: number | null;
+  available: boolean;
+  warning: boolean;
+}
+
 export interface GameDetailPopoverProps {
-  game: PopoverGame;
+  game: GameEvent;
   visible: boolean;
   onClose: () => void;
-  date?: string;
-  distance?: number;
-  policy?: VenuePolicy | null;
-  hotels?: PopoverHotel[];
-  children?: ReactNode;
+  date: string;
+  userLocation: { lat: number; lng: number } | null;
+  onRouteFocus?: (focus: RouteFocus | null) => void;
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -92,6 +224,199 @@ function formatUserLocalTime(utc: string | null | undefined): { text: string; tz
   return { text: timeFmt.format(d).replace(/\u202f/g, " "), tz: tzAbbr };
 }
 
+function formatDriveTime(minutes: number): string {
+  if (minutes < 60) return `${minutes}m`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m > 0 ? `${h}h${m}m` : `${h}h`;
+}
+
+function stubhubUrl(teamName: string): string {
+  const slug = teamName.replace(/\s*\(.*?\)/g, "").trim().toLowerCase().replace(/\s+/g, "-");
+  return `https://www.stubhub.com/${slug}-tickets`;
+}
+
+function gmapsUrl(fromLat: number, fromLng: number, toLat: number, toLng: number, mode: "driving" | "transit", arriveByEpoch?: number) {
+  let url = `https://www.google.com/maps/dir/?api=1&origin=${fromLat},${fromLng}&destination=${toLat},${toLng}&travelmode=${mode}`;
+  if (arriveByEpoch) url += `&arrival_time=${arriveByEpoch}`;
+  return url;
+}
+
+function uberDeepLink(fromLat: number, fromLng: number, toLat: number, toLng: number) {
+  const pickup = encodeURIComponent(JSON.stringify({ source: "SEARCH", latitude: fromLat, longitude: fromLng, provider: "uber_places" }));
+  const drop = encodeURIComponent(JSON.stringify({ source: "SEARCH", latitude: toLat, longitude: toLng, provider: "uber_places" }));
+  return `https://m.uber.com/go/product-selection?pickup=${pickup}&drop%5B0%5D=${drop}`;
+}
+
+function lyftDeepLink(fromLat: number, fromLng: number, toLat: number, toLng: number) {
+  return `https://lyft.com/ride?pickup[latitude]=${fromLat}&pickup[longitude]=${fromLng}&destination[latitude]=${toLat}&destination[longitude]=${toLng}`;
+}
+
+function extractUpperBound(estimate: string): string {
+  const parts = estimate.split(/[-–]/);
+  const last = parts[parts.length - 1].trim();
+  return last.startsWith("$") ? last : `$${last.replace(/[^0-9.]/g, "")}`;
+}
+
+function haversineMiles(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const R = 3958.8;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function WeatherIcon({ code, className }: { code: number; className?: string }) {
+  if (code === 0) return <Sun className={className} />;
+  if (code <= 2) return <CloudSun className={className} />;
+  if (code === 3) return <Cloud className={className} />;
+  if (code >= 45 && code <= 48) return <CloudFog className={className} />;
+  if (code >= 51 && code <= 57) return <CloudDrizzle className={className} />;
+  if (code >= 61 && code <= 67) return <CloudRain className={className} />;
+  if (code >= 71 && code <= 77) return <CloudSnow className={className} />;
+  if (code >= 80 && code <= 82) return <CloudRain className={className} />;
+  if (code >= 85 && code <= 86) return <CloudSnow className={className} />;
+  if (code >= 95) return <CloudLightning className={className} />;
+  return <Cloud className={className} />;
+}
+
+// ── TransitRows ────────────────────────────────────────────────────────────
+
+function TransitRows({
+  stops,
+  icon: Icon,
+  vLat,
+  vLng,
+  enriched,
+  enriching,
+  onEnrich,
+  onRouteFocus,
+  isAnimating,
+  venueName,
+  colorClass,
+  tipoffUtc,
+}: {
+  stops: TransitStop[];
+  icon: React.ComponentType<{ className?: string }>;
+  vLat: number;
+  vLng: number;
+  enriched: Record<string, { driveMinutes: number; transitMinutes: number | null; transitFare: string | null; uberEstimate: string | null; lyftEstimate: string | null }>;
+  enriching: Set<string>;
+  onEnrich: (stop: TransitStop) => void;
+  onRouteFocus: (focus: RouteFocus | null) => void;
+  isAnimating: boolean;
+  venueName: string;
+  colorClass: string;
+  tipoffUtc?: string | null;
+}) {
+  if (stops.length === 0) return null;
+  const enrichKey = (sLat: number, sLng: number) => `${vLat},${vLng};${sLat},${sLng}`;
+  const arriveByEpoch = tipoffUtc ? Math.floor((new Date(tipoffUtc).getTime() - 45 * 60 * 1000) / 1000) : undefined;
+
+  return (
+    <div className="space-y-2">
+      {stops.map((stop) => {
+        const ek = enrichKey(stop.lat, stop.lng);
+        const times = enriched[ek] ?? null;
+        const loading = enriching.has(ek);
+        const distMi = Math.round(haversineMiles(vLat, vLng, stop.lat, stop.lng));
+
+        return (
+          <div
+            key={stop.code}
+            className="rounded-xl bg-neutral-50 p-4"
+          >
+            {/* Header: code + distance */}
+            <div className="flex items-center gap-2 mb-2">
+              <Icon className={`size-4 ${colorClass}`} />
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${stop.lat},${stop.lng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`font-bold text-sm no-underline hover:underline ${colorClass}`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {stop.code}
+              </a>
+              <span className="text-xs text-[--color-dim]">{distMi} mi away</span>
+            </div>
+            {/* Transport options */}
+            {times ? (
+              <div className={`grid gap-2 ${times.transitMinutes != null ? "grid-cols-2" : "grid-cols-1"}`}>
+                {/* Drive column */}
+                <div className="space-y-2">
+                  <a
+                    href={gmapsUrl(vLat, vLng, stop.lat, stop.lng, "driving", arriveByEpoch)}
+                    target="_blank" rel="noopener noreferrer"
+                    className="block rounded-lg bg-neutral-50 hover:bg-neutral-100 py-2.5 px-3 no-underline transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Car className="size-4 text-[--color-dim]" />
+                      <span className="text-xs font-bold text-neutral-900">{formatDriveTime(times.driveMinutes)}</span>
+                      <span className="text-[10px] text-neutral-500">Drive</span>
+                    </div>
+                    <div className="text-[10px] text-emerald-600 mt-1">
+                      <span className="cursor-pointer hover:underline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(uberDeepLink(vLat, vLng, stop.lat, stop.lng), "_blank"); }}>Uber {times.uberEstimate ? `~${extractUpperBound(times.uberEstimate)}` : "--"}</span>
+                      <span className="text-neutral-300 mx-1">·</span>
+                      <span className="cursor-pointer hover:underline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(lyftDeepLink(vLat, vLng, stop.lat, stop.lng), "_blank"); }}>Lyft {times.lyftEstimate ? `~${extractUpperBound(times.lyftEstimate)}` : "--"}</span>
+                    </div>
+                  </a>
+                  <div className="rounded-lg overflow-hidden border border-black/5">
+                    <iframe
+                      className="w-full h-[180px]"
+                      style={{ colorScheme: "light" }}
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      src={`https://www.google.com/maps/embed/v1/directions?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&origin=${stop.lat},${stop.lng}&destination=${vLat},${vLng}&mode=driving&zoom=10`}
+                    />
+                  </div>
+                </div>
+                {/* Transit column */}
+                {times.transitMinutes != null && (
+                  <div className="space-y-2">
+                    <a
+                      href={gmapsUrl(vLat, vLng, stop.lat, stop.lng, "transit", arriveByEpoch)}
+                      target="_blank" rel="noopener noreferrer"
+                      className="block rounded-lg bg-neutral-50 hover:bg-neutral-100 py-2.5 px-3 no-underline transition-colors"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Bus className="size-4 text-[--color-dim]" />
+                        <span className="text-xs font-bold text-foreground">{formatDriveTime(times.transitMinutes)}</span>
+                        <span className="text-[10px] text-[--color-dim]">Transit</span>
+                      </div>
+                      <div className="text-[10px] text-emerald-600 mt-1">{times.transitFare ?? "No fare info"}</div>
+                    </a>
+                    <div className="rounded-lg overflow-hidden border border-black/5">
+                      <iframe
+                        className="w-full h-[180px]"
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                        src={`https://www.google.com/maps/embed/v1/directions?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&origin=${stop.lat},${stop.lng}&destination=${vLat},${vLng}&mode=transit&zoom=10`}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                className={`text-xs text-[--color-dim] hover:text-foreground flex items-center gap-1.5 ${loading ? "[&>svg]:animate-spin" : ""}`}
+                onClick={(e) => { e.stopPropagation(); onEnrich(stop); }}
+              >
+                <RefreshCw className="size-3" /> {loading ? "Loading…" : "Load transit info"}
+              </button>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ── Component ──────────────────────────────────────────────────────────────
 
 export function GameDetailPopover({
@@ -99,41 +424,227 @@ export function GameDetailPopover({
   visible,
   onClose,
   date,
-  distance,
-  policy,
-  hotels,
-  children,
+  userLocation,
+  onRouteFocus,
 }: GameDetailPopoverProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLDivElement>(null);
   const [scrolled, setScrolled] = useState(false);
+  const [transitTab, setTransitTab] = useState<"flights" | "trains" | "buses">("flights");
 
+  // Data state
+  const [venuePhotos, setVenuePhotos] = useState<string[]>([]);
+  const [weather, setWeather] = useState<HourlyWeather[] | null>(null);
+  const [weatherLoading, setWeatherLoading] = useState(false);
+  const [injuries, setInjuries] = useState<PlayerInjury[] | null>(null);
+  const [injuriesLoading, setInjuriesLoading] = useState(false);
+  const [venuePolicy, setVenuePolicy] = useState<VenuePolicy | null>(null);
+  const [policyLoading, setPolicyLoading] = useState(false);
+  const [hotels, setHotels] = useState<HotelSuggestion[] | null>(null);
+  const [hotelsLoading, setHotelsLoading] = useState(false);
+  const [parking, setParking] = useState<ParkingSpot[] | null>(null);
+  const [parkingLoading, setParkingLoading] = useState(false);
+  const [restaurants, setRestaurants] = useState<RestaurantSpot[] | null>(null);
+  const [restaurantsLoading, setRestaurantsLoading] = useState(false);
+  const [localNews, setLocalNews] = useState<NewsItem[] | null>(null);
+  const [newsLoading, setNewsLoading] = useState(false);
+  const [airportDelays, setAirportDelays] = useState<AirportDelay[] | null>(null);
+  const [delaysLoading, setDelaysLoading] = useState(false);
+  const [lastTransit, setLastTransit] = useState<LastTransitInfo[] | null>(null);
+  const [lastTransitLoading, setLastTransitLoading] = useState(false);
+
+  // Transit enrichment state (on-demand)
+  const [enriched, setEnriched] = useState<Record<string, { driveMinutes: number; transitMinutes: number | null; transitFare: string | null; uberEstimate: string | null; lyftEstimate: string | null }>>({});
+  const [enriching, setEnriching] = useState<Set<string>>(new Set());
+
+  // Track which game we fetched for
+  const fetchedGameId = useRef<string | null>(null);
+
+  // Watch title visibility for sticky header
   useEffect(() => {
-    const el = scrollRef.current;
-    const titleEl = titleRef.current;
-    if (!el || !titleEl) return;
+    const el = titleRef.current;
+    const root = scrollRef.current;
+    if (!el || !root) return;
     const observer = new IntersectionObserver(
       ([entry]) => setScrolled(!entry.isIntersecting),
-      { root: el, threshold: 0 }
+      { root, threshold: 0 }
     );
-    observer.observe(titleEl);
+    observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [visible]);
+
+  // Fetch all data when game changes
+  useEffect(() => {
+    if (!game || !game.lat || !game.lng) return;
+    if (fetchedGameId.current === game.id) return;
+    fetchedGameId.current = game.id;
+
+    const vLat = game.lat;
+    const vLng = game.lng;
+    const gameDate = game.est_date || date;
+
+    // Reset state for new game
+    setVenuePhotos([]);
+    setWeather(null);
+    setInjuries(null);
+    setVenuePolicy(null);
+    setHotels(null);
+    setParking(null);
+    setRestaurants(null);
+    setLocalNews(null);
+    setAirportDelays(null);
+    setLastTransit(null);
+    setEnriched({});
+    setEnriching(new Set());
+    setScrolled(false);
+
+    // Auto-select first available transit tab
+    if ((game.nearbyAirports ?? []).length > 0) setTransitTab("flights");
+    else if ((game.nearbyTrainStations ?? []).length > 0) setTransitTab("trains");
+    else if ((game.nearbyBusStations ?? []).length > 0) setTransitTab("buses");
+
+    // 1. Venue photos
+    fetch(`/api/venue-photos?venue=${encodeURIComponent(game.venue)}&lat=${vLat}&lng=${vLng}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d?.photos) setVenuePhotos(d.photos); })
+      .catch(() => {});
+
+    // 2. Weather
+    setWeatherLoading(true);
+    fetch(`/api/weather?lat=${vLat}&lng=${vLng}&date=${gameDate}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d?.hours) setWeather(d.hours); })
+      .catch(() => {})
+      .finally(() => setWeatherLoading(false));
+
+    // 3. Injuries
+    const codes = [game.odds?.away_team, game.odds?.home_team].filter(Boolean) as string[];
+    if (codes.length > 0) {
+      setInjuriesLoading(true);
+      fetch(`/api/injuries?teams=${encodeURIComponent(codes.sort().join(","))}`)
+        .then((r) => r.ok ? r.json() : null)
+        .then((d) => { if (d?.injuries) setInjuries(d.injuries); })
+        .catch(() => {})
+        .finally(() => setInjuriesLoading(false));
+    }
+
+    // 4. Venue policy
+    setPolicyLoading(true);
+    fetch(`/api/venue-policy?venue=${encodeURIComponent(game.venue)}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d) setVenuePolicy(d); })
+      .catch(() => {})
+      .finally(() => setPolicyLoading(false));
+
+    // 5. Hotels
+    setHotelsLoading(true);
+    fetch(`/api/nearby-hotels?venueName=${encodeURIComponent(game.venue)}&venueLat=${vLat}&venueLng=${vLng}&date=${gameDate}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d?.hotels) setHotels(d.hotels); })
+      .catch(() => {})
+      .finally(() => setHotelsLoading(false));
+
+    // 6. Parking
+    setParkingLoading(true);
+    fetch(`/api/nearby-parking?venueLat=${vLat}&venueLng=${vLng}&venueName=${encodeURIComponent(game.venue)}&date=${gameDate}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d?.parking) setParking(d.parking); })
+      .catch(() => {})
+      .finally(() => setParkingLoading(false));
+
+    // 7. Restaurants
+    setRestaurantsLoading(true);
+    fetch(`/api/nearby-restaurants?venueLat=${vLat}&venueLng=${vLng}&venueName=${encodeURIComponent(game.venue)}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d?.restaurants) setRestaurants(d.restaurants); })
+      .catch(() => {})
+      .finally(() => setRestaurantsLoading(false));
+
+    // 8. Local news
+    setNewsLoading(true);
+    fetch(`/api/local-news?city=${encodeURIComponent(game.city)}&state=${encodeURIComponent(game.state)}&venue=${encodeURIComponent(game.venue)}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d?.news) setLocalNews(d.news); })
+      .catch(() => {})
+      .finally(() => setNewsLoading(false));
+
+    // 9. Airport delays
+    const aptCodes = (game.nearbyAirports ?? []).map((a) => a.code);
+    if (aptCodes.length > 0) {
+      setDelaysLoading(true);
+      fetch(`/api/airport-delays?codes=${encodeURIComponent(aptCodes.sort().join(","))}`)
+        .then((r) => r.ok ? r.json() : null)
+        .then((d) => { if (d?.delays) setAirportDelays(d.delays); })
+        .catch(() => {})
+        .finally(() => setDelaysLoading(false));
+    }
+
+    // 10. Last transit
+    if (game.date_time_utc) {
+      const transitStops = [
+        ...(game.nearbyTrainStations ?? []).map((s) => ({ code: s.code, name: s.name, lat: s.lat, lng: s.lng })),
+        ...(game.nearbyBusStations ?? []).map((s) => ({ code: s.code, name: s.name, lat: s.lat, lng: s.lng })),
+      ];
+      if (transitStops.length > 0) {
+        setLastTransitLoading(true);
+        const stopsParam = encodeURIComponent(JSON.stringify(transitStops.slice(0, 6)));
+        fetch(`/api/last-transit?venueLat=${vLat}&venueLng=${vLng}&tipoffUtc=${encodeURIComponent(game.date_time_utc)}&stops=${stopsParam}`)
+          .then((r) => r.ok ? r.json() : null)
+          .then((d) => { if (d?.lastTransit) setLastTransit(d.lastTransit); })
+          .catch(() => {})
+          .finally(() => setLastTransitLoading(false));
+      }
+    }
+  }, [game, date]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Transit enrichment handler
+  const handleEnrich = useCallback(async (stop: TransitStop) => {
+    if (!game.lat || !game.lng) return;
+    const key = `${game.lat},${game.lng};${stop.lat},${stop.lng}`;
+    if (enriched[key] || enriching.has(key)) return;
+    setEnriching((prev) => new Set(prev).add(key));
+    try {
+      let url = `/api/travel-times?fromLat=${game.lat}&fromLng=${game.lng}&toLat=${stop.lat}&toLng=${stop.lng}`;
+      if (game.date_time_utc) {
+        const arriveBy = new Date(new Date(game.date_time_utc).getTime() - 45 * 60 * 1000).toISOString();
+        url += `&arriveBy=${encodeURIComponent(arriveBy)}`;
+      }
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        setEnriched((prev) => ({ ...prev, [key]: data }));
+      }
+    } finally {
+      setEnriching((prev) => {
+        const next = new Set(prev);
+        next.delete(key);
+        return next;
+      });
+    }
+  }, [game, enriched, enriching]);
 
   // Parse teams
   const parts = game.name.split(/\s+(?:vs?\.?|VS\.?)\s+/);
   const home = parts[0].replace(/\s*\(.*?\)/g, "").trim();
   const away = parts.length > 1 ? parts.slice(1).join(" vs ").replace(/\s*\(.*?\)/g, "").trim() : null;
+  const airports = game.nearbyAirports ?? [];
+  const trains = game.nearbyTrainStations ?? [];
+  const buses = game.nearbyBusStations ?? [];
+  const kalshiUrl = game.odds ? `https://kalshi.com/markets/KXNBAGAME/${game.odds.kalshi_event}` : null;
   const price = game.espn_price?.amount ?? game.min_price?.amount;
-  const displayDate = game.est_date || date || "";
+  const dist = userLocation && game.lat && game.lng ? haversineMiles(userLocation.lat, userLocation.lng, game.lat, game.lng) : undefined;
   const userLocal = formatUserLocalTime(game.date_time_utc);
   const showLocal = userLocal && userLocal.tz !== (game.tz ?? "ET");
-  const kalshiUrl = game.odds ? `https://kalshi.com/markets/KXNBAGAME/${game.odds.kalshi_event}` : null;
-  const ticketmasterUrl = game.url || `https://www.ticketmaster.com/event/${game.id}`;
+  const displayDate = game.est_date || date;
+  const routeFocusHandler = onRouteFocus ?? (() => {});
+
+  if (!game.lat || !game.lng) return null;
+  const vLat = game.lat;
+  const vLng = game.lng;
 
   return createPortal(
     <div
-      className={`fixed inset-0 z-50 transition-opacity duration-300 ${visible ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+      className={`fixed inset-0 z-50 transition-opacity duration-300 ${visible ? "opacity-100" : "opacity-0"}`}
       onClick={onClose}
     >
       <div className="absolute inset-0 bg-white/70 backdrop-blur-md" />
@@ -142,7 +653,7 @@ export function GameDetailPopover({
         className={`absolute inset-0 bg-white overflow-hidden flex flex-col transition-transform duration-300 ease-out ${visible ? "translate-y-0" : "translate-y-full"}`}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Sticky header */}
+        {/* Sticky header — Airbnb style */}
         <div className="sticky top-0 z-10 bg-white border-b border-neutral-200">
           <div className="max-w-3xl mx-auto flex items-center justify-between px-6 py-4">
             <div className="flex items-center gap-3">
@@ -169,6 +680,39 @@ export function GameDetailPopover({
         {/* Scrollable content */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto no-scrollbar">
           <div className="max-w-3xl mx-auto px-6">
+            {/* Venue photos — Airbnb grid */}
+            {(() => {
+              const photos = venuePhotos;
+              if (!photos || photos.length === 0) return null;
+              return (
+                <div className="rounded-xl overflow-hidden mt-6 mb-2">
+                  {photos.length >= 5 ? (
+                    <div className="grid grid-cols-4 grid-rows-2 gap-1.5 h-[320px]">
+                      <div className="col-span-2 row-span-2 relative">
+                        <img src={photos[0]} alt={game.venue} className="w-full h-full object-cover rounded-l-xl" />
+                      </div>
+                      <div className="relative"><img src={photos[1]} alt="" className="w-full h-full object-cover" /></div>
+                      <div className="relative"><img src={photos[2]} alt="" className="w-full h-full object-cover rounded-tr-xl" /></div>
+                      <div className="relative"><img src={photos[3]} alt="" className="w-full h-full object-cover" /></div>
+                      <div className="relative"><img src={photos[4]} alt="" className="w-full h-full object-cover rounded-br-xl" /></div>
+                    </div>
+                  ) : photos.length >= 3 ? (
+                    <div className="grid grid-cols-3 gap-1.5 h-[240px]">
+                      <div className="col-span-2 relative"><img src={photos[0]} alt={game.venue} className="w-full h-full object-cover rounded-l-xl" /></div>
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex-1 relative"><img src={photos[1]} alt="" className="w-full h-full object-cover rounded-tr-xl" /></div>
+                        <div className="flex-1 relative"><img src={photos[2]} alt="" className="w-full h-full object-cover rounded-br-xl" /></div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="h-[240px]">
+                      <img src={photos[0]} alt={game.venue} className="w-full h-full object-cover rounded-xl" />
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
             {/* Title section */}
             <div ref={titleRef} className="pt-8 pb-6">
               {away ? (
@@ -182,7 +726,7 @@ export function GameDetailPopover({
                 <span>{game.venue}</span>
                 <span className="text-neutral-300">·</span>
                 <span>{game.city}, {game.state}</span>
-                {distance != null && <><span className="text-neutral-300">·</span><span>{Math.round(distance)} miles away</span></>}
+                {dist != null && <><span className="text-neutral-300">·</span><span>{Math.round(dist)} miles away</span></>}
               </div>
             </div>
 
@@ -192,7 +736,7 @@ export function GameDetailPopover({
                 <Clock className="size-5 text-neutral-400" />
                 <div>
                   <div className="text-sm font-semibold text-neutral-900">{formatTime(game.local_time ?? game.est_time, game.tz)}</div>
-                  <div className="text-xs text-neutral-500">{displayDate ? new Date(displayDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" }) : ""}</div>
+                  <div className="text-xs text-neutral-500">{displayDate ? new Date(displayDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" }) : date}</div>
                   {showLocal && <div className="text-xs text-neutral-500">{userLocal.text} your time</div>}
                 </div>
               </div>
@@ -207,7 +751,7 @@ export function GameDetailPopover({
                   </div>
                 </div>
               )}
-              {game.away_record && game.home_record && away && (
+              {game.away_record && game.home_record && (
                 <div className="flex items-center gap-2">
                   <Star className="size-5 text-neutral-400" />
                   <div className="text-sm">
@@ -239,17 +783,199 @@ export function GameDetailPopover({
               </div>
             )}
 
-            {/* Injected children (for page-specific sections like weather, injuries, transit, etc.) */}
-            {children}
+            {/* Injury Report */}
+            {(() => {
+              const injCodes = [game.odds?.away_team, game.odds?.home_team].filter(Boolean).sort() as string[];
+              if (injCodes.length === 0) return null;
+              const inj = injuries;
+              const iLoading = injuriesLoading;
+              if (!inj && !iLoading) return null;
+              const statusColor = (s: string) => {
+                if (s === "Out") return "text-red-600 bg-red-50";
+                if (s === "Doubtful") return "text-violet-600 bg-violet-50";
+                if (s === "Day-To-Day" || s === "Questionable") return "text-amber-600 bg-amber-50";
+                return "text-emerald-600 bg-emerald-50";
+              };
+              const byTeam: Record<string, PlayerInjury[]> = {};
+              for (const p of (inj ?? [])) {
+                if (!byTeam[p.team]) byTeam[p.team] = [];
+                byTeam[p.team].push(p);
+              }
+              return (
+                <div className="py-8 border-b border-neutral-200">
+                  <h2 className="text-[22px] font-semibold text-neutral-900 mb-1">Injury report</h2>
+                  <p className="text-sm text-neutral-500 mb-4">Key player availability</p>
+                  {iLoading && !inj && <div className="flex items-center gap-2 text-sm text-neutral-500"><Loader2 className="size-4 animate-spin" /> Checking injuries...</div>}
+                  {inj && inj.length === 0 && <div className="text-sm text-emerald-600 font-medium">No injuries reported — full strength</div>}
+                  {inj && inj.length > 0 && (
+                    <div className="space-y-5">
+                      {Object.entries(byTeam).map(([team, players]) => (
+                        <div key={team}>
+                          <h3 className="text-sm font-semibold text-neutral-900 mb-2">{team}</h3>
+                          <div className="space-y-2">
+                            {players.map((p) => (
+                              <div key={p.name} className="flex items-center justify-between py-2 border-b border-neutral-100 last:border-0">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <HeartPulse className="size-4 shrink-0 text-neutral-400" />
+                                  <div className="min-w-0">
+                                    <div className="text-sm font-medium text-neutral-900 truncate">{p.name} <span className="text-neutral-400 font-normal">{p.position}</span></div>
+                                    {p.description && <div className="text-xs text-neutral-500">{p.description}</div>}
+                                  </div>
+                                </div>
+                                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 ml-2 ${statusColor(p.status)}`}>{p.status}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
-            {/* Venue Policy — "Things to know" */}
-            {policy && (() => {
-              const allowed = policy.items.filter((i) => i.allowed);
-              const prohibited = policy.items.filter((i) => !i.allowed);
+            {/* Weather */}
+            {(() => {
+              const hours = weather;
+              const wLoading = weatherLoading;
+              if (!hours && !wLoading) return null;
+              const relevantHours = hours ?? [];
+              return (
+                <div className="py-8 border-b border-neutral-200">
+                  <h2 className="text-[22px] font-semibold text-neutral-900 mb-1">Game day weather</h2>
+                  <p className="text-sm text-neutral-500 mb-4">Hourly forecast at the venue</p>
+                  {wLoading && !hours && <div className="flex items-center gap-2 text-sm text-neutral-500"><Loader2 className="size-4 animate-spin" /> Loading...</div>}
+                  {relevantHours.length > 0 && (
+                    <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                      {relevantHours.map((h) => {
+                        const hr = parseInt(h.time.split("T")[1]?.split(":")[0] ?? "0");
+                        const ampm = hr >= 12 ? "p" : "a";
+                        const hr12 = hr % 12 || 12;
+                        const tipoffHr = game.date_time_utc ? new Date(game.date_time_utc).getHours() : -1;
+                        const isTipoff = hr === tipoffHr;
+                        return (
+                          <div key={h.time} className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl shrink-0 min-w-[56px] ${isTipoff ? "bg-neutral-900 text-white" : "bg-neutral-50"}`}>
+                            <span className={`text-xs font-medium ${isTipoff ? "text-white" : "text-neutral-500"}`}>{hr12}{ampm}</span>
+                            <WeatherIcon code={h.weatherCode} className={`size-5 ${isTipoff ? "text-white" : "text-neutral-700"}`} />
+                            <span className={`text-sm font-semibold ${isTipoff ? "text-white" : "text-neutral-900"}`}>{h.temp}°</span>
+                            {h.precipProb > 0 && <span className={`text-[10px] flex items-center gap-0.5 ${isTipoff ? "text-blue-300" : "text-blue-500"}`}><Droplets className="size-2" />{h.precipProb}%</span>}
+                            {h.windSpeed >= 10 && <span className={`text-[10px] ${isTipoff ? "text-neutral-300" : "text-neutral-500"}`}>{h.windSpeed}mph</span>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Getting There */}
+            {(airports.length > 0 || trains.length > 0 || buses.length > 0) && (
+              <div className="py-8 border-b border-neutral-200">
+                <h2 className="text-[22px] font-semibold text-neutral-900 mb-1">Getting there</h2>
+                <p className="text-sm text-neutral-500 mb-5">Travel times target arrival 45 min before tipoff</p>
+                <div className="flex border-b border-neutral-200 mb-4">
+                  {([
+                    { key: "flights" as const, label: "Flights", count: airports.length },
+                    { key: "trains" as const, label: "Trains", count: trains.length },
+                    { key: "buses" as const, label: "Buses", count: buses.length },
+                  ]).filter((t) => t.count > 0).map((tab) => (
+                    <button
+                      key={tab.key}
+                      onClick={(e) => { e.stopPropagation(); setTransitTab(tab.key); }}
+                      className={`px-4 pb-3 text-sm font-medium border-b-2 transition-colors ${
+                        transitTab === tab.key
+                          ? "border-neutral-900 text-neutral-900"
+                          : "border-transparent text-neutral-500 hover:text-neutral-700"
+                      }`}
+                    >
+                      {tab.label} ({tab.count})
+                    </button>
+                  ))}
+                </div>
+                {transitTab === "flights" && airports.length > 0 && <TransitRows stops={airports} icon={Plane} vLat={vLat} vLng={vLng} enriched={enriched} enriching={enriching} onEnrich={(stop) => handleEnrich(stop)} onRouteFocus={routeFocusHandler} isAnimating={false} venueName={game.venue} colorClass="text-[--color-flight]" tipoffUtc={game.date_time_utc} />}
+                {transitTab === "trains" && trains.length > 0 && <TransitRows stops={trains} icon={TrainFront} vLat={vLat} vLng={vLng} enriched={enriched} enriching={enriching} onEnrich={(stop) => handleEnrich(stop)} onRouteFocus={routeFocusHandler} isAnimating={false} venueName={game.venue} colorClass="text-[--color-train]" tipoffUtc={game.date_time_utc} />}
+                {transitTab === "buses" && buses.length > 0 && <TransitRows stops={buses} icon={BusFront} vLat={vLat} vLng={vLng} enriched={enriched} enriching={enriching} onEnrich={(stop) => handleEnrich(stop)} onRouteFocus={routeFocusHandler} isAnimating={false} venueName={game.venue} colorClass="text-[--color-bus]" tipoffUtc={game.date_time_utc} />}
+              </div>
+            )}
+
+            {/* Airport Status */}
+            {(() => {
+              const delays = airportDelays;
+              const dLoading = delaysLoading;
+              if (airports.length === 0 || (!delays && !dLoading)) return null;
+              return (
+                <div className="py-8 border-b border-neutral-200">
+                  <h2 className="text-[22px] font-semibold text-neutral-900 mb-4">Airport status</h2>
+                  {dLoading && !delays && <div className="flex items-center gap-2 text-sm text-neutral-500"><Loader2 className="size-4 animate-spin" /> Checking delays...</div>}
+                  {delays && (
+                    <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                      {delays.map((d) => {
+                        const hasDelay = (d.departureDel != null && d.departureDel > 0) || (d.arrivalDel != null && d.arrivalDel > 0);
+                        return (
+                          <div key={d.code} className={`shrink-0 rounded-xl px-4 py-2.5 text-center min-w-[80px] ${hasDelay ? "bg-amber-50 border border-amber-200" : "bg-neutral-50"}`}>
+                            <div className="text-sm font-bold text-neutral-900">{d.code}</div>
+                            {hasDelay ? (
+                              <div className="mt-0.5">
+                                {d.departureDel != null && d.departureDel > 0 && <div className="text-xs text-amber-600 font-medium">+{d.departureDel}m</div>}
+                                {d.arrivalDel != null && d.arrivalDel > 0 && <div className="text-xs text-amber-600 font-medium">+{d.arrivalDel}m</div>}
+                              </div>
+                            ) : (
+                              <div className="text-xs text-emerald-600 font-medium mt-0.5">On time</div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Last Transit Home */}
+            {(() => {
+              if (!game.date_time_utc) return null;
+              const ltData = lastTransit;
+              const ltLoading = lastTransitLoading;
+              if (!ltData && !ltLoading) return null;
+              return (
+                <div className="py-8 border-b border-neutral-200">
+                  <h2 className="text-[22px] font-semibold text-neutral-900 mb-1">Getting home</h2>
+                  <p className="text-sm text-neutral-500 mb-4">Last transit after the game</p>
+                  {ltLoading && !ltData && <div className="flex items-center gap-2 text-sm text-neutral-500"><Loader2 className="size-4 animate-spin" /> Checking...</div>}
+                  {ltData && ltData.length > 0 && <div className="space-y-3">{ltData.map((lt) => {
+                    const depTime = lt.lastDeparture ? new Date(lt.lastDeparture) : null;
+                    const depStr = depTime ? depTime.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }) : null;
+                    return (<div key={lt.stopCode} className="flex items-center justify-between py-3 border-b border-neutral-100 last:border-0">
+                      <div>
+                        <div className="text-base font-semibold text-neutral-900">{lt.stopCode}</div>
+                        <div className="text-xs text-neutral-500">{lt.stopName || lt.stopCode} bound</div>
+                      </div>
+                      {lt.available && depStr ? (
+                        <div className="text-right">
+                          <div className={`text-sm font-medium ${lt.warning ? "text-red-600" : "text-neutral-700"}`}>Departs {depStr}</div>
+                          {lt.durationMinutes && <div className="text-xs text-neutral-500">{lt.durationMinutes} min ride to station</div>}
+                          {lt.warning && <div className="text-xs text-red-600 font-medium">Service may end before game</div>}
+                        </div>
+                      ) : <span className="text-sm text-neutral-500">No late service</span>}
+                    </div>);
+                  })}</div>}
+                </div>
+              );
+            })()}
+
+            {/* Venue Policy */}
+            {(() => {
+              const policy = venuePolicy;
+              const loading = policyLoading;
+              if (!policy && !loading) return null;
+              const allowed = policy?.items.filter((i) => i.allowed) ?? [];
+              const prohibited = policy?.items.filter((i) => !i.allowed) ?? [];
               return (
                 <div className="py-8 border-b border-neutral-200">
                   <h2 className="text-[22px] font-semibold text-neutral-900 mb-4">Things to know</h2>
-                  <div>
+                  {loading && !policy && <div className="flex items-center gap-2 text-sm text-neutral-500"><Loader2 className="size-4 animate-spin" /> Loading...</div>}
+                  {policy && (<div>
                     {(policy.clearBagRequired || policy.maxBagSize) && (
                       <div className="text-sm text-neutral-700 mb-4 p-3 bg-amber-50 rounded-xl border border-amber-200">
                         {policy.clearBagRequired && <span className="font-semibold">Clear bag required</span>}
@@ -261,57 +987,256 @@ export function GameDetailPopover({
                       {prohibited.length > 0 && <div><h3 className="text-sm font-semibold text-neutral-900 mb-2">Not allowed</h3><div className="space-y-2">{prohibited.map((item) => <div key={item.name} className="flex items-start gap-2 text-sm text-neutral-600"><Ban className="size-4 shrink-0 mt-0.5 text-red-500" /><span>{item.name}</span></div>)}</div></div>}
                     </div>
                     {policy.policyUrl && <a href={policy.policyUrl} target="_blank" rel="noopener noreferrer" className="mt-4 text-sm text-neutral-900 underline font-semibold inline-flex items-center gap-1 hover:text-neutral-600">Show full policy <ArrowUpRight className="size-3.5" /></a>}
+                  </div>)}
+                </div>
+              );
+            })()}
+
+            {/* Hotels */}
+            {(() => {
+              const h = hotels;
+              const loading = hotelsLoading;
+              if (!h && !loading) return null;
+              return (
+                <div className="py-8 border-b border-neutral-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-[22px] font-semibold text-neutral-900">Where to stay</h2>
+                    {h && h.length > 0 && <a href={h[0].bookingUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-neutral-900 underline hover:text-neutral-600">Browse more on Google</a>}
+                  </div>
+                  {loading && !h && <div className="flex items-center gap-2 text-sm text-neutral-500"><Loader2 className="size-4 animate-spin" /> Loading...</div>}
+                  {h && h.length > 0 && (
+                    <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-6 px-6 pb-2">
+                      {h.map((hotel, hi) => (
+                        <a key={hi} href={hotel.bookingUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 w-[240px] rounded-xl overflow-hidden hover:shadow-lg transition-shadow no-underline block group">
+                          <div className="h-[160px] bg-neutral-100 overflow-hidden">
+                            {hotel.photoUrl ? (
+                              <img src={hotel.photoUrl} alt={hotel.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-neutral-400"><Hotel className="size-10" /></div>
+                            )}
+                          </div>
+                          <div className="p-3">
+                            <div className="flex items-center justify-between">
+                              <div className="text-sm font-semibold text-neutral-900 truncate flex-1">{hotel.name}</div>
+                              {hotel.rating && <span className="flex items-center gap-0.5 text-sm shrink-0 ml-2"><Star className="size-3.5 text-neutral-900" /> {hotel.rating}</span>}
+                            </div>
+                            <div className="text-sm text-neutral-500 mt-0.5">{hotel.distanceMiles} mi from venue</div>
+                            <div className="text-sm font-semibold text-neutral-900 mt-1">{hotel.estimatedPrice}</div>
+                            <div className="flex items-center gap-2 mt-2 text-xs text-neutral-500">
+                              <span className="flex items-center gap-1"><Car className="size-3" /> {hotel.driveMinutes}m</span>
+                              {hotel.transitMinutes != null && <span className="flex items-center gap-1"><Bus className="size-3" /> {hotel.transitMinutes}m</span>}
+                              <span className="flex items-center gap-1"><Footprints className="size-3" /> {hotel.walkMinutes}m</span>
+                            </div>
+                          </div>
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Parking */}
+            {(() => {
+              const spots = parking;
+              const pLoading = parkingLoading;
+              if (!spots && !pLoading) return null;
+              return (
+                <div className="py-8 border-b border-neutral-200">
+                  <div className="flex items-center justify-between mb-1">
+                    <h2 className="text-[22px] font-semibold text-neutral-900">Parking</h2>
+                    {spots && spots.length > 0 && <a href={spots[0].spotHeroUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-neutral-900 underline hover:text-neutral-600">Reserve on SpotHero</a>}
+                  </div>
+                  <p className="text-sm text-neutral-500 mb-4">Spots open during event hours (2h before to 2h after)</p>
+                  {pLoading && !spots && <div className="flex items-center gap-2 text-sm text-neutral-500"><Loader2 className="size-4 animate-spin" /> Finding parking...</div>}
+                  {spots && spots.length > 0 && (
+                    <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-6 px-6 pb-2">
+                      {spots.map((p, i) => (
+                        <a key={i} href={p.directionsUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 w-[200px] rounded-xl overflow-hidden hover:shadow-lg transition-shadow no-underline block group">
+                          <div className="h-[120px] bg-neutral-100 overflow-hidden">
+                            {p.photoUrl ? (
+                              <img src={p.photoUrl} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-neutral-400"><ParkingSquare className="size-8" /></div>
+                            )}
+                          </div>
+                          <div className="p-3">
+                            <div className="text-sm font-semibold text-neutral-900 truncate">{p.name}</div>
+                            <div className="flex items-center gap-2 mt-1 text-xs text-neutral-500">
+                              <span className="flex items-center gap-0.5"><Footprints className="size-3" /> {p.walkMinutes}m walk</span>
+                              {p.rating && <span className="flex items-center gap-0.5"><Star className="size-3 text-neutral-900" /> {p.rating}</span>}
+                            </div>
+                            {p.estimatedPrice && <div className="text-sm font-semibold text-neutral-900 mt-1">{p.estimatedPrice}</div>}
+                          </div>
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Good Eats */}
+            {(() => {
+              const spots = restaurants;
+              const rLoading = restaurantsLoading;
+              if (!spots && !rLoading) return null;
+              const pregame = spots?.filter((r) => r.category === "pregame") ?? [];
+              const postgame = spots?.filter((r) => r.category === "postgame") ?? [];
+              const yelpUrl = `https://www.yelp.com/search?find_desc=restaurants&find_loc=${encodeURIComponent(game.venue + " " + game.city + " " + game.state)}`;
+              return (
+                <div className="py-8 border-b border-neutral-200">
+                  <div className="flex items-center justify-between mb-1">
+                    <h2 className="text-[22px] font-semibold text-neutral-900">Good Eats</h2>
+                    <a href={yelpUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-neutral-900 underline hover:text-neutral-600">More on Yelp</a>
+                  </div>
+                  <p className="text-sm text-neutral-500 mb-4">Top-rated spots near the arena</p>
+                  {rLoading && !spots && <div className="flex items-center gap-2 text-sm text-neutral-500"><Loader2 className="size-4 animate-spin" /> Finding restaurants...</div>}
+
+                  {pregame.length > 0 && (
+                    <>
+                      <div className="flex items-center gap-1.5 mb-3">
+                        <Beer className="size-4 text-neutral-700" />
+                        <h3 className="text-base font-semibold text-neutral-800">Pregame</h3>
+                      </div>
+                      <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-6 px-6 pb-2">
+                        {pregame.map((r, i) => (
+                          <a key={i} href={r.directionsUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 w-[200px] rounded-xl overflow-hidden hover:shadow-lg transition-shadow no-underline block group">
+                            <div className="h-[120px] bg-neutral-100 overflow-hidden">
+                              {r.photoUrl ? (
+                                <img src={r.photoUrl} alt={r.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-neutral-400"><Beer className="size-8" /></div>
+                              )}
+                            </div>
+                            <div className="p-3">
+                              <div className="text-sm font-semibold text-neutral-900 truncate">{r.name}</div>
+                              <div className="flex items-center gap-2 mt-1 text-xs text-neutral-500">
+                                <span className="flex items-center gap-0.5"><Footprints className="size-3" /> {r.walkMinutes}m walk</span>
+                                {r.rating && <span className="flex items-center gap-0.5"><Star className="size-3 text-neutral-900" /> {r.rating}</span>}
+                              </div>
+                              {r.priceLevel && <div className="text-xs text-neutral-500 mt-1">{r.priceLevel} {r.priceLevel === "$" ? "($5–15)" : r.priceLevel === "$$" ? "($15–30)" : r.priceLevel === "$$$" ? "($30–60)" : r.priceLevel === "$$$$" ? "($60+)" : ""}</div>}
+                            </div>
+                          </a>
+                        ))}
+                      </div>
+                    </>
+                  )}
+
+                  {postgame.length > 0 && (
+                    <>
+                      <div className={`flex items-center gap-1.5 mb-3 ${pregame.length > 0 ? "mt-6" : ""}`}>
+                        <UtensilsCrossed className="size-4 text-neutral-700" />
+                        <h3 className="text-base font-semibold text-neutral-800">Postgame</h3>
+                      </div>
+                      <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-6 px-6 pb-2">
+                        {postgame.map((r, i) => (
+                          <a key={i} href={r.directionsUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 w-[200px] rounded-xl overflow-hidden hover:shadow-lg transition-shadow no-underline block group">
+                            <div className="h-[120px] bg-neutral-100 overflow-hidden">
+                              {r.photoUrl ? (
+                                <img src={r.photoUrl} alt={r.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-neutral-400"><UtensilsCrossed className="size-8" /></div>
+                              )}
+                            </div>
+                            <div className="p-3">
+                              <div className="text-sm font-semibold text-neutral-900 truncate">{r.name}</div>
+                              <div className="flex items-center gap-2 mt-1 text-xs text-neutral-500">
+                                <span className="flex items-center gap-0.5"><Footprints className="size-3" /> {r.walkMinutes}m walk</span>
+                                {r.rating && <span className="flex items-center gap-0.5"><Star className="size-3 text-neutral-900" /> {r.rating}</span>}
+                              </div>
+                              {r.priceLevel && <div className="text-xs text-neutral-500 mt-1">{r.priceLevel} {r.priceLevel === "$" ? "($5–15)" : r.priceLevel === "$$" ? "($15–30)" : r.priceLevel === "$$$" ? "($30–60)" : r.priceLevel === "$$$$" ? "($60+)" : ""}</div>}
+                            </div>
+                          </a>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Watch Online */}
+            {game.broadcasts && (game.broadcasts.national.length > 0 || game.broadcasts.local.length > 0) && (() => {
+              const streamLinks: Record<string, { url: string; icon: string }> = {
+                "ESPN": { url: "https://www.espn.com/watch/", icon: "https://www.google.com/s2/favicons?domain=espn.com&sz=32" },
+                "ESPN2": { url: "https://www.espn.com/watch/", icon: "https://www.google.com/s2/favicons?domain=espn.com&sz=32" },
+                "ABC": { url: "https://abc.com/watch-live/", icon: "https://www.google.com/s2/favicons?domain=abc.com&sz=32" },
+                "TNT": { url: "https://www.tntdrama.com/watchtnt", icon: "https://www.google.com/s2/favicons?domain=tntdrama.com&sz=32" },
+                "truTV": { url: "https://www.trutv.com/watchtrutv", icon: "https://www.google.com/s2/favicons?domain=trutv.com&sz=32" },
+                "NBA TV": { url: "https://www.nba.com/watch/nba-tv", icon: "https://www.google.com/s2/favicons?domain=nba.com&sz=32" },
+                "NBATV": { url: "https://www.nba.com/watch/nba-tv", icon: "https://www.google.com/s2/favicons?domain=nba.com&sz=32" },
+              };
+              const allNetworks = [...game.broadcasts!.national, ...game.broadcasts!.local];
+              const isNational = game.broadcasts!.national.length > 0;
+              return (
+                <div className="py-8 border-b border-neutral-200">
+                  <h2 className="text-[22px] font-semibold text-neutral-900 mb-1">Watch online</h2>
+                  <p className="text-sm text-neutral-500 mb-4">{isNational ? "Nationally televised" : "Local broadcast"} — {isNational ? "catch the big game from anywhere" : "check local listings or NBA League Pass"}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {allNetworks.map((name) => {
+                      const link = streamLinks[name];
+                      return link ? (
+                        <a key={name} href={link.url} target="_blank" rel="noopener noreferrer" className="px-4 py-2.5 rounded-lg border border-neutral-200 text-sm font-medium text-neutral-900 hover:bg-neutral-50 hover:shadow-sm no-underline transition-all inline-flex items-center gap-2">
+                          <img src={link.icon} alt="" className="size-4 rounded-sm" />
+                          {name}
+                          <ArrowUpRight className="size-3.5 text-neutral-400" />
+                        </a>
+                      ) : (
+                        <span key={name} className="px-4 py-2.5 rounded-lg border border-neutral-200 text-sm font-medium text-neutral-900 inline-flex items-center gap-2">
+                          <Tv className="size-4 text-neutral-400" />
+                          {name}
+                        </span>
+                      );
+                    })}
+                    <a href="https://www.nba.com/watch/league-pass" target="_blank" rel="noopener noreferrer" className="px-4 py-2.5 rounded-lg border border-neutral-200 text-sm font-medium text-neutral-900 hover:bg-neutral-50 hover:shadow-sm no-underline transition-all inline-flex items-center gap-2">
+                      <img src="https://www.google.com/s2/favicons?domain=nba.com&sz=32" alt="" className="size-4 rounded-sm" />
+                      NBA League Pass
+                      <ArrowUpRight className="size-3.5 text-neutral-400" />
+                    </a>
                   </div>
                 </div>
               );
             })()}
 
-            {/* Hotels — "Where to stay" */}
-            {hotels && hotels.length > 0 && (
-              <div className="py-8 border-b border-neutral-200">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-[22px] font-semibold text-neutral-900">Where to stay</h2>
-                  <a href={hotels[0].bookingUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-neutral-900 underline hover:text-neutral-600">Browse more on Google</a>
-                </div>
-                <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-6 px-6 pb-2">
-                  {hotels.map((h, hi) => (
-                    <a key={hi} href={h.bookingUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 w-[240px] rounded-xl overflow-hidden hover:shadow-lg transition-shadow no-underline block group">
-                      <div className="h-[160px] bg-neutral-100 overflow-hidden">
-                        {h.photoUrl ? (
-                          <img src={h.photoUrl} alt={h.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-neutral-400"><Hotel className="size-10" /></div>
-                        )}
-                      </div>
-                      <div className="p-3">
-                        <div className="flex items-center justify-between">
-                          <div className="text-sm font-semibold text-neutral-900 truncate flex-1">{h.name}</div>
-                          {h.rating && <span className="flex items-center gap-0.5 text-sm shrink-0 ml-2"><Star className="size-3.5 text-neutral-900" /> {h.rating}</span>}
+            {/* Local News */}
+            {(() => {
+              const news = localNews;
+              const nLoading = newsLoading;
+              if (!news && !nLoading) return null;
+              return (
+                <details className="py-8 border-b border-neutral-200 group">
+                  <summary className="text-[22px] font-semibold text-neutral-900 cursor-pointer list-none select-none flex items-center justify-between">
+                    Local news
+                    <ChevronDown className="size-5 text-neutral-400 transition-transform group-open:rotate-180" />
+                  </summary>
+                  <div className="mt-4">
+                    {nLoading && !news && <div className="flex items-center gap-2 text-sm text-neutral-500"><Loader2 className="size-4 animate-spin" /> Loading...</div>}
+                    {news && news.length > 0 && <div className="divide-y divide-neutral-100">{news.map((n, i) => (
+                      <a key={i} href={n.link} target="_blank" rel="noopener noreferrer" className="block py-4 no-underline hover:bg-neutral-50 -mx-3 px-3 rounded-lg transition-colors">
+                        <div className="text-[15px] font-medium text-neutral-900 leading-snug">{n.title}</div>
+                        <div className="flex items-center justify-between mt-1.5">
+                          <span className="text-xs text-neutral-500">{n.source}</span>
+                          {n.published && <span className="text-xs text-neutral-400">{new Date(n.published).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>}
                         </div>
-                        <div className="text-sm text-neutral-500 mt-0.5">{h.distanceMiles} mi from venue</div>
-                        <div className="text-sm font-semibold text-neutral-900 mt-1">{h.estimatedPrice}</div>
-                        <div className="flex items-center gap-2 mt-2 text-xs text-neutral-500">
-                          <span className="flex items-center gap-1"><Car className="size-3" /> {h.driveMinutes}m</span>
-                          {h.transitMinutes != null && <span className="flex items-center gap-1"><Bus className="size-3" /> {h.transitMinutes}m</span>}
-                          <span className="flex items-center gap-1"><Footprints className="size-3" /> {h.walkMinutes}m</span>
-                        </div>
-                      </div>
-                    </a>
-                  ))}
-                </div>
-              </div>
-            )}
+                      </a>
+                    ))}</div>}
+                  </div>
+                </details>
+              );
+            })()}
 
-            {/* Links — "Tickets & links" */}
+            {/* Links */}
             <div className="py-8">
               <h2 className="text-[22px] font-semibold text-neutral-900 mb-4">Tickets & links</h2>
               <div className="flex flex-wrap gap-2">
                 {[
-                  { label: "Ticketmaster", href: ticketmasterUrl, icon: "https://www.google.com/s2/favicons?domain=ticketmaster.com&sz=32" },
+                  { label: "Ticketmaster", href: game.url, icon: "https://www.google.com/s2/favicons?domain=ticketmaster.com&sz=32" },
+                  away ? { label: "StubHub", href: stubhubUrl(home), icon: "https://www.google.com/s2/favicons?domain=stubhub.com&sz=32" } : null,
                   game.espn_price?.url ? { label: "VividSeats", href: game.espn_price.url, icon: "https://www.google.com/s2/favicons?domain=vividseats.com&sz=32" } : null,
                   kalshiUrl ? { label: "Kalshi", href: kalshiUrl, icon: "https://www.google.com/s2/favicons?domain=kalshi.com&sz=32" } : null,
                   { label: "ESPN", href: `https://www.espn.com/nba/scoreboard/_/date/${displayDate.replace(/-/g, "")}`, icon: "https://www.google.com/s2/favicons?domain=espn.com&sz=32" },
-                  policy?.websiteUrl ? { label: "Venue site", href: policy.websiteUrl, icon: "https://www.google.com/s2/favicons?domain=" + new URL(policy.websiteUrl).hostname + "&sz=32" } : null,
+                  venuePolicy?.websiteUrl ? { label: "Venue site", href: venuePolicy.websiteUrl, icon: "https://www.google.com/s2/favicons?domain=" + new URL(venuePolicy.websiteUrl).hostname + "&sz=32" } : null,
                 ].filter(Boolean).map((link) => (
                   <a key={link!.label} href={link!.href} target="_blank" rel="noopener noreferrer" className="px-4 py-2.5 rounded-lg border border-neutral-200 text-sm font-medium text-neutral-900 hover:bg-neutral-50 hover:shadow-sm no-underline transition-all inline-flex items-center gap-2">
                     <img src={(link as { icon: string }).icon} alt="" className="size-4 rounded-sm" />

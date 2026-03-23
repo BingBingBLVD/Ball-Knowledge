@@ -19,9 +19,8 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import Link from "next/link";
-import type { VenuePolicy } from "@/lib/venue-policies";
 import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
-import { GameDetailPopover } from "@/components/game-detail-popover";
+import { GameDetailPopover, type GameEvent } from "@/components/game-detail-popover";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -228,7 +227,6 @@ function RampageContent() {
   const [error, setError] = useState<string | null>(null);
   const mapRef = useRef<HTMLDivElement>(null);
   const googleMapRef = useRef<google.maps.Map | null>(null);
-  const [venuePolicies, setVenuePolicies] = useState<Record<string, VenuePolicy>>({});
   const [popoverGameId, setPopoverGameId] = useState<string | null>(null);
   const [popoverVisible, setPopoverVisible] = useState(false);
 
@@ -289,21 +287,6 @@ function RampageContent() {
     }
     fetchRampage();
   }, [cow]);
-
-  // Fetch venue policies for all games
-  useEffect(() => {
-    if (!result) return;
-    const venues = [...new Set(result.games.map((g) => g.venue))];
-    for (const venue of venues) {
-      if (venuePolicies[venue]) continue;
-      fetch(`/api/venue-policy?venue=${encodeURIComponent(venue)}`)
-        .then((res) => (res.ok ? res.json() : null))
-        .then((data: VenuePolicy | null) => {
-          if (data) setVenuePolicies((prev) => ({ ...prev, [venue]: data }));
-        })
-        .catch(() => {});
-    }
-  }, [result]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Init map
   useEffect(() => {
@@ -527,14 +510,19 @@ function RampageContent() {
       {popoverGameId && (() => {
         const game = result.games.find((g) => g.id === popoverGameId);
         if (!game) return null;
-        const hotels = result.hotels.find((h) => h.date === game.est_date);
+        const popoverGame: GameEvent = {
+          ...game,
+          url: `https://www.ticketmaster.com/event/${game.id}`,
+          lat: game.lat,
+          lng: game.lng,
+        };
         return (
           <GameDetailPopover
-            game={game}
+            game={popoverGame}
             visible={popoverVisible}
             onClose={closePopover}
-            policy={venuePolicies[game.venue]}
-            hotels={hotels?.suggestions}
+            date={game.est_date}
+            userLocation={null}
           />
         );
       })()}
