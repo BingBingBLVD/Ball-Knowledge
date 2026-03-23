@@ -1585,15 +1585,17 @@ export function BottomTray({
                       <h2 className="text-[22px] font-semibold text-neutral-900 mb-4">Tickets & links</h2>
                       <div className="flex flex-wrap gap-2">
                         {[
-                          { label: "Ticketmaster", href: event.url },
-                          away ? { label: "StubHub", href: stubhubUrl(home) } : null,
-                          event.espn_price?.url ? { label: "VividSeats", href: event.espn_price.url } : null,
-                          kalshiUrl ? { label: "Kalshi", href: kalshiUrl } : null,
-                          { label: "ESPN", href: `https://www.espn.com/nba/scoreboard/_/date/${date.replace(/-/g, "")}` },
-                          venuePolicies[event.venue]?.websiteUrl ? { label: "Venue site", href: venuePolicies[event.venue].websiteUrl } : null,
+                          { label: "Ticketmaster", href: event.url, icon: "https://www.google.com/s2/favicons?domain=ticketmaster.com&sz=32" },
+                          away ? { label: "StubHub", href: stubhubUrl(home), icon: "https://www.google.com/s2/favicons?domain=stubhub.com&sz=32" } : null,
+                          event.espn_price?.url ? { label: "VividSeats", href: event.espn_price.url, icon: "https://www.google.com/s2/favicons?domain=vividseats.com&sz=32" } : null,
+                          kalshiUrl ? { label: "Kalshi", href: kalshiUrl, icon: "https://www.google.com/s2/favicons?domain=kalshi.com&sz=32" } : null,
+                          { label: "ESPN", href: `https://www.espn.com/nba/scoreboard/_/date/${date.replace(/-/g, "")}`, icon: "https://www.google.com/s2/favicons?domain=espn.com&sz=32" },
+                          venuePolicies[event.venue]?.websiteUrl ? { label: "Venue site", href: venuePolicies[event.venue].websiteUrl, icon: "https://www.google.com/s2/favicons?domain=" + new URL(venuePolicies[event.venue].websiteUrl).hostname + "&sz=32" } : null,
                         ].filter(Boolean).map((link) => (
-                          <a key={link!.label} href={link!.href} target="_blank" rel="noopener noreferrer" className="px-4 py-2 rounded-lg border border-neutral-200 text-sm font-medium text-neutral-900 hover:bg-neutral-50 no-underline transition-colors inline-flex items-center gap-1.5">
-                            {link!.label} <ArrowUpRight className="size-3.5" />
+                          <a key={link!.label} href={link!.href} target="_blank" rel="noopener noreferrer" className="px-4 py-2.5 rounded-lg border border-neutral-200 text-sm font-medium text-neutral-900 hover:bg-neutral-50 hover:shadow-sm no-underline transition-all inline-flex items-center gap-2">
+                            <img src={(link as { icon: string }).icon} alt="" className="size-4 rounded-sm" />
+                            {link!.label}
+                            <ArrowUpRight className="size-3.5 text-neutral-400" />
                           </a>
                         ))}
                       </div>
