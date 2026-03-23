@@ -1075,8 +1075,8 @@ export function BottomTray({
                   onMouseLeave={() => onVenueHover?.(null)}
                   className={`card-enter transition-all cursor-pointer ${
                     isWide
-                      ? `rounded-2xl bg-neutral-50/60 p-4 hover:bg-neutral-100/60 ${isRampageSelected ? "ring-2 ring-blue-400 bg-blue-50" : ""}`
-                      : `py-5 ${isRampageSelected ? "bg-blue-50 -mx-4 px-4 border-l-3 border-blue-400" : ""}`
+                      ? `rounded-2xl bg-neutral-50/60 p-4 hover:bg-neutral-100/60 ${isRampageSelected ? "ring-2 ring-blue-400 bg-blue-50" : ""} ${isHovered ? "shadow-lg shadow-neutral-900/10 bg-neutral-100/60" : ""}`
+                      : `py-5 ${isRampageSelected ? "bg-blue-50 -mx-4 px-4 border-l-3 border-blue-400" : ""} ${isHovered ? "shadow-lg shadow-neutral-900/10 -mx-4 px-4 rounded-2xl bg-neutral-50/60" : ""}`
                   }`}
                   onClick={() => {
                     // RAMPAGE mode: toggle game selection
