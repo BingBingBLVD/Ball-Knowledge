@@ -281,42 +281,62 @@ function TransitRows({
             {/* Transport options */}
             {times ? (
               <div className={`grid gap-2 ${times.transitMinutes != null ? "grid-cols-2" : "grid-cols-1"}`}>
-                {/* Drive card with Uber/Lyft nested */}
-                <a
-                  href={gmapsUrl(vLat, vLng, stop.lat, stop.lng, "driving", arriveByEpoch)}
-                  target="_blank" rel="noopener noreferrer"
-                  className="rounded-lg bg-white/5 hover:bg-white/10 py-2.5 px-3 no-underline transition-colors"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <Car className="size-4 text-[--color-dim]" />
-                    <span className="text-xs font-bold text-foreground">{formatDriveTime(times.driveMinutes)}</span>
-                    <span className="text-[10px] text-[--color-dim]">Drive</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-[10px] border-t border-white/5 pt-1.5">
-                    <span className="text-[--color-dim]" onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(uberDeepLink(vLat, vLng, stop.lat, stop.lng), "_blank"); }}>
-                      <span className="font-bold">UBER</span> <span className="text-emerald-400">{times.uberEstimate ? `~${extractUpperBound(times.uberEstimate)}` : "--"}</span>
-                    </span>
-                    <span className="text-[--color-dim]" onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(lyftDeepLink(vLat, vLng, stop.lat, stop.lng), "_blank"); }}>
-                      <span className="font-bold">LYFT</span> <span className="text-emerald-400">{times.lyftEstimate ? `~${extractUpperBound(times.lyftEstimate)}` : "--"}</span>
-                    </span>
-                  </div>
-                </a>
-                {/* Transit card */}
-                {times.transitMinutes != null && (
+                {/* Drive column */}
+                <div className="space-y-2">
                   <a
-                    href={gmapsUrl(vLat, vLng, stop.lat, stop.lng, "transit", arriveByEpoch)}
+                    href={gmapsUrl(vLat, vLng, stop.lat, stop.lng, "driving", arriveByEpoch)}
                     target="_blank" rel="noopener noreferrer"
-                    className="rounded-lg bg-white/5 hover:bg-white/10 py-2.5 px-3 no-underline transition-colors flex flex-col justify-center"
+                    className="block rounded-lg bg-white/5 hover:bg-white/10 py-2.5 px-3 no-underline transition-colors"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <div className="flex items-center gap-2">
-                      <Bus className="size-4 text-[--color-dim]" />
-                      <span className="text-xs font-bold text-foreground">{formatDriveTime(times.transitMinutes)}</span>
-                      <span className="text-[10px] text-[--color-dim]">Transit</span>
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <Car className="size-4 text-[--color-dim]" />
+                      <span className="text-xs font-bold text-foreground">{formatDriveTime(times.driveMinutes)}</span>
+                      <span className="text-[10px] text-[--color-dim]">Drive</span>
                     </div>
-                    <div className="text-[10px] text-emerald-400 mt-1">{times.transitFare ?? "No fare info"}</div>
+                    <div className="flex items-center gap-3 text-[10px] border-t border-white/5 pt-1.5">
+                      <span className="text-[--color-dim] cursor-pointer" onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(uberDeepLink(vLat, vLng, stop.lat, stop.lng), "_blank"); }}>
+                        <span className="font-bold">UBER</span> <span className="text-emerald-400">{times.uberEstimate ? `~${extractUpperBound(times.uberEstimate)}` : "--"}</span>
+                      </span>
+                      <span className="text-[--color-dim] cursor-pointer" onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(lyftDeepLink(vLat, vLng, stop.lat, stop.lng), "_blank"); }}>
+                        <span className="font-bold">LYFT</span> <span className="text-emerald-400">{times.lyftEstimate ? `~${extractUpperBound(times.lyftEstimate)}` : "--"}</span>
+                      </span>
+                    </div>
                   </a>
+                  <div className="rounded-lg overflow-hidden border border-white/5">
+                    <iframe
+                      className="w-full h-[180px]"
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      src={`https://www.google.com/maps/embed/v1/directions?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&origin=${stop.lat},${stop.lng}&destination=${vLat},${vLng}&mode=driving`}
+                    />
+                  </div>
+                </div>
+                {/* Transit column */}
+                {times.transitMinutes != null && (
+                  <div className="space-y-2">
+                    <a
+                      href={gmapsUrl(vLat, vLng, stop.lat, stop.lng, "transit", arriveByEpoch)}
+                      target="_blank" rel="noopener noreferrer"
+                      className="block rounded-lg bg-white/5 hover:bg-white/10 py-2.5 px-3 no-underline transition-colors"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Bus className="size-4 text-[--color-dim]" />
+                        <span className="text-xs font-bold text-foreground">{formatDriveTime(times.transitMinutes)}</span>
+                        <span className="text-[10px] text-[--color-dim]">Transit</span>
+                      </div>
+                      <div className="text-[10px] text-emerald-400 mt-1">{times.transitFare ?? "No fare info"}</div>
+                    </a>
+                    <div className="rounded-lg overflow-hidden border border-white/5">
+                      <iframe
+                        className="w-full h-[180px]"
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                        src={`https://www.google.com/maps/embed/v1/directions?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&origin=${stop.lat},${stop.lng}&destination=${vLat},${vLng}&mode=transit`}
+                      />
+                    </div>
+                  </div>
                 )}
               </div>
             ) : (
