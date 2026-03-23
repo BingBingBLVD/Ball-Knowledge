@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { RouteFocus, TransitStop, VenueInfo } from "./game-map";
 import {
   ChevronUp,
@@ -42,6 +43,8 @@ import {
   ExternalLink,
   ParkingSquare,
   Timer,
+  X,
+  Ticket,
 } from "lucide-react";
 import type { VenuePolicy } from "@/lib/venue-policies";
 import { SearchBar } from "./search-bar";
@@ -384,6 +387,19 @@ export function BottomTray({
   const [isAnimating, setIsAnimating] = useState(false);
   const prevTrayState = useRef(trayState);
   const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
+  const [popoverEventId, setPopoverEventId] = useState<string | null>(null);
+  const [popoverVisible, setPopoverVisible] = useState(false);
+
+  const openPopover = useCallback((id: string) => {
+    setPopoverEventId(id);
+    // Trigger animation on next frame
+    requestAnimationFrame(() => requestAnimationFrame(() => setPopoverVisible(true)));
+  }, []);
+
+  const closePopover = useCallback(() => {
+    setPopoverVisible(false);
+    setTimeout(() => setPopoverEventId(null), 300); // match transition duration
+  }, []);
 
 
   // Sort state
@@ -1031,7 +1047,11 @@ export function BottomTray({
                         buses: event.nearbyBusStations ?? [],
                       });
                     }
-                    setExpandedCardId(isExpanded ? null : event.id);
+                    if (popoverEventId !== event.id) {
+                      openPopover(event.id);
+                    } else {
+                      closePopover();
+                    }
                   }}
                 >
                   {/* Card header — always visible */}
@@ -1117,583 +1137,355 @@ export function BottomTray({
                     </div>
                   </div>
 
-                  {/* Expanded section */}
-                  {isExpanded && (
-                    <div className="px-3 pb-3 border-t border-white/5" onClick={(e) => e.stopPropagation()}>
-                      {/* Transit section */}
-                      {(airports.length > 0 || trains.length > 0 || buses.length > 0) && event.lat != null && event.lng != null && (
-                        <div className="mt-2 space-y-1">
-                          <div className="text-[10px] font-mono tracking-widest text-[--primary]/70 uppercase">DISTANCE FROM STADIUM</div>
-                          <div className="text-[9px] text-[--color-dim]/60 -mt-0.5">Travel times target arrival 45 min before tipoff</div>
-                          {airports.length > 0 && (
-                            <TransitRows
-                              stops={airports}
-                              icon={Plane}
-                              vLat={event.lat!}
-                              vLng={event.lng!}
-                              enriched={enriched}
-                              enriching={enriching}
-                              onEnrich={(stop) => handleEnrich(event.lat!, event.lng!, stop, event.date_time_utc)}
-                              onRouteFocus={onRouteFocus}
-                              isAnimating={isAnimating}
-                              venueName={event.venue}
-                              colorClass="text-[--color-flight]"
-                              tipoffUtc={event.date_time_utc}
-                            />
-                          )}
-                          {trains.length > 0 && (
-                            <TransitRows
-                              stops={trains}
-                              icon={TrainFront}
-                              vLat={event.lat!}
-                              vLng={event.lng!}
-                              enriched={enriched}
-                              enriching={enriching}
-                              onEnrich={(stop) => handleEnrich(event.lat!, event.lng!, stop, event.date_time_utc)}
-                              onRouteFocus={onRouteFocus}
-                              isAnimating={isAnimating}
-                              venueName={event.venue}
-                              colorClass="text-[--color-train]"
-                              tipoffUtc={event.date_time_utc}
-                            />
-                          )}
-                          {buses.length > 0 && (
-                            <TransitRows
-                              stops={buses}
-                              icon={BusFront}
-                              vLat={event.lat!}
-                              vLng={event.lng!}
-                              enriched={enriched}
-                              enriching={enriching}
-                              onEnrich={(stop) => handleEnrich(event.lat!, event.lng!, stop, event.date_time_utc)}
-                              onRouteFocus={onRouteFocus}
-                              isAnimating={isAnimating}
-                              venueName={event.venue}
-                              colorClass="text-[--color-bus]"
-                              tipoffUtc={event.date_time_utc}
-                            />
-                          )}
-                        </div>
-                      )}
-
-                      {/* Weather section */}
-                      {(() => {
-                        const weatherKey = `${event.lat},${event.lng},${event.est_date || date}`;
-                        const hours = weather[weatherKey];
-                        const wLoading = weatherLoading.has(weatherKey);
-
-                        if (!hours && !wLoading) return null;
-
-                        // Show hours around game time: 3 hours before to 3 hours after tipoff
-                        let relevantHours = hours ?? [];
-                        if (hours && event.date_time_utc) {
-                          const tipoff = new Date(event.date_time_utc).getTime();
-                          relevantHours = hours.filter((h) => {
-                            const t = new Date(h.time).getTime();
-                            return t >= tipoff - 3 * 3600000 && t <= tipoff + 3 * 3600000;
-                          });
-                        } else if (hours) {
-                          // No tipoff known — show daytime hours 10am-10pm
-                          relevantHours = hours.filter((h) => {
-                            const hr = parseInt(h.time.split("T")[1]?.split(":")[0] ?? "0");
-                            return hr >= 10 && hr <= 22;
-                          });
-                        }
-
-                        return (
-                          <div className="mt-2">
-                            <div className="text-[10px] font-mono tracking-widest text-[--primary]/70 uppercase flex items-center gap-1">
-                              <Thermometer className="size-3 text-[--primary]" /> GAME DAY WEATHER
-                            </div>
-                            {wLoading && !hours && (
-                              <div className="flex items-center gap-1.5 mt-1.5 text-[11px] font-mono text-[--color-dim]">
-                                <Loader2 className="size-3 animate-spin" /> Loading weather...
-                              </div>
-                            )}
-                            {relevantHours.length > 0 && (
-                              <div className="mt-1 flex gap-1 overflow-x-auto no-scrollbar pb-1">
-                                {relevantHours.map((h) => {
-                                  const hr = parseInt(h.time.split("T")[1]?.split(":")[0] ?? "0");
-                                  const ampm = hr >= 12 ? "PM" : "AM";
-                                  const hr12 = hr % 12 || 12;
-                                  const isTipoff = event.date_time_utc && new Date(event.date_time_utc).getHours() === hr;
-
-                                  return (
-                                    <div
-                                      key={h.time}
-                                      className={`flex flex-col items-center gap-0.5 px-1.5 py-1 rounded text-[10px] font-mono shrink-0 min-w-[48px] ${isTipoff ? "bg-[--primary]/15 ring-1 ring-[--primary]/30" : "bg-white/5"}`}
-                                    >
-                                      <span className={`font-semibold ${isTipoff ? "text-[--primary]" : "text-[--color-dim]"}`}>{hr12}{ampm}</span>
-                                      <WeatherIcon code={h.weatherCode} className="size-3.5 text-foreground" />
-                                      <span className="text-foreground font-bold">{h.temp}°</span>
-                                      <span className="text-[--color-dim] text-[9px]">FL {h.feelsLike}°</span>
-                                      {h.precipProb > 0 && (
-                                        <span className="text-cyan-400 text-[9px] flex items-center gap-0.5"><Droplets className="size-2" />{h.precipProb}%</span>
-                                      )}
-                                      {h.windSpeed >= 10 && (
-                                        <span className="text-amber-400 text-[9px] flex items-center gap-0.5"><Wind className="size-2" />{h.windSpeed}</span>
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })()}
-
-                      {/* Airport delays section */}
-                      {(() => {
-                        const aptCodes = (event.nearbyAirports ?? []).map((a) => a.code);
-                        const delayKey = aptCodes.sort().join(",");
-                        const delays = airportDelays[delayKey];
-                        const dLoading = delaysLoading.has(delayKey);
-
-                        if (aptCodes.length === 0 || (!delays && !dLoading)) return null;
-
-                        const hasAnyDelay = delays?.some((d) => d.departureDel != null || d.arrivalDel != null || (d.reasons?.length ?? 0) > 0);
-
-                        return (
-                          <div className="mt-2">
-                            <div className="text-[10px] font-mono tracking-widest text-[--primary]/70 uppercase flex items-center gap-1">
-                              <Plane className="size-3 text-[--primary]" /> AIRPORT STATUS
-                            </div>
-                            {dLoading && !delays && (
-                              <div className="flex items-center gap-1.5 mt-1.5 text-[11px] font-mono text-[--color-dim]">
-                                <Loader2 className="size-3 animate-spin" /> Checking delays...
-                              </div>
-                            )}
-                            {delays && (
-                              <div className="mt-1 space-y-1">
-                                {delays.map((d) => {
-                                  const hasDelay = (d.departureDel != null && d.departureDel > 0) || (d.arrivalDel != null && d.arrivalDel > 0);
-                                  return (
-                                    <div key={d.code} className="flex items-center gap-2 text-[11px] font-mono">
-                                      <span className="font-bold text-[--color-flight] shrink-0">{d.code}</span>
-                                      {hasDelay ? (
-                                        <div className="flex items-center gap-2 flex-wrap">
-                                          {d.departureDel != null && d.departureDel > 0 && (
-                                            <span className="flex items-center gap-0.5 text-amber-400">
-                                              <AlertTriangle className="size-3" /> DEP +{d.departureDel}min
-                                            </span>
-                                          )}
-                                          {d.arrivalDel != null && d.arrivalDel > 0 && (
-                                            <span className="flex items-center gap-0.5 text-amber-400">
-                                              <Clock className="size-3" /> ARR +{d.arrivalDel}min
-                                            </span>
-                                          )}
-                                          {d.reasons?.map((r, i) => (
-                                            <span key={i} className="text-[--color-dim] text-[10px]">{r}</span>
-                                          ))}
-                                        </div>
-                                      ) : (
-                                        <span className="text-emerald-400 text-[10px]">No major delays</span>
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                                {!hasAnyDelay && delays.length > 0 && (
-                                  <div className="text-[9px] text-[--color-dim]/60">Live status via FlightAware</div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })()}
-
-                      {/* Last transit home section */}
-                      {(() => {
-                        if (!event.date_time_utc || !event.lat || !event.lng) return null;
-                        const ltKey = `${event.lat},${event.lng},${event.date_time_utc}`;
-                        const ltData = lastTransit[ltKey];
-                        const ltLoading = lastTransitLoading.has(ltKey);
-
-                        if (!ltData && !ltLoading) return null;
-
-                        return (
-                          <div className="mt-2">
-                            <div className="text-[10px] font-mono tracking-widest text-[--primary]/70 uppercase flex items-center gap-1">
-                              <Timer className="size-3 text-[--primary]" /> LAST TRANSIT HOME
-                            </div>
-                            {ltLoading && !ltData && (
-                              <div className="flex items-center gap-1.5 mt-1.5 text-[11px] font-mono text-[--color-dim]">
-                                <Loader2 className="size-3 animate-spin" /> Checking schedules...
-                              </div>
-                            )}
-                            {ltData && ltData.length > 0 && (
-                              <div className="mt-1 space-y-1">
-                                {ltData.map((lt) => {
-                                  const depTime = lt.lastDeparture ? new Date(lt.lastDeparture) : null;
-                                  const depStr = depTime
-                                    ? depTime.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
-                                    : null;
-
-                                  return (
-                                    <div key={lt.stopCode} className="flex items-center gap-2 text-[11px] font-mono">
-                                      <span className="font-bold text-[--color-train] shrink-0">{lt.stopCode}</span>
-                                      {lt.available && depStr ? (
-                                        <div className="flex items-center gap-2 flex-wrap">
-                                          <span className={lt.warning ? "text-red-400 font-semibold" : "text-[--color-dim]"}>
-                                            Last dep {depStr}
-                                          </span>
-                                          {lt.durationMinutes && (
-                                            <span className="text-[--color-dim] text-[10px]">{lt.durationMinutes}min ride</span>
-                                          )}
-                                          {lt.warning && (
-                                            <span className="text-red-400 text-[10px] flex items-center gap-0.5">
-                                              <AlertTriangle className="size-2.5" /> May end before game
-                                            </span>
-                                          )}
-                                        </div>
-                                      ) : (
-                                        <span className="text-[--color-dim] text-[10px]">{lt.available ? "Schedule available" : "No late service found"}</span>
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                                <div className="text-[9px] text-[--color-dim]/60">Post-game transit from venue area</div>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })()}
-
-                      {/* Venue policy section */}
-                      {(() => {
-                        const policy = venuePolicies[event.venue];
-                        const loading = policyLoading.has(event.venue);
-                        const allowed = policy?.items.filter((i) => i.allowed) ?? [];
-                        const prohibited = policy?.items.filter((i) => !i.allowed) ?? [];
-
-                        return (policy || loading) ? (
-                          <div className="mt-2">
-                            <div className="flex items-center gap-2">
-                              <div className="text-[10px] font-mono tracking-widest text-[--primary]/70 uppercase flex items-center gap-1">
-                                <ShieldCheck className="size-3 text-[--primary]" /> VENUE POLICY
-                              </div>
-                            </div>
-                            {loading && !policy && (
-                              <div className="flex items-center gap-1.5 mt-1.5 text-[11px] font-mono text-[--color-dim]">
-                                <Loader2 className="size-3 animate-spin" /> Loading policy...
-                              </div>
-                            )}
-                            {policy && (
-                              <div className="mt-1">
-                                {/* Summary line */}
-                                <div className="text-[11px] font-mono text-[--color-dim]">
-                                  {policy.clearBagRequired && (
-                                    <span className="text-amber-400 font-semibold">Clear bag required</span>
-                                  )}
-                                  {policy.maxBagSize && (
-                                    <span>{policy.clearBagRequired ? " · " : ""}Max {policy.maxBagSize}</span>
-                                  )}
-                                </div>
-                                {/* Details — always visible */}
-                                <div className="mt-1.5 flex gap-4 text-[11px] font-mono">
-                                  {allowed.length > 0 && (
-                                    <div className="flex-1 min-w-0 space-y-0.5">
-                                      {allowed.map((item) => (
-                                        <div key={item.name} className="flex items-start gap-1 text-emerald-400">
-                                          <Check className="size-3 shrink-0 mt-0.5" />
-                                          <span>{item.name}</span>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  )}
-                                  {prohibited.length > 0 && (
-                                    <div className="flex-1 min-w-0 space-y-0.5">
-                                      {prohibited.map((item) => (
-                                        <div key={item.name} className="flex items-start gap-1 text-red-400">
-                                          <Ban className="size-3 shrink-0 mt-0.5" />
-                                          <span>{item.name}</span>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                                {policy.policyUrl && (
-                                  <a
-                                    href={policy.policyUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="mt-1.5 text-[10px] font-mono text-[--color-dim] hover:text-foreground underline inline-flex items-center gap-0.5"
-                                  >
-                                    View full policy <ArrowUpRight className="size-2.5" />
-                                  </a>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        ) : null;
-                      })()}
-
-                      {/* Nearby hotels section */}
-                      {(() => {
-                        const hotels = nearbyHotels[event.venue];
-                        const loading = hotelsLoading.has(event.venue);
-
-                        if (!hotels && !loading) return null;
-
-                        return (
-                          <div className="mt-2">
-                            <div className="text-[10px] font-mono tracking-widest text-amber-400/70 uppercase flex items-center gap-1 mb-1.5">
-                              <Hotel className="size-3 text-amber-400" /> NEARBY HOTELS
-                            </div>
-                            {loading && !hotels && (
-                              <div className="flex items-center gap-1.5 text-[11px] font-mono text-[--color-dim]">
-                                <Loader2 className="size-3 animate-spin" /> Loading hotels...
-                              </div>
-                            )}
-                            {hotels && hotels.length > 0 && (
-                              <div className="flex gap-2 overflow-x-auto no-scrollbar">
-                                {hotels.map((h, hi) => (
-                                  <div
-                                    key={hi}
-                                    className="flex flex-col gap-1 text-[11px] font-mono rounded-lg panel px-2.5 py-2 min-w-[12rem] shrink-0"
-                                  >
-                                    <a href={h.bookingUrl} target="_blank" rel="noopener noreferrer" className="hover:text-amber-400 transition-colors">
-                                      <span className="text-xs font-semibold text-foreground truncate block">{h.name}</span>
-                                    </a>
-                                    <div className="flex items-center gap-2">
-                                      {h.rating && (
-                                        <span className="flex items-center gap-0.5 text-amber-400">
-                                          <Star className="size-2.5" /> {h.rating}
-                                        </span>
-                                      )}
-                                      <span className="text-emerald-400">{h.estimatedPrice}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-[10px] text-[--color-dim] border-t border-white/8 pt-1 mt-0.5 flex-wrap">
-                                      <span className="flex items-center gap-1"><MapPin className="size-2.5 text-amber-400/60 shrink-0" /><span className="text-foreground">{h.distanceMiles} mi</span></span>
-                                      <span>·</span>
-                                      <a href={gmapsUrl(h.lat, h.lng, event.lat!, event.lng!, "driving", event.date_time_utc ? Math.floor((new Date(event.date_time_utc).getTime() - 45 * 60 * 1000) / 1000) : undefined)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-cyan-400 transition-colors"><Car className="size-2.5 shrink-0" />{h.driveMinutes} min</a>
-                                      {h.transitMinutes != null && (
-                                        <><span>·</span><a href={gmapsUrl(h.lat, h.lng, event.lat!, event.lng!, "transit", event.date_time_utc ? Math.floor((new Date(event.date_time_utc).getTime() - 45 * 60 * 1000) / 1000) : undefined)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-cyan-400 transition-colors"><Bus className="size-2.5 shrink-0" />{h.transitMinutes} min{h.transitFare && <span className="text-emerald-400">{h.transitFare}</span>}</a></>
-                                      )}
-                                      <span>·</span>
-                                      <span className="flex items-center gap-1"><Footprints className="size-2.5 shrink-0" />{h.walkMinutes} min</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-[10px] text-[--color-dim]">
-                                      <span>UBER <span className="text-emerald-400">{h.uberEstimate}</span></span>
-                                      <span>LYFT <span className="text-emerald-400">{h.lyftEstimate}</span></span>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })()}
-
-                      {/* Parking section */}
-                      {(() => {
-                        if (!event.lat || !event.lng) return null;
-                        const parkKey = `${event.lat},${event.lng}`;
-                        const spots = nearbyParking[parkKey];
-                        const pLoading = parkingLoading.has(parkKey);
-
-                        if (!spots && !pLoading) return null;
-
-                        return (
-                          <div className="mt-2">
-                            <div className="flex items-center gap-2">
-                              <div className="text-[10px] font-mono tracking-widest text-[--primary]/70 uppercase flex items-center gap-1">
-                                <ParkingSquare className="size-3 text-[--primary]" /> PARKING NEAR STADIUM
-                              </div>
-                              {spots && spots.length > 0 && (
-                                <a
-                                  href={spots[0].spotHeroUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-[9px] font-mono text-cyan-400 hover:text-cyan-300 no-underline ml-auto"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  Reserve on SpotHero <ExternalLink className="size-2 inline" />
-                                </a>
-                              )}
-                            </div>
-                            {pLoading && !spots && (
-                              <div className="flex items-center gap-1.5 mt-1.5 text-[11px] font-mono text-[--color-dim]">
-                                <Loader2 className="size-3 animate-spin" /> Finding parking...
-                              </div>
-                            )}
-                            {spots && spots.length > 0 && (
-                              <div className="mt-1 flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
-                                {spots.map((p, i) => (
-                                  <a
-                                    key={i}
-                                    href={p.directionsUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex flex-col gap-0.5 px-2 py-1.5 rounded bg-white/5 hover:bg-white/10 transition-colors shrink-0 min-w-[130px] max-w-[160px] no-underline"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <span className="text-[11px] font-mono text-foreground font-semibold truncate">{p.name}</span>
-                                    <div className="flex items-center gap-2 text-[10px] text-[--color-dim]">
-                                      <span className="flex items-center gap-0.5"><MapPin className="size-2.5 text-amber-400/60" />{p.distanceMiles} mi</span>
-                                      <span className="flex items-center gap-0.5"><Footprints className="size-2.5" />{p.walkMinutes}min walk</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-[10px]">
-                                      {p.rating && (
-                                        <span className="flex items-center gap-0.5 text-amber-400">
-                                          <Star className="size-2.5" />{p.rating}
-                                          {p.totalRatings > 0 && <span className="text-[--color-dim]">({p.totalRatings})</span>}
-                                        </span>
-                                      )}
-                                      {p.openNow != null && (
-                                        <span className={p.openNow ? "text-emerald-400" : "text-red-400"}>
-                                          {p.openNow ? "Open" : "Closed"}
-                                        </span>
-                                      )}
-                                    </div>
-                                  </a>
-                                ))}
-                              </div>
-                            )}
-                            {spots && spots.length === 0 && (
-                              <div className="text-[10px] text-[--color-dim] mt-1 font-mono">No parking found nearby</div>
-                            )}
-                          </div>
-                        );
-                      })()}
-
-                      {/* Local news section — default collapsed */}
-                      {(() => {
-                        const newsKey = `${event.city},${event.state}`;
-                        const news = localNews[newsKey];
-                        const nLoading = newsLoading.has(newsKey);
-
-                        if (!news && !nLoading) return null;
-
-                        return (
-                          <details className="mt-2 group">
-                            <summary className="text-[10px] font-mono tracking-widest text-[--primary]/70 uppercase flex items-center gap-1 cursor-pointer list-none select-none">
-                              <Newspaper className="size-3 text-[--primary]" /> LOCAL NEWS
-                              <ChevronDown className="size-3 text-[--color-dim] ml-auto transition-transform group-open:rotate-180" />
-                            </summary>
-                            {nLoading && !news && (
-                              <div className="flex items-center gap-1.5 mt-1.5 text-[11px] font-mono text-[--color-dim]">
-                                <Loader2 className="size-3 animate-spin" /> Loading news...
-                              </div>
-                            )}
-                            {news && news.length > 0 && (
-                              <div className="mt-1.5 space-y-1.5 max-h-[200px] overflow-y-auto no-scrollbar">
-                                {news.map((n, i) => (
-                                  <a
-                                    key={i}
-                                    href={n.link}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="block text-[11px] font-mono hover:bg-white/5 rounded px-1.5 py-1 no-underline transition-colors"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <div className="text-foreground leading-tight">{n.title}</div>
-                                    <div className="flex items-center gap-2 mt-0.5 text-[9px] text-[--color-dim]">
-                                      <span>{n.source}</span>
-                                      {n.published && (
-                                        <span>{new Date(n.published).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
-                                      )}
-                                      <ExternalLink className="size-2 ml-auto shrink-0" />
-                                    </div>
-                                  </a>
-                                ))}
-                              </div>
-                            )}
-                            {news && news.length === 0 && (
-                              <div className="text-[10px] text-[--color-dim] mt-1.5 font-mono">No recent news found</div>
-                            )}
-                          </details>
-                        );
-                      })()}
-
-                      {/* Take Me button — saves a 1-game cow and navigates to rampage */}
-                      {userLocation && event.lat != null && event.lng != null && event.est_time ? (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const id = crypto.randomUUID().slice(0, 8);
-                            const cow = {
-                              id,
-                              createdAt: new Date().toISOString(),
-                              startLocation: { lat: userLocation.lat, lng: userLocation.lng, label: "Current Location" },
-                              endLocation: { lat: userLocation.lat, lng: userLocation.lng, label: "Current Location" },
-                              games: [{
-                                id: event.id,
-                                name: event.name,
-                                venue: event.venue,
-                                city: event.city,
-                                state: event.state,
-                                lat: event.lat!,
-                                lng: event.lng!,
-                                est_date: event.est_date || date,
-                                est_time: event.est_time,
-                                local_time: event.local_time,
-                                tz: event.tz,
-                                date_time_utc: event.date_time_utc,
-                                min_price: event.min_price,
-                                espn_price: event.espn_price,
-                                odds: event.odds,
-                                away_record: event.away_record,
-                                home_record: event.home_record,
-                              }],
-                            };
-                            localStorage.setItem(`balltastic_cow_${id}`, JSON.stringify(cow));
-                            // Persist to DB for shareable links
-                            fetch("/api/cow", {
-                              method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({ id, data: cow }),
-                            }).catch(() => {});
-                            router.push(`/rampage?cow=${id}`);
-                          }}
-                          className="mt-3 flex items-center justify-center gap-2 w-full py-2.5 rounded-lg font-mono text-sm font-semibold tracking-wider bg-[--primary] text-[--primary-foreground] shadow-lg backdrop-blur-md hover:brightness-110 transition-all press-scale"
-                        >
-                          <Navigation className="size-4" /> TAKE ME
-                        </button>
-                      ) : (
-                        <div className="mt-3 flex items-center justify-center gap-2 w-full py-2.5 rounded-lg font-mono text-[11px] text-[--color-dim] bg-white/[0.03] border border-white/5 backdrop-blur-sm">
-                          SET LOCATION TO PLAN ROUTE
-                        </div>
-                      )}
-
-                      {/* Links section */}
-                      <div className="mt-2">
-                        <div className="text-[10px] font-mono tracking-widest text-[--primary]/70 uppercase mb-1">LINKS</div>
-                        <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-mono">
-                          <a href={event.url} target="_blank" rel="noopener noreferrer" className="text-[--primary]/70 hover:text-[--primary] no-underline inline-flex items-center gap-0.5 hover:brightness-110 transition-colors">
-                            TICKETMASTER <ArrowUpRight className="size-2.5" />
-                          </a>
-                          {away && (
-                            <a href={stubhubUrl(home)} target="_blank" rel="noopener noreferrer" className="text-[--primary]/70 hover:text-[--primary] no-underline inline-flex items-center gap-0.5 hover:brightness-110 transition-colors">
-                              STUBHUB <ArrowUpRight className="size-2.5" />
-                            </a>
-                          )}
-                          {event.espn_price?.url && (
-                            <a href={event.espn_price.url} target="_blank" rel="noopener noreferrer" className="text-[--primary]/70 hover:text-[--primary] no-underline inline-flex items-center gap-0.5 hover:brightness-110 transition-colors">
-                              VIVIDSEATS <ArrowUpRight className="size-2.5" />
-                            </a>
-                          )}
-                          {kalshiUrl && (
-                            <a href={kalshiUrl} target="_blank" rel="noopener noreferrer" className="text-[--primary]/70 hover:text-[--primary] no-underline inline-flex items-center gap-0.5 hover:brightness-110 transition-colors">
-                              KALSHI <ArrowUpRight className="size-2.5" />
-                            </a>
-                          )}
-                          <a href={`https://www.espn.com/nba/scoreboard/_/date/${date.replace(/-/g, "")}`} target="_blank" rel="noopener noreferrer" className="text-[--primary]/70 hover:text-[--primary] no-underline inline-flex items-center gap-0.5 hover:brightness-110 transition-colors">
-                            ESPN <ArrowUpRight className="size-2.5" />
-                          </a>
-                          {venuePolicies[event.venue]?.websiteUrl && (
-                            <a href={venuePolicies[event.venue].websiteUrl} target="_blank" rel="noopener noreferrer" className="text-[--primary]/70 hover:text-[--primary] no-underline inline-flex items-center gap-0.5 hover:brightness-110 transition-colors">
-                              VENUE <ArrowUpRight className="size-2.5" />
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                  {/* Card no longer expands inline — popover renders via portal */}
                 </div>
               );
             })}
           </div>
         )}
+
+        {/* Full-page venue popover */}
+        {popoverEventId && (() => {
+          const event = games.find((g) => g.id === popoverEventId);
+          if (!event || !event.lat || !event.lng) return null;
+          const parts = event.name.split(/\s+(?:vs?\.?|VS\.?)\s+/);
+          const home = parts[0].replace(/\s*\(.*?\)/g, "").trim();
+          const away = parts.length > 1 ? parts.slice(1).join(" vs ").replace(/\s*\(.*?\)/g, "").trim() : null;
+          const airports = event.nearbyAirports ?? [];
+          const trains = event.nearbyTrainStations ?? [];
+          const buses = event.nearbyBusStations ?? [];
+          const kalshiUrl = event.odds ? `https://kalshi.com/markets/KXNBAGAME/${event.odds.kalshi_event}` : null;
+          const price = event.espn_price?.amount ?? event.min_price?.amount;
+          const dist = distanceMap[event.id];
+          const userLocal = formatUserLocalTime(event.date_time_utc);
+          const showLocal = userLocal && userLocal.tz !== (event.tz ?? "ET");
+
+          return createPortal(
+            <div
+              className={`fixed inset-0 z-50 transition-opacity duration-300 ${popoverVisible ? "opacity-100" : "opacity-0"}`}
+              onClick={closePopover}
+            >
+              {/* Backdrop */}
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+
+              {/* Panel */}
+              <div
+                className={`absolute bottom-0 left-0 right-0 max-h-[92vh] bg-[--background] rounded-t-2xl shadow-2xl overflow-hidden flex flex-col transition-transform duration-300 ease-out ${popoverVisible ? "translate-y-0" : "translate-y-full"}`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Drag handle + close */}
+                <div className="sticky top-0 z-10 bg-[--background] border-b border-white/5">
+                  <div className="flex justify-center pt-3 pb-1">
+                    <div className="w-10 h-1 rounded-full bg-white/20" />
+                  </div>
+                  <div className="flex items-center justify-between px-5 pb-3">
+                    <div>
+                      {away ? (
+                        <h2 className="text-lg font-bold uppercase tracking-tight text-foreground">
+                          {away} <span className="text-[--primary]/60 font-normal">@</span> {home}
+                        </h2>
+                      ) : (
+                        <h2 className="text-lg font-bold uppercase tracking-tight text-foreground">{event.name}</h2>
+                      )}
+                      <div className="flex items-center gap-3 mt-0.5 text-sm text-[--color-dim] font-mono">
+                        <span>{event.venue}</span>
+                        <span>{event.city}, {event.state}</span>
+                        {dist != null && <span>{Math.round(dist)}mi away</span>}
+                      </div>
+                    </div>
+                    <button onClick={closePopover} className="p-2 rounded-full hover:bg-white/10 transition-colors">
+                      <X className="size-5 text-[--color-dim]" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Scrollable content */}
+                <div className="flex-1 overflow-y-auto no-scrollbar px-5 pb-8">
+                  {/* Hero row: Time + Price + Odds */}
+                  <div className="flex items-start gap-6 py-5 border-b border-white/5">
+                    <div>
+                      <div className="text-[11px] font-mono text-[--color-dim] uppercase tracking-widest mb-1">Tipoff</div>
+                      <div className="text-2xl font-bold font-mono text-foreground">{formatTime(event.local_time ?? event.est_time, event.tz)}</div>
+                      {showLocal && <div className="text-sm font-mono text-[--color-dim]">{userLocal.text} your time</div>}
+                    </div>
+                    {price != null && (
+                      <div>
+                        <div className="text-[11px] font-mono text-[--color-dim] uppercase tracking-widest mb-1">From</div>
+                        <div className={`text-2xl font-bold font-mono ${price < 30 ? "text-emerald-400" : price < 80 ? "text-emerald-300/80" : "text-foreground"}`}>${price}</div>
+                        {event.espn_price?.available != null && event.espn_price.available > 0 && (
+                          <div className={`text-xs font-mono ${event.espn_price.available < 1000 ? "text-[#facc15]" : "text-[--color-dim]"}`}>{event.espn_price.available} left</div>
+                        )}
+                      </div>
+                    )}
+                    {event.odds && (
+                      <div>
+                        <div className="text-[11px] font-mono text-[--color-dim] uppercase tracking-widest mb-1">Odds</div>
+                        <div className="text-sm font-mono text-[--color-dim]">
+                          <span>{away} <span className="text-foreground font-bold">{event.odds.away_win}%</span></span>
+                          <span className="mx-2 text-white/20">|</span>
+                          <span>{home} <span className="text-foreground font-bold">{event.odds.home_win}%</span></span>
+                        </div>
+                      </div>
+                    )}
+                    {event.away_record && event.home_record && (
+                      <div>
+                        <div className="text-[11px] font-mono text-[--color-dim] uppercase tracking-widest mb-1">Record</div>
+                        <div className="text-sm font-mono text-[--color-dim]">
+                          <span>{event.away_record}</span>
+                          <span className="mx-2 text-white/20">vs</span>
+                          <span>{event.home_record}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Section: Weather */}
+                  {(() => {
+                    const weatherKey = `${event.lat},${event.lng},${event.est_date || date}`;
+                    const hours = weather[weatherKey];
+                    const wLoading = weatherLoading.has(weatherKey);
+                    if (!hours && !wLoading) return null;
+                    const relevantHours = hours ?? [];
+                    return (
+                      <div className="py-5 border-b border-white/5">
+                        <h3 className="text-xs font-mono uppercase tracking-widest text-[--color-dim] mb-3 flex items-center gap-2"><Thermometer className="size-4" /> Game Day Weather</h3>
+                        {wLoading && !hours && <div className="flex items-center gap-2 text-sm text-[--color-dim]"><Loader2 className="size-4 animate-spin" /> Loading weather...</div>}
+                        {relevantHours.length > 0 && (
+                          <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
+                            {relevantHours.map((h) => {
+                              const hr = parseInt(h.time.split("T")[1]?.split(":")[0] ?? "0");
+                              const ampm = hr >= 12 ? "PM" : "AM";
+                              const hr12 = hr % 12 || 12;
+                              const tipoffHr = event.date_time_utc ? new Date(event.date_time_utc).getHours() : -1;
+                              const isTipoff = hr === tipoffHr;
+                              return (
+                                <div key={h.time} className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg text-[11px] font-mono shrink-0 min-w-[52px] ${isTipoff ? "bg-[--primary]/15 ring-1 ring-[--primary]/30" : "bg-white/5"}`}>
+                                  <span className={`font-semibold ${isTipoff ? "text-[--primary]" : "text-[--color-dim]"}`}>{hr12}{ampm}</span>
+                                  <WeatherIcon code={h.weatherCode} className="size-4 text-foreground" />
+                                  <span className="text-foreground font-bold">{h.temp}°</span>
+                                  <span className="text-[--color-dim] text-[9px]">FL {h.feelsLike}°</span>
+                                  {h.precipProb > 0 && <span className="text-cyan-400 text-[9px] flex items-center gap-0.5"><Droplets className="size-2" />{h.precipProb}%</span>}
+                                  {h.windSpeed >= 10 && <span className="text-amber-400 text-[9px] flex items-center gap-0.5"><Wind className="size-2" />{h.windSpeed}</span>}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
+                  {/* Section: Getting There */}
+                  {(airports.length > 0 || trains.length > 0 || buses.length > 0) && (
+                    <div className="py-5 border-b border-white/5">
+                      <h3 className="text-xs font-mono uppercase tracking-widest text-[--color-dim] mb-1 flex items-center gap-2"><Map className="size-4" /> Getting There</h3>
+                      <p className="text-[10px] text-[--color-dim]/60 font-mono mb-3">Travel times target arrival 45 min before tipoff</p>
+                      <div className="space-y-1">
+                        {airports.length > 0 && <TransitRows stops={airports} icon={Plane} vLat={event.lat!} vLng={event.lng!} enriched={enriched} enriching={enriching} onEnrich={(stop) => handleEnrich(event.lat!, event.lng!, stop, event.date_time_utc)} onRouteFocus={onRouteFocus} isAnimating={false} venueName={event.venue} colorClass="text-[--color-flight]" tipoffUtc={event.date_time_utc} />}
+                        {trains.length > 0 && <TransitRows stops={trains} icon={TrainFront} vLat={event.lat!} vLng={event.lng!} enriched={enriched} enriching={enriching} onEnrich={(stop) => handleEnrich(event.lat!, event.lng!, stop, event.date_time_utc)} onRouteFocus={onRouteFocus} isAnimating={false} venueName={event.venue} colorClass="text-[--color-train]" tipoffUtc={event.date_time_utc} />}
+                        {buses.length > 0 && <TransitRows stops={buses} icon={BusFront} vLat={event.lat!} vLng={event.lng!} enriched={enriched} enriching={enriching} onEnrich={(stop) => handleEnrich(event.lat!, event.lng!, stop, event.date_time_utc)} onRouteFocus={onRouteFocus} isAnimating={false} venueName={event.venue} colorClass="text-[--color-bus]" tipoffUtc={event.date_time_utc} />}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Section: Airport Status */}
+                  {(() => {
+                    const aptCodes = airports.map((a) => a.code);
+                    const delayKey = aptCodes.sort().join(",");
+                    const delays = airportDelays[delayKey];
+                    const dLoading = delaysLoading.has(delayKey);
+                    if (aptCodes.length === 0 || (!delays && !dLoading)) return null;
+                    return (
+                      <div className="py-5 border-b border-white/5">
+                        <h3 className="text-xs font-mono uppercase tracking-widest text-[--color-dim] mb-3 flex items-center gap-2"><Plane className="size-4" /> Airport Status</h3>
+                        {dLoading && !delays && <div className="flex items-center gap-2 text-sm text-[--color-dim]"><Loader2 className="size-4 animate-spin" /> Checking delays...</div>}
+                        {delays && <div className="space-y-2">{delays.map((d) => {
+                          const hasDelay = (d.departureDel != null && d.departureDel > 0) || (d.arrivalDel != null && d.arrivalDel > 0);
+                          return (<div key={d.code} className="flex items-center gap-3 text-sm font-mono"><span className="font-bold text-[--color-flight]">{d.code}</span>{hasDelay ? (<div className="flex items-center gap-3 flex-wrap">{d.departureDel != null && d.departureDel > 0 && <span className="text-amber-400 flex items-center gap-1"><AlertTriangle className="size-3.5" /> DEP +{d.departureDel}min</span>}{d.arrivalDel != null && d.arrivalDel > 0 && <span className="text-amber-400 flex items-center gap-1"><Clock className="size-3.5" /> ARR +{d.arrivalDel}min</span>}{d.reasons?.map((r, i) => <span key={i} className="text-[--color-dim] text-xs">{r}</span>)}</div>) : <span className="text-emerald-400">No major delays</span>}</div>);
+                        })}</div>}
+                      </div>
+                    );
+                  })()}
+
+                  {/* Section: Last Transit Home */}
+                  {(() => {
+                    if (!event.date_time_utc) return null;
+                    const ltKey = `${event.lat},${event.lng},${event.date_time_utc}`;
+                    const ltData = lastTransit[ltKey];
+                    const ltLoading = lastTransitLoading.has(ltKey);
+                    if (!ltData && !ltLoading) return null;
+                    return (
+                      <div className="py-5 border-b border-white/5">
+                        <h3 className="text-xs font-mono uppercase tracking-widest text-[--color-dim] mb-3 flex items-center gap-2"><Timer className="size-4" /> Last Transit Home</h3>
+                        {ltLoading && !ltData && <div className="flex items-center gap-2 text-sm text-[--color-dim]"><Loader2 className="size-4 animate-spin" /> Checking schedules...</div>}
+                        {ltData && ltData.length > 0 && <div className="space-y-2">{ltData.map((lt) => {
+                          const depTime = lt.lastDeparture ? new Date(lt.lastDeparture) : null;
+                          const depStr = depTime ? depTime.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }) : null;
+                          return (<div key={lt.stopCode} className="flex items-center gap-3 text-sm font-mono"><span className="font-bold text-[--color-train]">{lt.stopCode}</span>{lt.available && depStr ? (<div className="flex items-center gap-3 flex-wrap"><span className={lt.warning ? "text-red-400 font-semibold" : "text-[--color-dim]"}>Last dep {depStr}</span>{lt.durationMinutes && <span className="text-[--color-dim] text-xs">{lt.durationMinutes}min ride</span>}{lt.warning && <span className="text-red-400 text-xs flex items-center gap-1"><AlertTriangle className="size-3" /> May end before game</span>}</div>) : <span className="text-[--color-dim] text-xs">{lt.available ? "Schedule available" : "No late service found"}</span>}</div>);
+                        })}<div className="text-[10px] text-[--color-dim]/60 mt-1">Post-game transit from venue area</div></div>}
+                      </div>
+                    );
+                  })()}
+
+                  {/* Section: Venue Policy */}
+                  {(() => {
+                    const policy = venuePolicies[event.venue];
+                    const loading = policyLoading.has(event.venue);
+                    if (!policy && !loading) return null;
+                    const allowed = policy?.items.filter((i) => i.allowed) ?? [];
+                    const prohibited = policy?.items.filter((i) => !i.allowed) ?? [];
+                    return (
+                      <div className="py-5 border-b border-white/5">
+                        <h3 className="text-xs font-mono uppercase tracking-widest text-[--color-dim] mb-3 flex items-center gap-2"><ShieldCheck className="size-4" /> Venue Policy</h3>
+                        {loading && !policy && <div className="flex items-center gap-2 text-sm text-[--color-dim]"><Loader2 className="size-4 animate-spin" /> Loading policy...</div>}
+                        {policy && (<div>
+                          <div className="text-sm font-mono text-[--color-dim] mb-2">{policy.clearBagRequired && <span className="text-amber-400 font-semibold">Clear bag required</span>}{policy.maxBagSize && <span>{policy.clearBagRequired ? " · " : ""}Max {policy.maxBagSize}</span>}</div>
+                          <div className="grid grid-cols-2 gap-4 text-sm font-mono">
+                            {allowed.length > 0 && <div className="space-y-1">{allowed.map((item) => <div key={item.name} className="flex items-start gap-1.5 text-emerald-400"><Check className="size-4 shrink-0 mt-0.5" /><span>{item.name}</span></div>)}</div>}
+                            {prohibited.length > 0 && <div className="space-y-1">{prohibited.map((item) => <div key={item.name} className="flex items-start gap-1.5 text-red-400"><Ban className="size-4 shrink-0 mt-0.5" /><span>{item.name}</span></div>)}</div>}
+                          </div>
+                          {policy.policyUrl && <a href={policy.policyUrl} target="_blank" rel="noopener noreferrer" className="mt-3 text-xs font-mono text-[--color-dim] hover:text-foreground underline inline-flex items-center gap-1">View full policy <ArrowUpRight className="size-3" /></a>}
+                        </div>)}
+                      </div>
+                    );
+                  })()}
+
+                  {/* Section: Hotels */}
+                  {(() => {
+                    const hotels = nearbyHotels[event.venue];
+                    const loading = hotelsLoading.has(event.venue);
+                    if (!hotels && !loading) return null;
+                    const arriveByEpoch = event.date_time_utc ? Math.floor((new Date(event.date_time_utc).getTime() - 45 * 60 * 1000) / 1000) : undefined;
+                    return (
+                      <div className="py-5 border-b border-white/5">
+                        <h3 className="text-xs font-mono uppercase tracking-widest text-[--color-dim] mb-3 flex items-center gap-2"><Hotel className="size-4" /> Nearby Hotels</h3>
+                        {loading && !hotels && <div className="flex items-center gap-2 text-sm text-[--color-dim]"><Loader2 className="size-4 animate-spin" /> Loading hotels...</div>}
+                        {hotels && hotels.length > 0 && <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{hotels.map((h, hi) => (
+                          <div key={hi} className="rounded-xl bg-white/5 p-3 space-y-2">
+                            <a href={h.bookingUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-foreground hover:text-amber-400 transition-colors no-underline block truncate">{h.name}</a>
+                            <div className="flex items-center gap-3 text-xs font-mono">
+                              {h.rating && <span className="flex items-center gap-0.5 text-amber-400"><Star className="size-3" /> {h.rating}</span>}
+                              <span className="text-emerald-400">{h.estimatedPrice}</span>
+                              <span className="text-[--color-dim] flex items-center gap-0.5"><MapPin className="size-3" /> {h.distanceMiles}mi</span>
+                            </div>
+                            <div className="flex items-center gap-3 text-xs font-mono text-[--color-dim] flex-wrap">
+                              <a href={gmapsUrl(h.lat, h.lng, event.lat!, event.lng!, "driving", arriveByEpoch)} target="_blank" rel="noopener noreferrer" className="hover:text-foreground no-underline flex items-center gap-1"><Car className="size-3" />{h.driveMinutes}min</a>
+                              {h.transitMinutes != null && <a href={gmapsUrl(h.lat, h.lng, event.lat!, event.lng!, "transit", arriveByEpoch)} target="_blank" rel="noopener noreferrer" className="hover:text-foreground no-underline flex items-center gap-1"><Bus className="size-3" />{h.transitMinutes}min{h.transitFare && <span className="text-emerald-400 ml-0.5">{h.transitFare}</span>}</a>}
+                              <span className="flex items-center gap-1"><Footprints className="size-3" />{h.walkMinutes}min</span>
+                              <span>UBER <span className="text-emerald-400">{h.uberEstimate}</span></span>
+                              <span>LYFT <span className="text-emerald-400">{h.lyftEstimate}</span></span>
+                            </div>
+                          </div>
+                        ))}</div>}
+                      </div>
+                    );
+                  })()}
+
+                  {/* Section: Parking */}
+                  {(() => {
+                    const parkKey = `${event.lat},${event.lng}`;
+                    const spots = nearbyParking[parkKey];
+                    const pLoading = parkingLoading.has(parkKey);
+                    if (!spots && !pLoading) return null;
+                    return (
+                      <div className="py-5 border-b border-white/5">
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="text-xs font-mono uppercase tracking-widest text-[--color-dim] flex items-center gap-2"><ParkingSquare className="size-4" /> Parking</h3>
+                          {spots && spots.length > 0 && <a href={spots[0].spotHeroUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] font-mono text-cyan-400 hover:text-cyan-300 no-underline flex items-center gap-1">Reserve on SpotHero <ExternalLink className="size-3" /></a>}
+                        </div>
+                        {pLoading && !spots && <div className="flex items-center gap-2 text-sm text-[--color-dim]"><Loader2 className="size-4 animate-spin" /> Finding parking...</div>}
+                        {spots && spots.length > 0 && <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">{spots.map((p, i) => (
+                          <a key={i} href={p.directionsUrl} target="_blank" rel="noopener noreferrer" className="rounded-lg bg-white/5 hover:bg-white/10 transition-colors p-2.5 no-underline block">
+                            <div className="text-xs font-mono text-foreground font-semibold truncate">{p.name}</div>
+                            <div className="flex items-center gap-2 text-[10px] text-[--color-dim] mt-1 font-mono">
+                              <span className="flex items-center gap-0.5"><MapPin className="size-2.5 text-amber-400/60" />{p.distanceMiles}mi</span>
+                              <span><Footprints className="size-2.5 inline" /> {p.walkMinutes}min</span>
+                              {p.rating && <span className="text-amber-400"><Star className="size-2.5 inline" /> {p.rating}</span>}
+                              {p.openNow != null && <span className={p.openNow ? "text-emerald-400" : "text-red-400"}>{p.openNow ? "Open" : "Closed"}</span>}
+                            </div>
+                          </a>
+                        ))}</div>}
+                        {spots && spots.length === 0 && <div className="text-sm text-[--color-dim] font-mono">No parking found nearby</div>}
+                      </div>
+                    );
+                  })()}
+
+                  {/* Section: Local News */}
+                  {(() => {
+                    const newsKey = `${event.city},${event.state}`;
+                    const news = localNews[newsKey];
+                    const nLoading = newsLoading.has(newsKey);
+                    if (!news && !nLoading) return null;
+                    return (
+                      <div className="py-5 border-b border-white/5">
+                        <h3 className="text-xs font-mono uppercase tracking-widest text-[--color-dim] mb-3 flex items-center gap-2"><Newspaper className="size-4" /> Local News</h3>
+                        {nLoading && !news && <div className="flex items-center gap-2 text-sm text-[--color-dim]"><Loader2 className="size-4 animate-spin" /> Loading news...</div>}
+                        {news && news.length > 0 && <div className="space-y-2">{news.map((n, i) => (
+                          <a key={i} href={n.link} target="_blank" rel="noopener noreferrer" className="block rounded-lg hover:bg-white/5 px-3 py-2 no-underline transition-colors">
+                            <div className="text-sm text-foreground leading-snug">{n.title}</div>
+                            <div className="flex items-center gap-3 mt-1 text-[10px] text-[--color-dim] font-mono">
+                              <span>{n.source}</span>
+                              {n.published && <span>{new Date(n.published).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>}
+                              <ExternalLink className="size-2.5 ml-auto" />
+                            </div>
+                          </a>
+                        ))}</div>}
+                        {news && news.length === 0 && <div className="text-sm text-[--color-dim] font-mono">No recent news found</div>}
+                      </div>
+                    );
+                  })()}
+
+                  {/* Section: Links */}
+                  <div className="py-5 border-b border-white/5">
+                    <h3 className="text-xs font-mono uppercase tracking-widest text-[--color-dim] mb-3 flex items-center gap-2"><Ticket className="size-4" /> Tickets & Links</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { label: "Ticketmaster", href: event.url },
+                        away ? { label: "StubHub", href: stubhubUrl(home) } : null,
+                        event.espn_price?.url ? { label: "VividSeats", href: event.espn_price.url } : null,
+                        kalshiUrl ? { label: "Kalshi", href: kalshiUrl } : null,
+                        { label: "ESPN", href: `https://www.espn.com/nba/scoreboard/_/date/${date.replace(/-/g, "")}` },
+                        venuePolicies[event.venue]?.websiteUrl ? { label: "Venue", href: venuePolicies[event.venue].websiteUrl } : null,
+                      ].filter(Boolean).map((link) => (
+                        <a key={link!.label} href={link!.href} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 text-xs font-mono text-[--color-dim] hover:text-foreground no-underline transition-colors inline-flex items-center gap-1">
+                          {link!.label} <ArrowUpRight className="size-3" />
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Take Me CTA */}
+                  <div className="py-6">
+                    {userLocation && event.est_time ? (
+                      <button
+                        onClick={() => {
+                          const id = crypto.randomUUID().slice(0, 8);
+                          const cow = {
+                            id, createdAt: new Date().toISOString(),
+                            startLocation: { lat: userLocation.lat, lng: userLocation.lng, label: "Current Location" },
+                            endLocation: { lat: userLocation.lat, lng: userLocation.lng, label: "Current Location" },
+                            games: [{ id: event.id, name: event.name, venue: event.venue, city: event.city, state: event.state, lat: event.lat!, lng: event.lng!, est_date: event.est_date || date, est_time: event.est_time, local_time: event.local_time, tz: event.tz, date_time_utc: event.date_time_utc, min_price: event.min_price, espn_price: event.espn_price, odds: event.odds, away_record: event.away_record, home_record: event.home_record }],
+                          };
+                          localStorage.setItem(`balltastic_cow_${id}`, JSON.stringify(cow));
+                          fetch("/api/cow", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, data: cow }) }).catch(() => {});
+                          router.push(`/rampage?cow=${id}`);
+                        }}
+                        className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl font-mono text-base font-semibold tracking-wider bg-[--primary] text-[--primary-foreground] shadow-lg hover:brightness-110 transition-all press-scale"
+                      >
+                        <Navigation className="size-5" /> TAKE ME
+                      </button>
+                    ) : (
+                      <div className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl font-mono text-sm text-[--color-dim] bg-white/[0.03] border border-white/5">
+                        SET LOCATION TO PLAN ROUTE
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>,
+            document.body
+          );
+        })()}
       </div>
     </div>
   );
