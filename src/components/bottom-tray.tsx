@@ -736,10 +736,10 @@ export function BottomTray({
                   onMouseLeave={() => onVenueHover?.(null)}
                   className={`rounded-lg card-enter transition-all cursor-pointer ${
                     isRampageSelected
-                      ? "border-l-2 border-[--color-rampage] bg-[--color-rampage]/8 panel-elevated shadow-lg shadow-[--color-rampage]/5"
+                      ? "border-l-2 border-[--color-rampage] bg-[--color-rampage]/8 shadow-lg shadow-[--color-rampage]/5"
                       : isSelected || isHovered
-                        ? "panel shadow-lg"
-                        : "panel hover:bg-white/[0.04]"
+                        ? "shadow-lg"
+                        : "hover:bg-white/[0.04]"
                   }`}
                   style={isHovered && !isSelected && !isRampageSelected ? { borderColor: "white" } : undefined}
                   onClick={() => {
@@ -776,7 +776,7 @@ export function BottomTray({
                     if (event.lat != null && event.lng != null) {
                       const vLat = event.lat!;
                       const vLng = event.lng!;
-                      for (const s of airports) {
+                      for (const s of [...airports, ...trains, ...buses]) {
                         handleEnrich(vLat, vLng, s);
                       }
                       handlePolicyLoad(event.venue);
