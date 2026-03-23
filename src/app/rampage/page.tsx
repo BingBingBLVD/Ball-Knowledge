@@ -17,6 +17,8 @@ import {
   Share2,
   Ticket,
   AlertTriangle,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import Link from "next/link";
 import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
@@ -564,19 +566,23 @@ function RampageContent() {
 /** Render a single itinerary's legs vertically inside a card */
 function ItinLegs({ itin }: { itin: Itinerary }) {
   return (
-    <div className="flex flex-col gap-0.5 mt-1">
+    <div className="flex flex-col gap-0.5 mt-1 min-w-0">
       {itin.legs.map((l, li) => (
-        <div key={li} className="py-1 px-1.5">
-          <a href={l.bookingUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-xs hover:bg-neutral-100 rounded-lg transition-colors no-underline">
+        <div key={li} className="py-1 px-1.5 min-w-0">
+          <a href={l.bookingUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs hover:bg-neutral-100 rounded-lg transition-colors no-underline min-w-0">
             <span className={`shrink-0 ${modeColor(l.mode)}`}>{modeIcon(l.mode)}</span>
-            <span className="text-neutral-500 shrink-0">{modeLabel(l.mode)}</span>
+            <span className="text-neutral-500 truncate min-w-0">
+              {l.carrier && l.routeName && l.mode !== "drive" && l.mode !== "rideshare"
+                ? <><span className="text-foreground font-medium">{l.carrier}</span> <span className="text-neutral-400">{l.routeName}</span></>
+                : modeLabel(l.mode)}
+            </span>
             <span className="text-foreground font-semibold shrink-0">{formatDuration(l.minutes)}</span>
             {l.miles > 0 && <span className="text-neutral-400 shrink-0">{l.miles}mi</span>}
             {l.cost != null && <span className="text-[--color-price] font-semibold shrink-0">${l.cost}</span>}
             <ArrowUpRight className="size-3 text-neutral-400 shrink-0 ml-auto" />
           </a>
-          <div className="text-[9px] text-neutral-400 ml-6 leading-tight">
-            {l.mode === "drive" || l.mode === "rideshare" ? `Drive to ${l.to}` : `${modeLabel(l.mode)} from ${l.from} to ${l.to}`}
+          <div className="text-[9px] text-neutral-400 ml-6 leading-tight truncate">
+            {l.mode === "drive" || l.mode === "rideshare" ? `Drive to ${l.to}` : `${l.from} → ${l.to}`}
           </div>
           {(l.mode === "drive" || l.mode === "rideshare") && (
             <div className="flex items-center gap-2 ml-6 mt-0.5 text-[10px]">
@@ -604,41 +610,99 @@ function itinLabel(itin: Itinerary): { icon: React.ReactNode; label: string; col
   return { icon: <Car className="size-4" />, label: "Drive", color: "text-[--color-drive]" };
 }
 
-/** Travel leg — horizontally scrollable option cards */
-function TravelLegCard({ leg, cheapest }: { leg: RampageLeg; cheapest: Itinerary | null }) {
-  if (!cheapest) return null;
-  const t = leg.transitOption;
+/** Stacked card — shows multiple itineraries of the same mode with vertical swipe to cycle */
+function StackedItinCard({ itineraries }: { itineraries: Itinerary[] }) {
+  const [idx, setIdx] = useState(0);
+  const touchStartY = useRef(0);
+  const touchStartX = useRef(0);
+  const count = itineraries.length;
+  const itin = itineraries[idx];
+  const { icon, label, color } = itinLabel(itin);
 
-  // Deduplicate: pick best itinerary per primary mode (drive, flight, bus, train)
-  const seen = new Set<string>();
-  const uniqueItins: Itinerary[] = [];
-  for (const itin of leg.itineraries) {
-    const { label } = itinLabel(itin);
-    if (!seen.has(label)) {
-      seen.add(label);
-      uniqueItins.push(itin);
-    }
+  function handleTouchStart(e: React.TouchEvent) {
+    touchStartY.current = e.touches[0].clientY;
+    touchStartX.current = e.touches[0].clientX;
+  }
+  function handleTouchEnd(e: React.TouchEvent) {
+    const dy = e.changedTouches[0].clientY - touchStartY.current;
+    const dx = Math.abs(e.changedTouches[0].clientX - touchStartX.current);
+    // Only trigger vertical swipe if vertical distance > horizontal (avoid blocking horizontal scroll)
+    if (Math.abs(dy) < 30 || dx > Math.abs(dy)) return;
+    if (dy < 0 && idx < count - 1) setIdx(idx + 1);
+    if (dy > 0 && idx > 0) setIdx(idx - 1);
   }
 
-  const cards: React.ReactNode[] = [];
+  return (
+    <div
+      className="shrink-0 w-[260px] snap-start relative"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Stack shadow cards behind */}
+      {count > 1 && idx < count - 1 && (
+        <>
+          <div className="absolute inset-x-[6px] top-[6px] bottom-[-6px] rounded-2xl bg-neutral-100/80" />
+          {idx < count - 2 && (
+            <div className="absolute inset-x-[12px] top-[12px] bottom-[-12px] rounded-2xl bg-neutral-100/40" />
+          )}
+        </>
+      )}
 
-  // One card per unique itinerary type
-  for (const itin of uniqueItins) {
-    const { icon, label, color } = itinLabel(itin);
-    cards.push(
-      <div key={itin.id} className="shrink-0 w-[260px] rounded-2xl bg-neutral-50 px-4 py-3.5 snap-start">
+      {/* Active card */}
+      <div className="relative rounded-2xl bg-neutral-50 px-4 py-3.5">
         <div className="flex items-center gap-2">
           <span className={color}>{icon}</span>
           <span className="text-xs font-semibold text-foreground">{label}</span>
+          {count > 1 && (
+            <span className="flex items-center gap-0.5 text-[10px] text-neutral-400 ml-1">
+              <button
+                onClick={() => setIdx(Math.max(0, idx - 1))}
+                disabled={idx === 0}
+                className="p-0 disabled:opacity-20"
+              >
+                <ChevronUp className="size-3" />
+              </button>
+              <span className="tabular-nums">{idx + 1}/{count}</span>
+              <button
+                onClick={() => setIdx(Math.min(count - 1, idx + 1))}
+                disabled={idx === count - 1}
+                className="p-0 disabled:opacity-20"
+              >
+                <ChevronDown className="size-3" />
+              </button>
+            </span>
+          )}
           <span className="text-xs text-neutral-400 ml-auto">{formatDuration(itin.totalMinutes)}</span>
         </div>
         <ItinLegs itin={itin} />
       </div>
-    );
+    </div>
+  );
+}
+
+/** Travel leg — horizontally scrollable option cards, stacked when multiple of same mode */
+function TravelLegCard({ leg, cheapest }: { leg: RampageLeg; cheapest: Itinerary | null }) {
+  if (!cheapest) return null;
+  const t = leg.transitOption;
+
+  // Group itineraries by primary mode
+  const groups = new Map<string, Itinerary[]>();
+  for (const itin of leg.itineraries) {
+    const { label } = itinLabel(itin);
+    if (!groups.has(label)) groups.set(label, []);
+    groups.get(label)!.push(itin);
+  }
+
+  const cards: React.ReactNode[] = [];
+  const seenModes = new Set<string>();
+
+  for (const [label, itins] of groups) {
+    seenModes.add(label);
+    cards.push(<StackedItinCard key={label} itineraries={itins} />);
   }
 
   // Google Flights fallback if no flight itinerary
-  if (!seen.has("Fly")) {
+  if (!seenModes.has("Fly")) {
     const flightsUrl = leg.googleFlightsUrl ?? `https://www.google.com/travel/flights?q=Flights+from+${leg.from.lat},${leg.from.lng}+to+${leg.to.lat},${leg.to.lng}+on+${leg.date}`;
     cards.push(
       <a key="fly-link" href={flightsUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 w-[260px] rounded-2xl bg-neutral-50 px-4 py-3.5 snap-start no-underline hover:bg-neutral-100 transition-colors">
@@ -681,7 +745,7 @@ function TravelLegCard({ leg, cheapest }: { leg: RampageLeg; cheapest: Itinerary
         <ArrowRight className="size-3 text-[--color-rampage]" />
         <span className="font-semibold text-foreground">{leg.to.name}</span>
       </div>
-      <div className="flex gap-3 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-1">
+      <div className="flex gap-3 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-3">
         {cards}
       </div>
     </div>

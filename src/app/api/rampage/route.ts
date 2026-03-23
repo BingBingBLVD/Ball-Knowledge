@@ -167,8 +167,8 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { startLocation, endLocation, games } = body as {
-      startLocation: { lat: number; lng: number };
-      endLocation: { lat: number; lng: number };
+      startLocation: { lat: number; lng: number; label?: string };
+      endLocation: { lat: number; lng: number; label?: string };
       games: RampageGame[];
     };
 
@@ -184,7 +184,7 @@ export async function POST(req: NextRequest) {
 
     // Start → first game
     legParams.push({
-      from: { name: "Start", lat: startLocation.lat, lng: startLocation.lng },
+      from: { name: startLocation.label || "Start", lat: startLocation.lat, lng: startLocation.lng },
       to: { name: sorted[0].venue, lat: sorted[0].lat, lng: sorted[0].lng },
       date: sorted[0].date,
       time: sorted[0].time || "19:00",
@@ -209,7 +209,7 @@ export async function POST(req: NextRequest) {
     const returnDate = dayAfterLast.toISOString().split("T")[0];
     legParams.push({
       from: { name: lastGame.venue, lat: lastGame.lat, lng: lastGame.lng },
-      to: { name: "End", lat: endLocation.lat, lng: endLocation.lng },
+      to: { name: endLocation.label || "End", lat: endLocation.lat, lng: endLocation.lng },
       date: returnDate,
       time: "18:00",
     });

@@ -10,6 +10,7 @@
 export interface FlightResult {
   ident: string; // e.g. "UA123"
   airline: string; // e.g. "UA"
+  airlineName: string; // e.g. "United Airlines"
   flightNumber: string; // e.g. "123"
   originCode: string; // IATA e.g. "JFK"
   destCode: string; // IATA e.g. "LAX"
@@ -123,13 +124,16 @@ export async function fetchFlights(
       const ident =
         ((flight.identification as Record<string, unknown>)
           ?.number as Record<string, string>)?.default ?? "";
+      const airlineObj = flight.airline as Record<string, unknown> | undefined;
       const airline =
-        ((flight.airline as Record<string, unknown>)
-          ?.code as Record<string, string>)?.iata ?? "";
+        (airlineObj?.code as Record<string, string>)?.iata ?? "";
+      const airlineName =
+        (airlineObj?.name as string) ?? "";
 
       flights.push({
         ident,
         airline,
+        airlineName,
         flightNumber: ident.replace(airline, ""),
         originCode: originIata,
         destCode: destIata,

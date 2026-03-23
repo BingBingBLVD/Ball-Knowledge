@@ -551,7 +551,7 @@ export async function searchRoutes(
       const googleFlightSearch = `https://www.google.com/travel/flights?q=Flights+to+${destApt.code}+from+${origApt.code}+on+${gameDate}`;
       legs.push({
         mode: "flight",
-        carrier: flight.airline,
+        carrier: flight.airlineName || flight.airline,
         routeName: flight.ident,
         from: `${origApt.name} (${origApt.code})`,
         fromLat: origApt.lat,
