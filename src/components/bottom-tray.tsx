@@ -45,6 +45,8 @@ import {
   Timer,
   X,
   Ticket,
+  UtensilsCrossed,
+  Beer,
 } from "lucide-react";
 import type { VenuePolicy } from "@/lib/venue-policies";
 import { SearchBar } from "./search-bar";
@@ -778,6 +780,31 @@ export function BottomTray({
     }
   }, [nearbyParking, parkingLoading]);
 
+  // Nearby restaurants state
+  interface RestaurantSpot { name: string; vicinity: string; lat: number; lng: number; distanceMiles: number; walkMinutes: number; rating: number | null; totalRatings: number; priceLevel: string | null; photoUrl: string | null; yelpUrl: string; directionsUrl: string; category: "pregame" | "postgame" }
+  const [nearbyRestaurants, setNearbyRestaurants] = useState<Record<string, RestaurantSpot[]>>({});
+  const [restaurantsLoading, setRestaurantsLoading] = useState<Set<string>>(new Set());
+  const restaurantsFailed = useRef<Set<string>>(new Set());
+
+  const handleRestaurantsLoad = useCallback(async (venueName: string, venueLat: number, venueLng: number) => {
+    const key = `${venueLat},${venueLng}`;
+    if (nearbyRestaurants[key] || restaurantsLoading.has(key) || restaurantsFailed.current.has(key)) return;
+    setRestaurantsLoading((prev) => new Set(prev).add(key));
+    try {
+      const res = await fetch(`/api/nearby-restaurants?venueLat=${venueLat}&venueLng=${venueLng}&venueName=${encodeURIComponent(venueName)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setNearbyRestaurants((prev) => ({ ...prev, [key]: data.restaurants }));
+      } else {
+        restaurantsFailed.current.add(key);
+      }
+    } catch {
+      restaurantsFailed.current.add(key);
+    } finally {
+      setRestaurantsLoading((prev) => { const next = new Set(prev); next.delete(key); return next; });
+    }
+  }, [nearbyRestaurants, restaurantsLoading]);
+
   // Last transit home state
   interface LastTransitInfo { stopCode: string; stopName: string; stopLat: number; stopLng: number; lastDeparture: string | null; lastArrival: string | null; durationMinutes: number | null; available: boolean; warning: boolean }
   const [lastTransit, setLastTransit] = useState<Record<string, LastTransitInfo[]>>({});
@@ -855,7 +882,7 @@ export function BottomTray({
       className="fixed bottom-0 left-0 right-0 z-10 tray-transition pointer-events-auto"
       style={{ height }}
     >
-      <div className="h-full panel rounded-t-lg flex flex-col">
+      <div className="h-full bg-white rounded-t-2xl border-t border-x border-neutral-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] flex flex-col">
         {/* Header bar */}
         <div className="flex items-center select-none border-b border-black/5">
           {/* Search */}
@@ -880,7 +907,7 @@ export function BottomTray({
                 onClick={(e) => { e.stopPropagation(); setShowFilters(false); }}
               >
                 <div
-                  className="w-64 rounded-xl border border-black/8 panel-elevated shadow-2xl py-2"
+                  className="w-64 rounded-xl bg-white border border-neutral-200 shadow-xl py-2"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className="px-4 py-2 text-xs tracking-widest text-foreground uppercase border-b border-black/5 font-semibold">
@@ -890,7 +917,7 @@ export function BottomTray({
                     <button
                       key={col.id}
                       onClick={() => toggleColumn(col.id)}
-                      className="flex items-center gap-3 w-full px-4 py-2.5 text-sm hover:bg-black/5 transition-all"
+                      className="flex items-center gap-3 w-full px-4 py-2.5 text-sm hover:bg-neutral-50 transition-all"
                     >
                       <span className={`size-5 rounded-md border-2 flex items-center justify-center transition-all ${
                         visibleColumns.has(col.id)
@@ -921,7 +948,7 @@ export function BottomTray({
           {/* Expand/collapse */}
           <button
             onClick={cycleTray}
-            className="shrink-0 px-2 py-2.5 hover:bg-black/5 transition-colors border-l border-black/5"
+            className="shrink-0 px-2 py-2.5 hover:bg-neutral-50 transition-colors border-l border-black/5"
           >
             <ChevronUp className={`size-4 text-[--color-dim] transition-transform ${trayState === "expanded" ? "rotate-180" : ""}`} />
           </button>
@@ -1014,7 +1041,7 @@ export function BottomTray({
                       ? "border-l-2 border-[--color-rampage] bg-[--color-rampage]/8 shadow-lg shadow-[--color-rampage]/5"
                       : isSelected || isHovered
                         ? "shadow-lg"
-                        : "hover:bg-black/[0.03]"
+                        : "hover:bg-neutral-50"
                   }`}
                   style={isHovered && !isSelected && !isRampageSelected ? { borderColor: "white" } : undefined}
                   onClick={() => {
@@ -1064,6 +1091,7 @@ export function BottomTray({
                       handleNewsLoad(event.city, event.state, event.venue);
                       handlePhotosLoad(event.venue, vLat, vLng);
                       handleParkingLoad(event.venue, vLat, vLng, event.est_date || date);
+                      handleRestaurantsLoad(event.venue, vLat, vLng);
                       if (event.date_time_utc) {
                         const transitStops = [
                           ...(event.nearbyTrainStations ?? []).map((s) => ({ code: s.code, name: s.name, lat: s.lat, lng: s.lng })),
@@ -1610,6 +1638,87 @@ export function BottomTray({
                                 </a>
                               ))}
                             </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+
+                    {/* Good Eats */}
+                    {(() => {
+                      const eatKey = `${event.lat},${event.lng}`;
+                      const spots = nearbyRestaurants[eatKey];
+                      const rLoading = restaurantsLoading.has(eatKey);
+                      if (!spots && !rLoading) return null;
+                      const pregame = spots?.filter((r) => r.category === "pregame") ?? [];
+                      const postgame = spots?.filter((r) => r.category === "postgame") ?? [];
+                      const yelpUrl = `https://www.yelp.com/search?find_desc=restaurants&find_loc=${encodeURIComponent(event.venue + " " + event.city + " " + event.state)}`;
+                      return (
+                        <div className="py-8 border-b border-neutral-200">
+                          <div className="flex items-center justify-between mb-1">
+                            <h2 className="text-[22px] font-semibold text-neutral-900">Good Eats</h2>
+                            <a href={yelpUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-neutral-900 underline hover:text-neutral-600">More on Yelp</a>
+                          </div>
+                          <p className="text-sm text-neutral-500 mb-4">Top-rated spots near the arena</p>
+                          {rLoading && !spots && <div className="flex items-center gap-2 text-sm text-neutral-500"><Loader2 className="size-4 animate-spin" /> Finding restaurants...</div>}
+
+                          {pregame.length > 0 && (
+                            <>
+                              <div className="flex items-center gap-1.5 mb-3">
+                                <Beer className="size-4 text-neutral-700" />
+                                <h3 className="text-base font-semibold text-neutral-800">Pregame</h3>
+                              </div>
+                              <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-6 px-6 pb-2">
+                                {pregame.map((r, i) => (
+                                  <a key={i} href={r.directionsUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 w-[200px] rounded-xl overflow-hidden hover:shadow-lg transition-shadow no-underline block group">
+                                    <div className="h-[120px] bg-neutral-100 overflow-hidden">
+                                      {r.photoUrl ? (
+                                        <img src={r.photoUrl} alt={r.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                                      ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-neutral-400"><Beer className="size-8" /></div>
+                                      )}
+                                    </div>
+                                    <div className="p-3">
+                                      <div className="text-sm font-semibold text-neutral-900 truncate">{r.name}</div>
+                                      <div className="flex items-center gap-2 mt-1 text-xs text-neutral-500">
+                                        <span className="flex items-center gap-0.5"><Footprints className="size-3" /> {r.walkMinutes}m walk</span>
+                                        {r.rating && <span className="flex items-center gap-0.5"><Star className="size-3 text-neutral-900" /> {r.rating}</span>}
+                                      </div>
+                                      {r.priceLevel && <div className="text-xs text-neutral-500 mt-1">{r.priceLevel}</div>}
+                                    </div>
+                                  </a>
+                                ))}
+                              </div>
+                            </>
+                          )}
+
+                          {postgame.length > 0 && (
+                            <>
+                              <div className={`flex items-center gap-1.5 mb-3 ${pregame.length > 0 ? "mt-6" : ""}`}>
+                                <UtensilsCrossed className="size-4 text-neutral-700" />
+                                <h3 className="text-base font-semibold text-neutral-800">Postgame</h3>
+                              </div>
+                              <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-6 px-6 pb-2">
+                                {postgame.map((r, i) => (
+                                  <a key={i} href={r.directionsUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 w-[200px] rounded-xl overflow-hidden hover:shadow-lg transition-shadow no-underline block group">
+                                    <div className="h-[120px] bg-neutral-100 overflow-hidden">
+                                      {r.photoUrl ? (
+                                        <img src={r.photoUrl} alt={r.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                                      ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-neutral-400"><UtensilsCrossed className="size-8" /></div>
+                                      )}
+                                    </div>
+                                    <div className="p-3">
+                                      <div className="text-sm font-semibold text-neutral-900 truncate">{r.name}</div>
+                                      <div className="flex items-center gap-2 mt-1 text-xs text-neutral-500">
+                                        <span className="flex items-center gap-0.5"><Footprints className="size-3" /> {r.walkMinutes}m walk</span>
+                                        {r.rating && <span className="flex items-center gap-0.5"><Star className="size-3 text-neutral-900" /> {r.rating}</span>}
+                                      </div>
+                                      {r.priceLevel && <div className="text-xs text-neutral-500 mt-1">{r.priceLevel}</div>}
+                                    </div>
+                                  </a>
+                                ))}
+                              </div>
+                            </>
                           )}
                         </div>
                       );

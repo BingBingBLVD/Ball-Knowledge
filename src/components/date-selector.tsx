@@ -124,12 +124,12 @@ export function DateSelector({
               if (hasPrev) onDateChange(availableDates[idx - 1]);
             }}
             disabled={!hasPrev}
-            className="p-1 rounded hover:bg-white/5 disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
+            className="p-1 rounded hover:bg-neutral-100 disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronLeft className="size-4 text-[--color-dim]" />
           </button>
           {prevDate && (
-            <span className="text-[9px] font-mono text-green-400/70 leading-none -mt-0.5">
+            <span className="text-[9px] font-mono text-emerald-600 leading-none -mt-0.5">
               {gameCountByDate[prevDate] ?? 0}
             </span>
           )}
@@ -138,7 +138,7 @@ export function DateSelector({
         {/* Center date — clickable */}
         <button
           onClick={() => setOpen((o) => !o)}
-          className="text-center min-w-[120px] px-1 rounded hover:bg-white/5 transition-colors py-0.5"
+          className="text-center min-w-[120px] px-1 rounded hover:bg-neutral-100 transition-colors py-0.5"
         >
           <div className="text-sm font-mono font-medium leading-tight text-foreground tracking-wide">
             {formatDateMono(currentDate)}
@@ -155,12 +155,12 @@ export function DateSelector({
               if (hasNext) onDateChange(availableDates[idx + 1]);
             }}
             disabled={!hasNext}
-            className="p-1 rounded hover:bg-white/5 disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
+            className="p-1 rounded hover:bg-neutral-100 disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronRight className="size-4 text-[--color-dim]" />
           </button>
           {nextDate && (
-            <span className="text-[9px] font-mono text-green-400/70 leading-none -mt-0.5">
+            <span className="text-[9px] font-mono text-emerald-600 leading-none -mt-0.5">
               {gameCountByDate[nextDate] ?? 0}
             </span>
           )}
@@ -174,12 +174,12 @@ export function DateSelector({
           onClick={() => setOpen(false)}
         >
           <div
-            className="panel-elevated rounded-xl p-4 shadow-2xl min-w-[300px]"
+            className="bg-white rounded-xl border border-neutral-200 p-4 shadow-xl min-w-[300px]"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Month nav */}
             <div className="flex items-center justify-between mb-3">
-              <button onClick={prevMonth} className="p-1.5 rounded-md hover:bg-white/[0.06] transition-all">
+              <button onClick={prevMonth} className="p-1.5 rounded-md hover:bg-neutral-100 transition-all">
                 <ChevronLeft className="size-4 text-[--color-dim]" />
               </button>
               <div className="flex items-center gap-2">
@@ -202,7 +202,7 @@ export function DateSelector({
                           ? "bg-[--primary]/20 text-[--primary] cursor-default"
                           : todayAvailable
                             ? "bg-[--primary] text-[--primary-foreground] hover:brightness-110 cursor-pointer"
-                            : "bg-white/[0.04] text-[--color-dim]/50 cursor-not-allowed"
+                            : "bg-neutral-100 text-[--color-dim]/50 cursor-not-allowed"
                       }`}
                     >
                       TDY
@@ -210,7 +210,7 @@ export function DateSelector({
                   );
                 })()}
               </div>
-              <button onClick={nextMonth} className="p-1.5 rounded-md hover:bg-white/[0.06] transition-all">
+              <button onClick={nextMonth} className="p-1.5 rounded-md hover:bg-neutral-100 transition-all">
                 <ChevronRight className="size-4 text-[--color-dim]" />
               </button>
             </div>
@@ -250,7 +250,7 @@ export function DateSelector({
                       isSelected
                         ? "bg-[--primary] text-[--primary-foreground] font-bold shadow-md shadow-[--primary]/25"
                         : hasGames
-                          ? "text-foreground font-medium hover:bg-white/[0.06] cursor-pointer"
+                          ? "text-foreground font-medium hover:bg-neutral-100 cursor-pointer"
                           : "text-[--color-dim]/40 cursor-default"
                     } ${isToday && !isSelected ? "ring-1 ring-[--primary]/50" : ""} ${hasRampageGame && !isSelected ? "ring-1 ring-[--color-rampage]" : ""}`}
                   >
@@ -260,7 +260,7 @@ export function DateSelector({
                         ●
                       </span>
                     ) : hasGames && count > 0 ? (
-                      <span className={`text-[8px] leading-none mt-0.5 ${isSelected ? "text-[--primary-foreground]/70" : "text-green-400"}`}>
+                      <span className={`text-[8px] leading-none mt-0.5 ${isSelected ? "text-[--primary-foreground]/70" : "text-emerald-600"}`}>
                         {count}
                       </span>
                     ) : null}

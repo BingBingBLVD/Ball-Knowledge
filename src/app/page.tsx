@@ -322,22 +322,22 @@ function HomeInner() {
         />
       )}
 
-      {/* Loading overlay — dark */}
+      {/* Loading overlay */}
       {loading && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0a0a0f]/90">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-3">
-            <div className="w-8 h-8 border-2 border-[--primary]/30 border-t-[--primary] rounded-full animate-spin" />
+            <div className="w-8 h-8 border-2 border-neutral-200 border-t-neutral-900 rounded-full animate-spin" />
           </div>
         </div>
       )}
 
-      {/* Error overlay — dark */}
+      {/* Error overlay */}
       {error && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0a0a0f]/90">
-          <div className="panel rounded-lg p-6 max-w-md text-center">
-            <p className="font-mono font-semibold text-[--color-danger] mb-2 tracking-widest">ERROR</p>
-            <p className="text-sm text-[--color-dim]">{error}</p>
-            <p className="text-xs text-[--color-dim]/60 mt-3 font-mono">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl border border-neutral-200 shadow-lg p-8 max-w-md text-center">
+            <p className="font-semibold text-red-600 mb-2">Something went wrong</p>
+            <p className="text-sm text-neutral-600">{error}</p>
+            <p className="text-xs text-neutral-400 mt-3">
               Check that TICKETMASTER_API_KEY is set in .env.local
             </p>
           </div>

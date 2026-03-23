@@ -155,8 +155,8 @@ export function SearchBar({
       </div>
 
       {suggestions.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-1 panel-elevated rounded-lg py-1 z-50 shadow-2xl">
-          <div className="px-3 py-1 text-[10px] font-mono text-[--color-dim] tracking-widest uppercase">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl border border-neutral-200 py-1 z-50 shadow-xl">
+          <div className="px-3 py-1 text-[10px] font-semibold text-neutral-500 tracking-widest uppercase">
             Set Location
           </div>
           {suggestions.map((s, i) => (
@@ -165,12 +165,12 @@ export function SearchBar({
               onClick={() => selectSuggestion(s)}
               className={`w-full text-left px-3 py-2 text-sm transition-colors ${
                 i === selectedIdx
-                  ? "bg-[--primary]/10 text-[--primary]"
-                  : "text-foreground hover:bg-white/5"
+                  ? "bg-neutral-100 text-neutral-900"
+                  : "text-neutral-900 hover:bg-neutral-50"
               }`}
             >
               <div className="font-medium text-xs">{s.main}</div>
-              <div className="text-[11px] text-[--color-dim]">{s.secondary}</div>
+              <div className="text-[11px] text-neutral-500">{s.secondary}</div>
             </button>
           ))}
         </div>

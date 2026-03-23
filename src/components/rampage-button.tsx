@@ -170,12 +170,11 @@ export function RampageButton({
       <div className="flex items-center gap-1.5">
         <button
           onClick={handleToggle}
-          className={`flex items-center gap-1.5 px-2.5 py-2 rounded-xl shadow-lg transition-all ${
+          className={`flex items-center gap-1.5 px-3 py-2 rounded-full shadow-md hover:shadow-lg transition-all ${
             rampage.active
-              ? "border border-[--color-rampage]/50 text-[--color-rampage] rampage-glow shadow-[--color-rampage]/10"
-              : "border border-white/10 text-[--color-dim] hover:text-[--color-rampage] hover:border-[--color-rampage]/30 hover:shadow-[--color-rampage]/5"
+              ? "bg-orange-50 border border-orange-300 text-orange-600"
+              : "bg-white border border-neutral-200 text-neutral-500 hover:text-orange-600 hover:border-orange-300"
           }`}
-          style={{ background: "rgba(10,10,15,0.65)", backdropFilter: "blur(20px) saturate(1.5)", WebkitBackdropFilter: "blur(20px) saturate(1.5)" }}
         >
           <Zap className="size-4" />
           {rampage.active && (
@@ -188,15 +187,13 @@ export function RampageButton({
           <>
             <button
               onClick={handleCancel}
-              className="flex items-center gap-1 px-2.5 py-2 rounded-xl shadow-lg border border-white/10 text-[--color-dim] hover:text-foreground font-mono text-[11px] font-semibold tracking-wider hover:bg-white/[0.06] transition-all"
-              style={{ background: "rgba(10,10,15,0.65)", backdropFilter: "blur(20px) saturate(1.5)", WebkitBackdropFilter: "blur(20px) saturate(1.5)" }}
+              className="flex items-center gap-1 px-2.5 py-2 rounded-full bg-white border border-neutral-200 shadow-md text-neutral-500 hover:text-neutral-900 text-xs font-semibold transition-all"
             >
               <X className="size-3.5" />
             </button>
             <button
               onClick={handlePlanRampage}
-              className="flex items-center gap-1 px-3 py-2 rounded-xl shadow-lg shadow-[--color-rampage]/20 bg-[--color-rampage] text-white font-mono text-[11px] font-semibold tracking-wider hover:brightness-110 transition-all"
-              style={{ backdropFilter: "blur(20px) saturate(1.5)", WebkitBackdropFilter: "blur(20px) saturate(1.5)" }}
+              className="flex items-center gap-1 px-3 py-2 rounded-full bg-orange-500 text-white shadow-md text-xs font-semibold hover:bg-orange-600 transition-all"
             >
               PLAN
               <ArrowRight className="size-3.5" />
@@ -207,7 +204,7 @@ export function RampageButton({
 
       {/* Dropdown */}
       {open && rampage.active && (
-        <div className="absolute top-full left-0 mt-2 w-80 panel-elevated rounded-xl shadow-2xl overflow-hidden">
+        <div className="absolute top-full left-0 mt-2 w-80 bg-white rounded-xl border border-neutral-200 shadow-xl overflow-hidden">
           {/* Start location */}
           <LocationRow
             label="START"
@@ -224,7 +221,7 @@ export function RampageButton({
           />
 
           {/* Arrow separator */}
-          <div className="flex items-center justify-center py-1 border-b border-white/5">
+          <div className="flex items-center justify-center py-1 border-b border-neutral-100">
             <ArrowRight className="size-3 text-[--color-dim] rotate-90" />
           </div>
 
@@ -245,12 +242,12 @@ export function RampageButton({
 
           {/* Selected games list */}
           {sortedGames.length > 0 && (
-            <div className="border-t border-white/5">
+            <div className="border-t border-neutral-100">
               <div className="px-3 py-1.5 text-[10px] font-mono tracking-widest text-[--color-dim] uppercase">
                 Selected Games
               </div>
               {sortedGames.map((g, i) => (
-                <div key={g.id} className="flex items-center gap-2 px-3 py-1.5 text-xs font-mono hover:bg-white/5">
+                <div key={g.id} className="flex items-center gap-2 px-3 py-1.5 text-xs font-mono hover:bg-neutral-50">
                   <span className="size-5 shrink-0 rounded-full bg-[--color-rampage] text-white flex items-center justify-center text-[10px] font-bold">
                     {i + 1}
                   </span>
@@ -325,7 +322,7 @@ function LocationRow({
   inputRef?: React.RefObject<HTMLInputElement | null>;
 }) {
   return (
-    <div className="border-b border-white/5">
+    <div className="border-b border-neutral-100">
       <div className="flex items-center gap-2 px-3 py-2.5">
         <span className="text-[10px] font-mono tracking-widest text-[--color-dim] w-8 shrink-0">{label}</span>
         {editing ? (
@@ -370,7 +367,7 @@ function LocationRow({
             <button
               key={s.placeId}
               onClick={() => onSelectSuggestion(s)}
-              className="w-full text-left px-2 py-1.5 text-xs hover:bg-white/5 rounded transition-colors"
+              className="w-full text-left px-2 py-1.5 text-xs hover:bg-neutral-50 rounded transition-colors"
             >
               <div className="font-medium text-foreground">{s.main}</div>
               <div className="text-[10px] text-[--color-dim]">{s.secondary}</div>

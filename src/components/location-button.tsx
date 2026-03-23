@@ -160,27 +160,26 @@ export function LocationButton({
       {/* Toggle button */}
       <button
         onClick={() => { setOpen(!open); setAddressMode(false); setQuery(""); setSuggestions([]); }}
-        className={`flex items-center gap-1.5 px-2.5 py-2 rounded-xl shadow-lg transition-all ${
+        className={`flex items-center gap-1.5 px-3 py-2 rounded-full bg-white border shadow-md hover:shadow-lg transition-all ${
           userLocation
-            ? "border border-[--primary]/30 text-[--primary] shadow-[--primary]/10"
-            : "border border-white/10 text-[--color-dim]"
+            ? "border-neutral-200 text-neutral-900"
+            : "border-neutral-200 text-neutral-500"
         }`}
-        style={{ background: "rgba(10,10,15,0.65)", backdropFilter: "blur(20px) saturate(1.5)", WebkitBackdropFilter: "blur(20px) saturate(1.5)" }}
       >
         <MapPin className="size-4" />
         {userLocation && label ? (
-          <span className="text-[11px] font-mono max-w-[120px] truncate">{label}</span>
+          <span className="text-xs font-medium max-w-[120px] truncate">{label}</span>
         ) : null}
       </button>
 
       {/* Dropdown menu */}
       {open && (
-        <div className="absolute top-full right-0 mt-2 w-72 panel-elevated rounded-xl shadow-2xl overflow-hidden">
+        <div className="absolute top-full right-0 mt-2 w-72 bg-white rounded-xl border border-neutral-200 shadow-xl overflow-hidden">
           {/* Use current location */}
           <button
             onClick={useCurrentLocation}
             disabled={locating}
-            className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/[0.06] transition-all border-b border-white/8"
+            className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-neutral-50 transition-all border-b border-neutral-100"
           >
             {locating ? (
               <Loader2 className="size-4 text-[--primary] animate-spin" />
@@ -189,7 +188,7 @@ export function LocationButton({
             )}
             <div>
               <div className="text-sm font-medium text-foreground">Use current location</div>
-              <div className="text-[11px] text-[--color-dim] font-mono">GPS / browser location</div>
+              <div className="text-xs text-neutral-500">GPS / browser location</div>
             </div>
           </button>
 
@@ -197,17 +196,17 @@ export function LocationButton({
           {!addressMode ? (
             <button
               onClick={() => setAddressMode(true)}
-              className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/[0.06] transition-all"
+              className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-neutral-50 transition-all"
             >
-              <Search className="size-4 text-[--color-dim]" />
+              <Search className="size-4 text-neutral-400" />
               <div>
-                <div className="text-sm font-medium text-foreground">Enter an address</div>
-                <div className="text-[11px] text-[--color-dim] font-mono">Search by street address</div>
+                <div className="text-sm font-medium text-neutral-900">Enter an address</div>
+                <div className="text-xs text-neutral-500">Search by street address</div>
               </div>
             </button>
           ) : (
             <div className="px-3 py-2">
-              <div className="flex items-center gap-2 border border-white/10 rounded px-2 py-1.5">
+              <div className="flex items-center gap-2 border border-neutral-200 rounded-lg px-2 py-1.5">
                 <Search className="size-3.5 text-[--color-dim] shrink-0" />
                 <input
                   ref={inputRef}
@@ -229,7 +228,7 @@ export function LocationButton({
                     <button
                       key={s.placeId}
                       onClick={() => selectSuggestion(s)}
-                      className="w-full text-left px-2 py-2 text-sm hover:bg-white/5 rounded transition-colors"
+                      className="w-full text-left px-2 py-2 text-sm hover:bg-neutral-50 rounded transition-colors"
                     >
                       <div className="font-medium text-xs text-foreground">{s.main}</div>
                       <div className="text-[11px] text-[--color-dim]">{s.secondary}</div>
