@@ -24,6 +24,17 @@ import {
   Star,
   MapPin,
   Footprints,
+  Cloud,
+  Sun,
+  CloudRain,
+  CloudSnow,
+  CloudLightning,
+  Droplets,
+  Wind,
+  Thermometer,
+  CloudDrizzle,
+  CloudFog,
+  CloudSun,
 } from "lucide-react";
 import type { VenuePolicy } from "@/lib/venue-policies";
 import { SearchBar } from "./search-bar";
@@ -144,6 +155,32 @@ function haversineMiles(lat1: number, lng1: number, lat2: number, lng2: number):
     Math.sin(dLat / 2) ** 2 +
     Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function WeatherIcon({ code, className }: { code: number; className?: string }) {
+  if (code === 0) return <Sun className={className} />;
+  if (code <= 2) return <CloudSun className={className} />;
+  if (code === 3) return <Cloud className={className} />;
+  if (code >= 45 && code <= 48) return <CloudFog className={className} />;
+  if (code >= 51 && code <= 57) return <CloudDrizzle className={className} />;
+  if (code >= 61 && code <= 67) return <CloudRain className={className} />;
+  if (code >= 71 && code <= 77) return <CloudSnow className={className} />;
+  if (code >= 80 && code <= 82) return <CloudRain className={className} />;
+  if (code >= 85 && code <= 86) return <CloudSnow className={className} />;
+  if (code >= 95) return <CloudLightning className={className} />;
+  return <Cloud className={className} />;
+}
+
+function weatherLabel(code: number): string {
+  const labels: Record<number, string> = {
+    0: "Clear", 1: "Mostly Clear", 2: "Partly Cloudy", 3: "Overcast",
+    45: "Fog", 48: "Rime Fog", 51: "Lt Drizzle", 53: "Drizzle", 55: "Hvy Drizzle",
+    56: "Frz Drizzle", 57: "Frz Drizzle", 61: "Lt Rain", 63: "Rain", 65: "Hvy Rain",
+    66: "Frz Rain", 67: "Frz Rain", 71: "Lt Snow", 73: "Snow", 75: "Hvy Snow",
+    77: "Snow Grains", 80: "Lt Showers", 81: "Showers", 82: "Hvy Showers",
+    85: "Snow Shwrs", 86: "Hvy Snow Shwrs", 95: "T-Storm", 96: "T-Storm+Hail", 99: "T-Storm+Hail",
+  };
+  return labels[code] ?? "Unknown";
 }
 
 type SortKey = "time" | "price" | "dist" | "odds" | "record" | "team";
@@ -551,6 +588,35 @@ export function BottomTray({
     }
   }, [nearbyHotels, hotelsLoading]);
 
+  // Weather state
+  interface HourlyWeather { time: string; temp: number; feelsLike: number; precip: number; precipProb: number; weatherCode: number; windSpeed: number; humidity: number }
+  const [weather, setWeather] = useState<Record<string, HourlyWeather[]>>({});
+  const [weatherLoading, setWeatherLoading] = useState<Set<string>>(new Set());
+  const weatherFailed = useRef<Set<string>>(new Set());
+
+  const handleWeatherLoad = useCallback(async (venueLat: number, venueLng: number, gameDate: string) => {
+    const key = `${venueLat},${venueLng},${gameDate}`;
+    if (weather[key] || weatherLoading.has(key) || weatherFailed.current.has(key)) return;
+    setWeatherLoading((prev) => new Set(prev).add(key));
+    try {
+      const res = await fetch(`/api/weather?lat=${venueLat}&lng=${venueLng}&date=${gameDate}`);
+      if (res.ok) {
+        const data = await res.json();
+        setWeather((prev) => ({ ...prev, [key]: data.hours }));
+      } else {
+        weatherFailed.current.add(key);
+      }
+    } catch {
+      weatherFailed.current.add(key);
+    } finally {
+      setWeatherLoading((prev) => {
+        const next = new Set(prev);
+        next.delete(key);
+        return next;
+      });
+    }
+  }, [weather, weatherLoading]);
+
   // Auto-scroll and expand when a marker is clicked (selectedVenue changes)
   useEffect(() => {
     if (!selectedVenue || trayState === "collapsed") return;
@@ -805,6 +871,7 @@ export function BottomTray({
                         handleEnrich(vLat, vLng, s, event.date_time_utc);
                       }
                       handlePolicyLoad(event.venue);
+                      handleWeatherLoad(vLat, vLng, event.est_date || date);
                       handleHotelsLoad(event.venue, vLat, vLng, event.est_date || date);
                       const venueGames = games.filter((g) => g.venue === event.venue);
                       onVenueClick({
@@ -972,6 +1039,72 @@ export function BottomTray({
                           )}
                         </div>
                       )}
+
+                      {/* Weather section */}
+                      {(() => {
+                        const weatherKey = `${event.lat},${event.lng},${event.est_date || date}`;
+                        const hours = weather[weatherKey];
+                        const wLoading = weatherLoading.has(weatherKey);
+
+                        if (!hours && !wLoading) return null;
+
+                        // Show hours around game time: 3 hours before to 3 hours after tipoff
+                        let relevantHours = hours ?? [];
+                        if (hours && event.date_time_utc) {
+                          const tipoff = new Date(event.date_time_utc).getTime();
+                          relevantHours = hours.filter((h) => {
+                            const t = new Date(h.time).getTime();
+                            return t >= tipoff - 3 * 3600000 && t <= tipoff + 3 * 3600000;
+                          });
+                        } else if (hours) {
+                          // No tipoff known — show daytime hours 10am-10pm
+                          relevantHours = hours.filter((h) => {
+                            const hr = parseInt(h.time.split("T")[1]?.split(":")[0] ?? "0");
+                            return hr >= 10 && hr <= 22;
+                          });
+                        }
+
+                        return (
+                          <div className="mt-2">
+                            <div className="text-[10px] font-mono tracking-widest text-[--primary]/70 uppercase flex items-center gap-1">
+                              <Thermometer className="size-3 text-[--primary]" /> GAME DAY WEATHER
+                            </div>
+                            {wLoading && !hours && (
+                              <div className="flex items-center gap-1.5 mt-1.5 text-[11px] font-mono text-[--color-dim]">
+                                <Loader2 className="size-3 animate-spin" /> Loading weather...
+                              </div>
+                            )}
+                            {relevantHours.length > 0 && (
+                              <div className="mt-1 flex gap-1 overflow-x-auto no-scrollbar pb-1">
+                                {relevantHours.map((h) => {
+                                  const hr = parseInt(h.time.split("T")[1]?.split(":")[0] ?? "0");
+                                  const ampm = hr >= 12 ? "PM" : "AM";
+                                  const hr12 = hr % 12 || 12;
+                                  const isTipoff = event.date_time_utc && new Date(event.date_time_utc).getHours() === hr;
+
+                                  return (
+                                    <div
+                                      key={h.time}
+                                      className={`flex flex-col items-center gap-0.5 px-1.5 py-1 rounded text-[10px] font-mono shrink-0 min-w-[48px] ${isTipoff ? "bg-[--primary]/15 ring-1 ring-[--primary]/30" : "bg-white/5"}`}
+                                    >
+                                      <span className={`font-semibold ${isTipoff ? "text-[--primary]" : "text-[--color-dim]"}`}>{hr12}{ampm}</span>
+                                      <WeatherIcon code={h.weatherCode} className="size-3.5 text-foreground" />
+                                      <span className="text-foreground font-bold">{h.temp}°</span>
+                                      <span className="text-[--color-dim] text-[9px]">FL {h.feelsLike}°</span>
+                                      {h.precipProb > 0 && (
+                                        <span className="text-cyan-400 text-[9px] flex items-center gap-0.5"><Droplets className="size-2" />{h.precipProb}%</span>
+                                      )}
+                                      {h.windSpeed >= 10 && (
+                                        <span className="text-amber-400 text-[9px] flex items-center gap-0.5"><Wind className="size-2" />{h.windSpeed}</span>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
 
                       {/* Venue policy section */}
                       {(() => {
