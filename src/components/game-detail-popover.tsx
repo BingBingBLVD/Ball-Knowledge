@@ -35,6 +35,7 @@ import {
   Beer,
   UtensilsCrossed,
   Luggage,
+  Wifi,
   Plus,
   Minus,
 } from "lucide-react";
@@ -131,6 +132,22 @@ interface AirportDelay {
   departureDel: number | null;
   arrivalDel: number | null;
   reasons: string[];
+}
+
+interface StationDeparture {
+  carrier: string;
+  routeName: string;
+  headsign: string;
+  mode: "bus" | "train";
+  departMinutes: number;
+  departTime: string;
+  destination: string;
+}
+
+interface StationDepartureResult {
+  code: string;
+  name: string;
+  departures: StationDeparture[];
 }
 
 interface NewsItem {
@@ -453,6 +470,8 @@ export function GameDetailPopover({
   const [delaysLoading, setDelaysLoading] = useState(false);
   const [lastTransit, setLastTransit] = useState<LastTransitInfo[] | null>(null);
   const [lastTransitLoading, setLastTransitLoading] = useState(false);
+  const [stationDepartures, setStationDepartures] = useState<StationDepartureResult[] | null>(null);
+  const [stationDeparturesLoading, setStationDeparturesLoading] = useState(false);
   const [standardBags, setStandardBags] = useState(2);
   const [compactBags, setCompactBags] = useState(0);
   const [oddsizeBags, setOddsizeBags] = useState(0);
@@ -498,6 +517,7 @@ export function GameDetailPopover({
     setLocalNews(null);
     setAirportDelays(null);
     setLastTransit(null);
+    setStationDepartures(null);
     setEnriched({});
     setEnriching(new Set());
     setScrolled(false);
@@ -583,7 +603,22 @@ export function GameDetailPopover({
         .finally(() => setDelaysLoading(false));
     }
 
-    // 10. Last transit
+    // 10. Station departures (trains & buses)
+    const allTransitStops = [
+      ...(game.nearbyTrainStations ?? []).map((s) => ({ code: s.code, name: s.name, lat: s.lat, lng: s.lng })),
+      ...(game.nearbyBusStations ?? []).map((s) => ({ code: s.code, name: s.name, lat: s.lat, lng: s.lng })),
+    ];
+    if (allTransitStops.length > 0) {
+      setStationDeparturesLoading(true);
+      const stopsJson = encodeURIComponent(JSON.stringify(allTransitStops.slice(0, 10)));
+      fetch(`/api/station-departures?stops=${stopsJson}&date=${gameDate}`)
+        .then((r) => r.ok ? r.json() : null)
+        .then((d) => { if (d?.stations) setStationDepartures(d.stations); })
+        .catch(() => {})
+        .finally(() => setStationDeparturesLoading(false));
+    }
+
+    // 11. Last transit
     if (game.date_time_utc) {
       const transitStops = [
         ...(game.nearbyTrainStations ?? []).map((s) => ({ code: s.code, name: s.name, lat: s.lat, lng: s.lng })),
@@ -900,8 +935,8 @@ export function GameDetailPopover({
                 {transitTab === "trains" && trains.length > 0 && <TransitRows stops={trains} icon={TrainFront} vLat={vLat} vLng={vLng} enriched={enriched} enriching={enriching} onEnrich={(stop) => handleEnrich(stop)} onRouteFocus={routeFocusHandler} isAnimating={false} venueName={game.venue} colorClass="text-[--color-train]" tipoffUtc={game.date_time_utc} />}
                 {transitTab === "buses" && buses.length > 0 && <TransitRows stops={buses} icon={BusFront} vLat={vLat} vLng={vLng} enriched={enriched} enriching={enriching} onEnrich={(stop) => handleEnrich(stop)} onRouteFocus={routeFocusHandler} isAnimating={false} venueName={game.venue} colorClass="text-[--color-bus]" tipoffUtc={game.date_time_utc} />}
 
-                {/* Airport Status (subsection) */}
-                {(() => {
+                {/* Airport Status (flights tab only) */}
+                {transitTab === "flights" && (() => {
                   const delays = airportDelays;
                   const dLoading = delaysLoading;
                   if (airports.length === 0 || (!delays && !dLoading)) return null;
@@ -924,6 +959,46 @@ export function GameDetailPopover({
                           })}
                         </div>
                       )}
+                    </div>
+                  );
+                })()}
+
+                {/* Station Departures (trains/buses tabs) */}
+                {(transitTab === "trains" || transitTab === "buses") && (() => {
+                  const wantMode = transitTab === "trains" ? "train" : "bus";
+                  const sLabel = transitTab === "trains" ? "Amtrak departures" : "Bus departures";
+                  const sdLoading = stationDeparturesLoading;
+                  const sdData = stationDepartures;
+                  const relevant = sdData?.filter((s) => s.departures.some((dep) => dep.mode === wantMode)) ?? [];
+                  if (!sdLoading && relevant.length === 0 && !sdData) return null;
+                  return (
+                    <div className="mt-6">
+                      <h3 className="text-base font-semibold text-neutral-800 mb-3">{sLabel}</h3>
+                      {sdLoading && !sdData && <div className="flex items-center gap-2 text-sm text-neutral-500"><Loader2 className="size-4 animate-spin" /> Checking schedules...</div>}
+                      {sdData && relevant.length === 0 && <p className="text-sm text-neutral-500">No departures found for this date.</p>}
+                      {relevant.map((station) => {
+                        const deps = station.departures.filter((dep) => dep.mode === wantMode).slice(0, 8);
+                        if (deps.length === 0) return null;
+                        return (
+                          <div key={station.code} className="mb-4 last:mb-0">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-sm font-semibold text-neutral-800">{station.name}</span>
+                              <span className="text-xs text-neutral-500">{station.code}</span>
+                            </div>
+                            <div className="space-y-1">
+                              {deps.map((dep, i) => (
+                                <div key={i} className="flex items-center gap-3 rounded-lg bg-neutral-50 px-3 py-2">
+                                  <span className="text-sm font-semibold text-neutral-900 w-[72px] shrink-0">{dep.departTime}</span>
+                                  <div className="min-w-0 flex-1">
+                                    <div className="text-sm text-neutral-800 truncate">{dep.headsign || dep.destination}</div>
+                                    <div className="text-xs text-neutral-500">{dep.carrier} · {dep.routeName}</div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   );
                 })()}
@@ -1023,6 +1098,10 @@ export function GameDetailPopover({
                         {policy.maxBagSize && <span>{policy.clearBagRequired ? " · " : ""}Max {policy.maxBagSize}</span>}
                       </div>
                     )}
+                    <div className="flex items-start gap-2 text-sm text-neutral-700 mb-4 p-3 bg-blue-50 rounded-xl border border-blue-200">
+                      <Wifi className="size-4 shrink-0 mt-0.5 text-blue-600" />
+                      <span>{policy.wifiInfo || "WiFi availability unsure"}</span>
+                    </div>
                     <div className="grid grid-cols-2 gap-6">
                       {allowed.length > 0 && <div><h3 className="text-sm font-semibold text-neutral-900 mb-2">Allowed</h3><div className="space-y-2">{allowed.map((item) => <div key={item.name} className="flex items-start gap-2 text-sm text-neutral-600"><Check className="size-4 shrink-0 mt-0.5 text-emerald-600" /><span>{item.name}</span></div>)}</div></div>}
                       {prohibited.length > 0 && <div><h3 className="text-sm font-semibold text-neutral-900 mb-2">Not allowed</h3><div className="space-y-2">{prohibited.map((item) => <div key={item.name} className="flex items-start gap-2 text-sm text-neutral-600"><Ban className="size-4 shrink-0 mt-0.5 text-red-500" /><span>{item.name}</span></div>)}</div></div>}

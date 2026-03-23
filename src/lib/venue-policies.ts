@@ -8,5 +8,6 @@ export interface VenuePolicy {
   policyUrl: string;
   clearBagRequired: boolean;
   maxBagSize: string;
+  wifiInfo: string;
   items: PolicyItem[];
 }

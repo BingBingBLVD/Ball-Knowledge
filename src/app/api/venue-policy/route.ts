@@ -22,6 +22,7 @@ Return ONLY valid JSON (no markdown, no explanation) with this exact structure:
   "policyUrl": "the arena's bag policy or A-Z guide URL if you know it, otherwise empty string",
   "clearBagRequired": true or false,
   "maxBagSize": "dimensions string like 14x14x6 or empty string if unknown",
+  "wifiInfo": "string describing WiFi availability — e.g. 'Free WiFi available (network: ArenaWiFi)', 'No public WiFi', or 'WiFi available for premium seating only'. Include the network name if known.",
   "items": [
     {"name": "item description", "allowed": true/false}
   ]
