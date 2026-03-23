@@ -125,8 +125,10 @@ function stubhubUrl(teamName: string): string {
   return `https://www.stubhub.com/${slug}-tickets`;
 }
 
-function gmapsUrl(fromLat: number, fromLng: number, toLat: number, toLng: number, mode: "driving" | "transit") {
-  return `https://www.google.com/maps/dir/?api=1&origin=${fromLat},${fromLng}&destination=${toLat},${toLng}&travelmode=${mode}`;
+function gmapsUrl(fromLat: number, fromLng: number, toLat: number, toLng: number, mode: "driving" | "transit", arriveByEpoch?: number) {
+  let url = `https://www.google.com/maps/dir/?api=1&origin=${fromLat},${fromLng}&destination=${toLat},${toLng}&travelmode=${mode}`;
+  if (arriveByEpoch) url += `&arrival_time=${arriveByEpoch}`;
+  return url;
 }
 
 function uberDeepLink(fromLat: number, fromLng: number, toLat: number, toLng: number) {
@@ -216,6 +218,7 @@ function TransitRows({
   isAnimating,
   venueName,
   colorClass,
+  tipoffUtc,
 }: {
   stops: TransitStop[];
   icon: React.ComponentType<{ className?: string }>;
@@ -228,9 +231,12 @@ function TransitRows({
   isAnimating: boolean;
   venueName: string;
   colorClass: string;
+  tipoffUtc?: string | null;
 }) {
   if (stops.length === 0) return null;
   const enrichKey = (sLat: number, sLng: number) => `${vLat},${vLng};${sLat},${sLng}`;
+  // 45 minutes before tipoff as Unix epoch seconds
+  const arriveByEpoch = tipoffUtc ? Math.floor((new Date(tipoffUtc).getTime() - 45 * 60 * 1000) / 1000) : undefined;
 
   return (
     <div className="space-y-1">
@@ -267,7 +273,7 @@ function TransitRows({
               <div className="flex items-center gap-1.5 flex-wrap text-[10px]">
                 <span className="text-white/10">|</span>
                 <a
-                  href={gmapsUrl(vLat, vLng, stop.lat, stop.lng, "driving")}
+                  href={gmapsUrl(vLat, vLng, stop.lat, stop.lng, "driving", arriveByEpoch)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-0.5 text-[--color-dim] hover:text-foreground no-underline transition-colors"
@@ -299,7 +305,7 @@ function TransitRows({
                   <>
                     <span className="text-white/10">|</span>
                     <a
-                      href={gmapsUrl(vLat, vLng, stop.lat, stop.lng, "transit")}
+                      href={gmapsUrl(vLat, vLng, stop.lat, stop.lng, "transit", arriveByEpoch)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 text-[--color-dim] hover:text-foreground no-underline transition-colors"
@@ -1005,6 +1011,7 @@ export function BottomTray({
                               isAnimating={isAnimating}
                               venueName={event.venue}
                               colorClass="text-[--color-flight]"
+                              tipoffUtc={event.date_time_utc}
                             />
                           )}
                           {trains.length > 0 && (
@@ -1020,6 +1027,7 @@ export function BottomTray({
                               isAnimating={isAnimating}
                               venueName={event.venue}
                               colorClass="text-[--color-train]"
+                              tipoffUtc={event.date_time_utc}
                             />
                           )}
                           {buses.length > 0 && (
@@ -1035,6 +1043,7 @@ export function BottomTray({
                               isAnimating={isAnimating}
                               venueName={event.venue}
                               colorClass="text-[--color-bus]"
+                              tipoffUtc={event.date_time_utc}
                             />
                           )}
                         </div>
@@ -1213,9 +1222,9 @@ export function BottomTray({
                                     <div className="flex items-center gap-2 text-[10px] text-[--color-dim] border-t border-white/8 pt-1 mt-0.5 flex-wrap">
                                       <span className="flex items-center gap-1"><MapPin className="size-2.5 text-amber-400/60 shrink-0" /><span className="text-foreground">{h.distanceMiles} mi</span></span>
                                       <span>·</span>
-                                      <a href={h.directionsUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-cyan-400 transition-colors"><Car className="size-2.5 shrink-0" />{h.driveMinutes} min</a>
+                                      <a href={gmapsUrl(h.lat, h.lng, event.lat!, event.lng!, "driving", event.date_time_utc ? Math.floor((new Date(event.date_time_utc).getTime() - 45 * 60 * 1000) / 1000) : undefined)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-cyan-400 transition-colors"><Car className="size-2.5 shrink-0" />{h.driveMinutes} min</a>
                                       {h.transitMinutes != null && (
-                                        <><span>·</span><a href={h.transitDirectionsUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-cyan-400 transition-colors"><Bus className="size-2.5 shrink-0" />{h.transitMinutes} min{h.transitFare && <span className="text-emerald-400">{h.transitFare}</span>}</a></>
+                                        <><span>·</span><a href={gmapsUrl(h.lat, h.lng, event.lat!, event.lng!, "transit", event.date_time_utc ? Math.floor((new Date(event.date_time_utc).getTime() - 45 * 60 * 1000) / 1000) : undefined)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-cyan-400 transition-colors"><Bus className="size-2.5 shrink-0" />{h.transitMinutes} min{h.transitFare && <span className="text-emerald-400">{h.transitFare}</span>}</a></>
                                       )}
                                       <span>·</span>
                                       <span className="flex items-center gap-1"><Footprints className="size-2.5 shrink-0" />{h.walkMinutes} min</span>
