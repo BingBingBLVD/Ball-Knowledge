@@ -10,6 +10,7 @@ export interface ParkingSpot {
   rating: number | null;
   totalRatings: number;
   openNow: boolean | null;
+  priceLevel: string | null;
   spotHeroUrl: string;
   directionsUrl: string;
 }
@@ -58,6 +59,8 @@ export async function GET(req: NextRequest) {
     // SpotHero search URL for venue area
     const spotHeroBase = `https://spothero.com/search?latitude=${venueLat}&longitude=${venueLng}${date ? `&starts=${date}T16:00&ends=${date}T23:59` : ""}`;
 
+    const PRICE_MAP: Record<number, string> = { 0: "Free", 1: "$", 2: "$$", 3: "$$$", 4: "$$$$" };
+
     const spots: ParkingSpot[] = data.results
       .slice(0, 15)
       .map((place: {
@@ -65,6 +68,7 @@ export async function GET(req: NextRequest) {
         vicinity: string;
         rating?: number;
         user_ratings_total?: number;
+        price_level?: number;
         opening_hours?: { open_now?: boolean };
         geometry: { location: { lat: number; lng: number } };
       }) => {
@@ -82,6 +86,7 @@ export async function GET(req: NextRequest) {
           rating: place.rating ?? null,
           totalRatings: place.user_ratings_total ?? 0,
           openNow: place.opening_hours?.open_now ?? null,
+          priceLevel: place.price_level != null ? PRICE_MAP[place.price_level] ?? null : null,
           spotHeroUrl: spotHeroBase,
           directionsUrl: `https://www.google.com/maps/dir/?api=1&destination=${pLat},${pLng}&travelmode=driving`,
         };

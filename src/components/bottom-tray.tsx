@@ -304,6 +304,7 @@ function TransitRows({
                   <div className="rounded-lg overflow-hidden border border-white/5">
                     <iframe
                       className="w-full h-[180px]"
+                      style={{ colorScheme: "light" }}
                       loading="lazy"
                       referrerPolicy="no-referrer-when-downgrade"
                       src={`https://www.google.com/maps/embed/v1/directions?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&origin=${stop.lat},${stop.lng}&destination=${vLat},${vLng}&mode=driving&zoom=10`}
@@ -716,7 +717,7 @@ export function BottomTray({
   }, [localNews, newsLoading]);
 
   // Nearby parking state
-  interface ParkingSpot { name: string; vicinity: string; lat: number; lng: number; distanceMiles: number; walkMinutes: number; rating: number | null; totalRatings: number; openNow: boolean | null; spotHeroUrl: string; directionsUrl: string }
+  interface ParkingSpot { name: string; vicinity: string; lat: number; lng: number; distanceMiles: number; walkMinutes: number; rating: number | null; totalRatings: number; openNow: boolean | null; priceLevel: string | null; spotHeroUrl: string; directionsUrl: string }
   const [nearbyParking, setNearbyParking] = useState<Record<string, ParkingSpot[]>>({});
   const [parkingLoading, setParkingLoading] = useState<Set<string>>(new Set());
   const parkingFailed = useRef<Set<string>>(new Set());
@@ -1456,12 +1457,14 @@ export function BottomTray({
                         {pLoading && !spots && <div className="flex items-center gap-2 text-sm text-[--color-dim]"><Loader2 className="size-4 animate-spin" /> Finding parking...</div>}
                         {spots && spots.length > 0 && <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">{spots.map((p, i) => (
                           <a key={i} href={p.directionsUrl} target="_blank" rel="noopener noreferrer" className="rounded-lg bg-white/5 hover:bg-white/10 transition-colors p-2.5 no-underline block">
-                            <div className="text-xs font-mono text-foreground font-semibold truncate">{p.name}</div>
-                            <div className="flex items-center gap-2 text-[10px] text-[--color-dim] mt-1 font-mono">
-                              <span className="flex items-center gap-0.5"><MapPin className="size-2.5 text-amber-400/60" />{p.distanceMiles}mi</span>
-                              <span><Footprints className="size-2.5 inline" /> {p.walkMinutes}min</span>
+                            <div className="flex items-center justify-between">
+                              <div className="text-xs font-mono text-foreground font-semibold truncate">{p.name}</div>
+                              {p.priceLevel && <span className="text-emerald-400 text-[10px] font-mono font-bold shrink-0 ml-1">{p.priceLevel}</span>}
+                            </div>
+                            <div className="flex items-center gap-2 text-[10px] text-[--color-dim] mt-1 font-mono flex-wrap">
+                              <span className="flex items-center gap-0.5"><Footprints className="size-2.5" />{p.walkMinutes}min to stadium</span>
                               {p.rating && <span className="text-amber-400"><Star className="size-2.5 inline" /> {p.rating}</span>}
-                              {p.openNow != null && <span className={p.openNow ? "text-emerald-400" : "text-red-400"}>{p.openNow ? "Open" : "Closed"}</span>}
+                              {p.openNow != null && <span className={p.openNow ? "text-emerald-400" : "text-red-400"}>{p.openNow ? "Open now" : "Closed"}</span>}
                             </div>
                           </a>
                         ))}</div>}
