@@ -249,90 +249,85 @@ function TransitRows({
   const arriveByEpoch = tipoffUtc ? Math.floor((new Date(tipoffUtc).getTime() - 45 * 60 * 1000) / 1000) : undefined;
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-2">
       {stops.map((stop) => {
         const ek = enrichKey(stop.lat, stop.lng);
         const times = enriched[ek] ?? null;
         const loading = enriching.has(ek);
         const baseFocus = { venueLat: vLat, venueLng: vLng, airportLat: stop.lat, airportLng: stop.lng, airportCode: stop.code, venueName };
+        const distMi = Math.round(haversineMiles(vLat, vLng, stop.lat, stop.lng));
 
         return (
           <div
             key={stop.code}
-            className="flex items-center gap-2 text-[11px] font-mono py-1"
+            className="rounded-xl bg-white/5 p-3 font-mono"
             onMouseEnter={() => !isAnimating && onRouteFocus(baseFocus)}
             onMouseLeave={() => !isAnimating && onRouteFocus(null)}
           >
-            {/* Stop code + distance */}
-            <span className={`flex items-center gap-1 font-bold shrink-0 ${colorClass}`}>
-              <Icon className="size-3.5" />
+            {/* Header: code + distance */}
+            <div className="flex items-center gap-2 mb-2">
+              <Icon className={`size-4 ${colorClass}`} />
               <a
                 href={`https://www.google.com/maps/search/?api=1&query=${stop.lat},${stop.lng}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`hover:underline no-underline ${colorClass}`}
+                className={`font-bold text-sm no-underline hover:underline ${colorClass}`}
                 onClick={(e) => e.stopPropagation()}
-                title={`Open ${stop.code} in Google Maps`}
               >
                 {stop.code}
               </a>
-            </span>
-            <span className="text-[10px] text-[--color-dim] shrink-0">{Math.round(haversineMiles(vLat, vLng, stop.lat, stop.lng))}mi</span>
-            {/* Transport options inline */}
+              <span className="text-xs text-[--color-dim]">{distMi} mi away</span>
+            </div>
+            {/* Transport grid */}
             {times ? (
-              <div className="flex items-center gap-1.5 flex-wrap text-[10px]">
-                <span className="text-white/10">|</span>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <a
                   href={gmapsUrl(vLat, vLng, stop.lat, stop.lng, "driving", arriveByEpoch)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-0.5 text-[--color-dim] hover:text-foreground no-underline transition-colors"
+                  target="_blank" rel="noopener noreferrer"
+                  className="flex flex-col items-center gap-0.5 rounded-lg bg-white/5 hover:bg-white/10 py-2 px-1 no-underline transition-colors"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <Car className="size-3" /> {formatDriveTime(times.driveMinutes)}
-                </a>
-                <span className="text-white/10">|</span>
-                <a
-                  href={uberDeepLink(vLat, vLng, stop.lat, stop.lng)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-0.5 text-[--color-dim] hover:text-foreground font-semibold no-underline transition-colors"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  UBER {times.uberEstimate ? <span className="text-emerald-400">~{extractUpperBound(times.uberEstimate)}</span> : <span className="text-emerald-400">--</span>}
-                </a>
-                <span className="text-white/10">|</span>
-                <a
-                  href={lyftDeepLink(vLat, vLng, stop.lat, stop.lng)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-0.5 text-[--color-dim] hover:text-foreground font-semibold no-underline transition-colors"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  LYFT {times.lyftEstimate ? <span className="text-emerald-400">~{extractUpperBound(times.lyftEstimate)}</span> : <span className="text-emerald-400">--</span>}
+                  <Car className="size-4 text-[--color-dim]" />
+                  <span className="text-xs font-bold text-foreground">{formatDriveTime(times.driveMinutes)}</span>
+                  <span className="text-[10px] text-[--color-dim]">Drive</span>
                 </a>
                 {times.transitMinutes != null && (
-                  <>
-                    <span className="text-white/10">|</span>
-                    <a
-                      href={gmapsUrl(vLat, vLng, stop.lat, stop.lng, "transit", arriveByEpoch)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-[--color-dim] hover:text-foreground no-underline transition-colors"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <Bus className="size-3" /> {formatDriveTime(times.transitMinutes)} {times.transitFare ? <span className="text-emerald-400">{times.transitFare}</span> : <span className="text-emerald-400">--</span>}
-                    </a>
-                  </>
+                  <a
+                    href={gmapsUrl(vLat, vLng, stop.lat, stop.lng, "transit", arriveByEpoch)}
+                    target="_blank" rel="noopener noreferrer"
+                    className="flex flex-col items-center gap-0.5 rounded-lg bg-white/5 hover:bg-white/10 py-2 px-1 no-underline transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Bus className="size-4 text-[--color-dim]" />
+                    <span className="text-xs font-bold text-foreground">{formatDriveTime(times.transitMinutes)}</span>
+                    <span className="text-[10px] text-emerald-400">{times.transitFare ?? "--"}</span>
+                  </a>
                 )}
+                <a
+                  href={uberDeepLink(vLat, vLng, stop.lat, stop.lng)}
+                  target="_blank" rel="noopener noreferrer"
+                  className="flex flex-col items-center gap-0.5 rounded-lg bg-white/5 hover:bg-white/10 py-2 px-1 no-underline transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <span className="text-[10px] font-bold text-[--color-dim]">UBER</span>
+                  <span className="text-xs font-bold text-emerald-400">{times.uberEstimate ? `~${extractUpperBound(times.uberEstimate)}` : "--"}</span>
+                </a>
+                <a
+                  href={lyftDeepLink(vLat, vLng, stop.lat, stop.lng)}
+                  target="_blank" rel="noopener noreferrer"
+                  className="flex flex-col items-center gap-0.5 rounded-lg bg-white/5 hover:bg-white/10 py-2 px-1 no-underline transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <span className="text-[10px] font-bold text-[--color-dim]">LYFT</span>
+                  <span className="text-xs font-bold text-emerald-400">{times.lyftEstimate ? `~${extractUpperBound(times.lyftEstimate)}` : "--"}</span>
+                </a>
               </div>
             ) : (
               <button
-                className={`text-[--color-dim] hover:text-foreground flex items-center gap-1 ${loading ? "[&>svg]:animate-spin" : ""}`}
+                className={`text-xs text-[--color-dim] hover:text-foreground flex items-center gap-1.5 ${loading ? "[&>svg]:animate-spin" : ""}`}
                 onClick={(e) => { e.stopPropagation(); onEnrich(stop); }}
-                title="Load transit info"
               >
-                <RefreshCw className="size-2.5" /> {loading ? "Loading…" : "Load info"}
+                <RefreshCw className="size-3" /> {loading ? "Loading…" : "Load transit info"}
               </button>
             )}
           </div>
