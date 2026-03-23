@@ -288,14 +288,15 @@ function TransitRows({
                     className="block rounded-lg bg-neutral-50 hover:bg-neutral-100 py-2.5 px-3 no-underline transition-colors"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex items-center gap-2">
                       <Car className="size-4 text-neutral-400" />
                       <span className="text-xs font-bold text-neutral-900">{formatDriveTime(times.driveMinutes)}</span>
                       <span className="text-[10px] text-neutral-500">Drive</span>
-                      <span className="text-neutral-300">·</span>
-                      <span className="text-[10px] text-neutral-500 cursor-pointer hover:text-neutral-900" onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(uberDeepLink(vLat, vLng, stop.lat, stop.lng), "_blank"); }}>Uber <span className="text-emerald-600 font-medium">{times.uberEstimate ? `~${extractUpperBound(times.uberEstimate)}` : "--"}</span></span>
-                      <span className="text-neutral-300">·</span>
-                      <span className="text-[10px] text-neutral-500 cursor-pointer hover:text-neutral-900" onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(lyftDeepLink(vLat, vLng, stop.lat, stop.lng), "_blank"); }}>Lyft <span className="text-emerald-600 font-medium">{times.lyftEstimate ? `~${extractUpperBound(times.lyftEstimate)}` : "--"}</span></span>
+                    </div>
+                    <div className="text-[10px] text-emerald-600 mt-1">
+                      <span className="cursor-pointer hover:underline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(uberDeepLink(vLat, vLng, stop.lat, stop.lng), "_blank"); }}>Uber {times.uberEstimate ? `~${extractUpperBound(times.uberEstimate)}` : "--"}</span>
+                      <span className="text-neutral-300 mx-1">·</span>
+                      <span className="cursor-pointer hover:underline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(lyftDeepLink(vLat, vLng, stop.lat, stop.lng), "_blank"); }}>Lyft {times.lyftEstimate ? `~${extractUpperBound(times.lyftEstimate)}` : "--"}</span>
                     </div>
                   </a>
                   <div className="rounded-lg overflow-hidden border border-black/5">
