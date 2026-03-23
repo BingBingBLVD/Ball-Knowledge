@@ -35,6 +35,11 @@ import {
   CloudDrizzle,
   CloudFog,
   CloudSun,
+  AlertTriangle,
+  Clock,
+  Newspaper,
+  ChevronDown,
+  ExternalLink,
 } from "lucide-react";
 import type { VenuePolicy } from "@/lib/venue-policies";
 import { SearchBar } from "./search-bar";
@@ -623,6 +628,64 @@ export function BottomTray({
     }
   }, [weather, weatherLoading]);
 
+  // Airport delays state
+  interface AirportDelay { code: string; name: string; delayIndex: number | null; departureDel: number | null; arrivalDel: number | null; reasons: string[] }
+  const [airportDelays, setAirportDelays] = useState<Record<string, AirportDelay[]>>({});
+  const [delaysLoading, setDelaysLoading] = useState<Set<string>>(new Set());
+  const delaysFailed = useRef<Set<string>>(new Set());
+
+  const handleDelaysLoad = useCallback(async (airportCodes: string[]) => {
+    const key = airportCodes.sort().join(",");
+    if (!key || airportDelays[key] || delaysLoading.has(key) || delaysFailed.current.has(key)) return;
+    setDelaysLoading((prev) => new Set(prev).add(key));
+    try {
+      const res = await fetch(`/api/airport-delays?codes=${encodeURIComponent(key)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setAirportDelays((prev) => ({ ...prev, [key]: data.delays }));
+      } else {
+        delaysFailed.current.add(key);
+      }
+    } catch {
+      delaysFailed.current.add(key);
+    } finally {
+      setDelaysLoading((prev) => {
+        const next = new Set(prev);
+        next.delete(key);
+        return next;
+      });
+    }
+  }, [airportDelays, delaysLoading]);
+
+  // Local news state
+  interface NewsItem { title: string; link: string; source: string; published: string; snippet: string }
+  const [localNews, setLocalNews] = useState<Record<string, NewsItem[]>>({});
+  const [newsLoading, setNewsLoading] = useState<Set<string>>(new Set());
+  const newsFailed = useRef<Set<string>>(new Set());
+
+  const handleNewsLoad = useCallback(async (city: string, state: string, venue: string) => {
+    const key = `${city},${state}`;
+    if (localNews[key] || newsLoading.has(key) || newsFailed.current.has(key)) return;
+    setNewsLoading((prev) => new Set(prev).add(key));
+    try {
+      const res = await fetch(`/api/local-news?city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}&venue=${encodeURIComponent(venue)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setLocalNews((prev) => ({ ...prev, [key]: data.news }));
+      } else {
+        newsFailed.current.add(key);
+      }
+    } catch {
+      newsFailed.current.add(key);
+    } finally {
+      setNewsLoading((prev) => {
+        const next = new Set(prev);
+        next.delete(key);
+        return next;
+      });
+    }
+  }, [localNews, newsLoading]);
+
   // Auto-scroll and expand when a marker is clicked (selectedVenue changes)
   useEffect(() => {
     if (!selectedVenue || trayState === "collapsed") return;
@@ -878,6 +941,9 @@ export function BottomTray({
                       }
                       handlePolicyLoad(event.venue);
                       handleWeatherLoad(vLat, vLng, event.est_date || date);
+                      const aptCodes = (event.nearbyAirports ?? []).map((a) => a.code);
+                      if (aptCodes.length > 0) handleDelaysLoad(aptCodes);
+                      handleNewsLoad(event.city, event.state, event.venue);
                       handleHotelsLoad(event.venue, vLat, vLng, event.est_date || date);
                       const venueGames = games.filter((g) => g.venue === event.venue);
                       onVenueClick({
@@ -1115,6 +1181,65 @@ export function BottomTray({
                         );
                       })()}
 
+                      {/* Airport delays section */}
+                      {(() => {
+                        const aptCodes = (event.nearbyAirports ?? []).map((a) => a.code);
+                        const delayKey = aptCodes.sort().join(",");
+                        const delays = airportDelays[delayKey];
+                        const dLoading = delaysLoading.has(delayKey);
+
+                        if (aptCodes.length === 0 || (!delays && !dLoading)) return null;
+
+                        const hasAnyDelay = delays?.some((d) => d.departureDel != null || d.arrivalDel != null || (d.reasons?.length ?? 0) > 0);
+
+                        return (
+                          <div className="mt-2">
+                            <div className="text-[10px] font-mono tracking-widest text-[--primary]/70 uppercase flex items-center gap-1">
+                              <Plane className="size-3 text-[--primary]" /> AIRPORT STATUS
+                            </div>
+                            {dLoading && !delays && (
+                              <div className="flex items-center gap-1.5 mt-1.5 text-[11px] font-mono text-[--color-dim]">
+                                <Loader2 className="size-3 animate-spin" /> Checking delays...
+                              </div>
+                            )}
+                            {delays && (
+                              <div className="mt-1 space-y-1">
+                                {delays.map((d) => {
+                                  const hasDelay = (d.departureDel != null && d.departureDel > 0) || (d.arrivalDel != null && d.arrivalDel > 0);
+                                  return (
+                                    <div key={d.code} className="flex items-center gap-2 text-[11px] font-mono">
+                                      <span className="font-bold text-[--color-flight] shrink-0">{d.code}</span>
+                                      {hasDelay ? (
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          {d.departureDel != null && d.departureDel > 0 && (
+                                            <span className="flex items-center gap-0.5 text-amber-400">
+                                              <AlertTriangle className="size-3" /> DEP +{d.departureDel}min
+                                            </span>
+                                          )}
+                                          {d.arrivalDel != null && d.arrivalDel > 0 && (
+                                            <span className="flex items-center gap-0.5 text-amber-400">
+                                              <Clock className="size-3" /> ARR +{d.arrivalDel}min
+                                            </span>
+                                          )}
+                                          {d.reasons?.map((r, i) => (
+                                            <span key={i} className="text-[--color-dim] text-[10px]">{r}</span>
+                                          ))}
+                                        </div>
+                                      ) : (
+                                        <span className="text-emerald-400 text-[10px]">No major delays</span>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                                {!hasAnyDelay && delays.length > 0 && (
+                                  <div className="text-[9px] text-[--color-dim]/60">Live status via FlightAware</div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+
                       {/* Venue policy section */}
                       {(() => {
                         const policy = venuePolicies[event.venue];
@@ -1238,6 +1363,55 @@ export function BottomTray({
                               </div>
                             )}
                           </div>
+                        );
+                      })()}
+
+                      {/* Local news section — default collapsed */}
+                      {(() => {
+                        const newsKey = `${event.city},${event.state}`;
+                        const news = localNews[newsKey];
+                        const nLoading = newsLoading.has(newsKey);
+
+                        if (!news && !nLoading) return null;
+
+                        return (
+                          <details className="mt-2 group">
+                            <summary className="text-[10px] font-mono tracking-widest text-[--primary]/70 uppercase flex items-center gap-1 cursor-pointer list-none select-none">
+                              <Newspaper className="size-3 text-[--primary]" /> LOCAL NEWS
+                              <ChevronDown className="size-3 text-[--color-dim] ml-auto transition-transform group-open:rotate-180" />
+                            </summary>
+                            {nLoading && !news && (
+                              <div className="flex items-center gap-1.5 mt-1.5 text-[11px] font-mono text-[--color-dim]">
+                                <Loader2 className="size-3 animate-spin" /> Loading news...
+                              </div>
+                            )}
+                            {news && news.length > 0 && (
+                              <div className="mt-1.5 space-y-1.5 max-h-[200px] overflow-y-auto no-scrollbar">
+                                {news.map((n, i) => (
+                                  <a
+                                    key={i}
+                                    href={n.link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="block text-[11px] font-mono hover:bg-white/5 rounded px-1.5 py-1 no-underline transition-colors"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <div className="text-foreground leading-tight">{n.title}</div>
+                                    <div className="flex items-center gap-2 mt-0.5 text-[9px] text-[--color-dim]">
+                                      <span>{n.source}</span>
+                                      {n.published && (
+                                        <span>{new Date(n.published).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                                      )}
+                                      <ExternalLink className="size-2 ml-auto shrink-0" />
+                                    </div>
+                                  </a>
+                                ))}
+                              </div>
+                            )}
+                            {news && news.length === 0 && (
+                              <div className="text-[10px] text-[--color-dim] mt-1.5 font-mono">No recent news found</div>
+                            )}
+                          </details>
                         );
                       })()}
 
