@@ -1301,7 +1301,8 @@ export function BottomTray({
                       <div className="flex items-center gap-2">
                         <Clock className="size-5 text-neutral-400" />
                         <div>
-                          <div className="text-sm font-semibold text-neutral-900">{event.est_date ? new Date(event.est_date + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }) : date} · {formatTime(event.local_time ?? event.est_time, event.tz)}</div>
+                          <div className="text-sm font-semibold text-neutral-900">{event.est_date ? new Date(event.est_date + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }) : date}</div>
+                          <div className="text-sm text-neutral-900">{formatTime(event.local_time ?? event.est_time, event.tz)}</div>
                           {showLocal && <div className="text-xs text-neutral-500">{userLocal.text} your time</div>}
                         </div>
                       </div>
@@ -1319,8 +1320,9 @@ export function BottomTray({
                       {event.away_record && event.home_record && (
                         <div className="flex items-center gap-2">
                           <Star className="size-5 text-neutral-400" />
-                          <div className="text-sm text-neutral-600">
-                            <span className="font-semibold text-neutral-900">{event.away_record}</span> vs <span className="font-semibold text-neutral-900">{event.home_record}</span>
+                          <div className="text-sm">
+                            <div className="font-semibold text-neutral-900">{away} {event.away_record}</div>
+                            <div className="font-semibold text-neutral-900">{home} {event.home_record}</div>
                           </div>
                         </div>
                       )}
