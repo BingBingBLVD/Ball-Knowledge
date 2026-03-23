@@ -1217,8 +1217,9 @@ export function BottomTray({
                             <span className="text-[--color-dim]">{away}</span>
                             <span className="text-foreground font-bold">{event.odds.away_win}%</span>
                           </div>
-                          <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
-                            <div className="h-full rounded-full bg-[--primary]" style={{ width: `${event.odds.away_win}%` }} />
+                          <div className="h-2 rounded-full bg-white/10 overflow-hidden flex">
+                            <div className="h-full rounded-l-full bg-emerald-500" style={{ width: `${event.odds.away_win}%` }} />
+                            <div className="h-full rounded-r-full bg-amber-500" style={{ width: `${event.odds.home_win}%` }} />
                           </div>
                           <div className="flex items-center justify-between text-xs font-mono">
                             <span className="text-[--color-dim]">{home}</span>
