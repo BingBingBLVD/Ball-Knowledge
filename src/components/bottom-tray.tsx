@@ -1170,7 +1170,7 @@ export function BottomTray({
 
               {/* Panel */}
               <div
-                className={`absolute bottom-0 left-0 right-0 max-h-[92vh] bg-[--background] rounded-t-2xl shadow-2xl overflow-hidden flex flex-col transition-transform duration-300 ease-out ${popoverVisible ? "translate-y-0" : "translate-y-full"}`}
+                className={`absolute inset-0 bg-[--background] overflow-hidden flex flex-col transition-transform duration-300 ease-out ${popoverVisible ? "translate-y-0" : "translate-y-full"}`}
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Drag handle + close */}
