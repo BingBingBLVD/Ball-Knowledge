@@ -18,6 +18,17 @@ function formatTime(time: string | null, tz?: string | null) {
   return `${hour12}:${String(m).padStart(2, "0")} ${period} ${tz ?? "ET"}`;
 }
 
+function formatUserLocalTime(utc: string | null | undefined): { text: string; tz: string } | null {
+  if (!utc) return null;
+  const d = new Date(utc);
+  if (isNaN(d.getTime())) return null;
+  const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const timeFmt = new Intl.DateTimeFormat("en-US", { timeZone: userTz, hour: "numeric", minute: "2-digit", hour12: true });
+  const tzFmt = new Intl.DateTimeFormat("en-US", { timeZone: userTz, timeZoneName: "short" });
+  const tzAbbr = tzFmt.formatToParts(d).find((p) => p.type === "timeZoneName")?.value ?? "";
+  return { text: timeFmt.format(d).replace(/\u202f/g, " "), tz: tzAbbr };
+}
+
 function formatPrice(price: { amount: number; currency: string } | null) {
   if (!price) return null;
   return new Intl.NumberFormat("en-US", {
@@ -92,11 +103,15 @@ export function StadiumCard({
               ? `https://kalshi.com/markets/KXNBAGAME/${game.odds.kalshi_event}`
               : null;
 
+            const userLocal = formatUserLocalTime(game.date_time_utc);
+            const showLocal = userLocal && userLocal.tz !== (game.tz ?? "ET");
+
             return (
-              <div key={game.id} className="flex items-center gap-2 text-xs text-[--color-dim]">
-                <Clock className="size-3" />
-                {formatTime(game.local_time ?? game.est_time, game.tz)}
-                {price && (
+              <div key={game.id} className="text-xs text-[--color-dim]">
+                <div className="flex items-center gap-2">
+                  <Clock className="size-3" />
+                  {formatTime(game.local_time ?? game.est_time, game.tz)}
+                  {price && (
                   <span className="text-emerald-600 font-mono">
                     {price}
                   </span>
@@ -110,6 +125,10 @@ export function StadiumCard({
                   >
                     {game.odds.away_win}%-{game.odds.home_win}%
                   </a>
+                )}
+                </div>
+                {showLocal && (
+                  <div className="ml-5 text-[10px] text-[--color-dim]/60">{userLocal.text} {userLocal.tz} your time</div>
                 )}
               </div>
             );

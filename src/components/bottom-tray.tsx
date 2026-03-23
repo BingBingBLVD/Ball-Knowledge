@@ -23,6 +23,7 @@ import {
   Hotel,
   Star,
   MapPin,
+  Footprints,
 } from "lucide-react";
 import type { VenuePolicy } from "@/lib/venue-policies";
 import { SearchBar } from "./search-bar";
@@ -40,6 +41,7 @@ interface GameEvent {
   est_time: string | null;
   local_time?: string | null;
   tz?: string | null;
+  date_time_utc?: string | null;
   venue: string;
   city: string;
   state: string;
@@ -72,6 +74,8 @@ interface HotelSuggestion {
   lng: number;
   distanceMiles: number;
   driveMinutes: number;
+  walkMinutes: number;
+  transitDirectionsUrl: string;
   uberEstimate: string;
   lyftEstimate: string;
   directionsUrl: string;
@@ -83,6 +87,17 @@ function formatTime(time: string | null, tz?: string | null) {
   const period = h >= 12 ? "PM" : "AM";
   const hour12 = h % 12 || 12;
   return `${hour12}:${String(m).padStart(2, "0")} ${period} ${tz ?? "ET"}`;
+}
+
+function formatUserLocalTime(utc: string | null | undefined): { text: string; tz: string } | null {
+  if (!utc) return null;
+  const d = new Date(utc);
+  if (isNaN(d.getTime())) return null;
+  const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const timeFmt = new Intl.DateTimeFormat("en-US", { timeZone: userTz, hour: "numeric", minute: "2-digit", hour12: true });
+  const tzFmt = new Intl.DateTimeFormat("en-US", { timeZone: userTz, timeZoneName: "short" });
+  const tzAbbr = tzFmt.formatToParts(d).find((p) => p.type === "timeZoneName")?.value ?? "";
+  return { text: timeFmt.format(d).replace(/\u202f/g, " "), tz: tzAbbr };
 }
 
 function formatDriveTime(minutes: number): string {
@@ -760,6 +775,7 @@ export function BottomTray({
                         est_time: event.est_time,
                         local_time: event.local_time,
                         tz: event.tz,
+                        date_time_utc: event.date_time_utc,
                         min_price: event.min_price,
                         espn_price: event.espn_price,
                         odds: event.odds,
@@ -799,6 +815,7 @@ export function BottomTray({
                           est_time: g.est_time,
                           local_time: g.local_time,
                           tz: g.tz,
+                          date_time_utc: g.date_time_utc,
                           min_price: g.min_price,
                           odds: g.odds,
                           away_record: g.away_record,
@@ -880,11 +897,18 @@ export function BottomTray({
                         </div>
                       )}
                       {/* Col: Time */}
-                      {visibleColumns.has("time") && (
-                        <div className="shrink-0">
-                          <span className="font-mono text-sm text-foreground">{formatTime(event.local_time ?? event.est_time, event.tz)}</span>
-                        </div>
-                      )}
+                      {visibleColumns.has("time") && (() => {
+                        const userLocal = formatUserLocalTime(event.date_time_utc);
+                        const showLocal = userLocal && userLocal.tz !== (event.tz ?? "ET");
+                        return (
+                          <div className="shrink-0 text-right">
+                            <span className="font-mono text-sm text-foreground">{formatTime(event.local_time ?? event.est_time, event.tz)}</span>
+                            {showLocal && (
+                              <div className="font-mono text-[10px] text-[--color-dim]">{userLocal.text} {userLocal.tz}</div>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
 
@@ -1049,23 +1073,36 @@ export function BottomTray({
                                     </div>
                                     <div className="flex items-center gap-2 text-[10px] text-[--color-dim] border-t border-white/8 pt-1 mt-0.5">
                                       <MapPin className="size-2.5 text-amber-400/60 shrink-0" />
-                                      <span className="text-foreground">{h.distanceMiles} mi from {event.venue}</span>
+                                      <span className="text-foreground">{h.distanceMiles} mi</span>
                                       <span>·</span>
                                       <Car className="size-2.5 shrink-0" />
                                       <span>{h.driveMinutes} min</span>
+                                      <span>·</span>
+                                      <Footprints className="size-2.5 shrink-0" />
+                                      <span>{h.walkMinutes} min</span>
                                     </div>
                                     <div className="flex items-center gap-2 text-[10px] text-[--color-dim]">
                                       <span>UBER <span className="text-emerald-400">{h.uberEstimate}</span></span>
                                       <span>LYFT <span className="text-emerald-400">{h.lyftEstimate}</span></span>
                                     </div>
-                                    <a
-                                      href={h.directionsUrl}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-[10px] text-cyan-400/70 hover:text-cyan-400 inline-flex items-center gap-0.5 transition-colors"
-                                    >
-                                      DIRECTIONS <ArrowUpRight className="size-2.5" />
-                                    </a>
+                                    <div className="flex items-center gap-2">
+                                      <a
+                                        href={h.directionsUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-[10px] text-cyan-400/70 hover:text-cyan-400 inline-flex items-center gap-0.5 transition-colors"
+                                      >
+                                        DRIVE <ArrowUpRight className="size-2.5" />
+                                      </a>
+                                      <a
+                                        href={h.transitDirectionsUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-[10px] text-cyan-400/70 hover:text-cyan-400 inline-flex items-center gap-0.5 transition-colors"
+                                      >
+                                        TRANSIT <ArrowUpRight className="size-2.5" />
+                                      </a>
+                                    </div>
                                   </div>
                                 ))}
                               </div>
@@ -1097,6 +1134,7 @@ export function BottomTray({
                                 est_time: event.est_time,
                                 local_time: event.local_time,
                                 tz: event.tz,
+                                date_time_utc: event.date_time_utc,
                                 min_price: event.min_price,
                                 espn_price: event.espn_price,
                                 odds: event.odds,

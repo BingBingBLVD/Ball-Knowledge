@@ -187,6 +187,7 @@ export async function GET() {
         est_time: estTime,
         local_time: localTime,
         tz: tz,
+        date_time_utc: event.dates.start.dateTime ?? null,
         venue: venue?.name ?? "Unknown Venue",
         city: venue?.city.name ?? "",
         state: venue?.state?.stateCode ?? "",

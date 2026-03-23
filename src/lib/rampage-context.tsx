@@ -14,6 +14,7 @@ export interface SelectedGame {
   est_time: string | null;
   local_time?: string | null;
   tz?: string | null;
+  date_time_utc?: string | null;
   min_price: { amount: number; currency: string } | null;
   espn_price?: { amount: number; available: number; url: string | null } | null;
   odds?: {

@@ -23,6 +23,7 @@ import {
   ShieldCheck,
   Check,
   Ban,
+  Footprints,
 } from "lucide-react";
 import Link from "next/link";
 import type { VenuePolicy } from "@/lib/venue-policies";
@@ -89,6 +90,8 @@ interface HotelSuggestion {
   lng: number;
   distanceMiles: number;
   driveMinutes: number;
+  walkMinutes: number;
+  transitDirectionsUrl: string;
   uberEstimate: string;
   lyftEstimate: string;
   directionsUrl: string;
@@ -112,6 +115,7 @@ interface RampageGame {
   est_time: string | null;
   local_time?: string | null;
   tz?: string | null;
+  date_time_utc?: string | null;
   min_price: { amount: number; currency: string } | null;
   espn_price?: { amount: number; available: number; url: string | null } | null;
   odds?: { away_team: string; home_team: string; away_win: number; home_win: number; kalshi_event: string } | null;
@@ -160,6 +164,17 @@ function formatTime(time: string | null, tz?: string | null): string {
   const period = h >= 12 ? "PM" : "AM";
   const hour12 = h % 12 || 12;
   return `${hour12}:${String(m).padStart(2, "0")} ${period} ${tz ?? "ET"}`;
+}
+
+function formatUserLocalTime(utc: string | null | undefined): { text: string; tz: string } | null {
+  if (!utc) return null;
+  const d = new Date(utc);
+  if (isNaN(d.getTime())) return null;
+  const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const timeFmt = new Intl.DateTimeFormat("en-US", { timeZone: userTz, hour: "numeric", minute: "2-digit", hour12: true });
+  const tzFmt = new Intl.DateTimeFormat("en-US", { timeZone: userTz, timeZoneName: "short" });
+  const tzAbbr = tzFmt.formatToParts(d).find((p) => p.type === "timeZoneName")?.value ?? "";
+  return { text: timeFmt.format(d).replace(/\u202f/g, " "), tz: tzAbbr };
 }
 
 function modeIcon(mode: string) {
@@ -510,12 +525,23 @@ function RampageContent() {
                     {/* Game info */}
                     <div className="flex-1 min-w-0">
                       {/* Date + time */}
-                      <div className="flex items-center gap-2 text-[10px] font-mono text-[--color-dim] tracking-widest mb-1">
-                        <span>{formatDate(game.est_date)}</span>
-                        <span>·</span>
-                        <Clock className="size-3" />
-                        <span>{formatTime(game.local_time ?? game.est_time, game.tz)}</span>
-                      </div>
+                      {(() => {
+                        const userLocal = formatUserLocalTime(game.date_time_utc);
+                        const showLocal = userLocal && userLocal.tz !== (game.tz ?? "ET");
+                        return (
+                          <div className="mb-1">
+                            <div className="flex items-center gap-2 text-[10px] font-mono text-[--color-dim] tracking-widest">
+                              <span>{formatDate(game.est_date)}</span>
+                              <span>·</span>
+                              <Clock className="size-3" />
+                              <span>{formatTime(game.local_time ?? game.est_time, game.tz)}</span>
+                            </div>
+                            {showLocal && (
+                              <div className="text-[9px] font-mono text-[--color-dim]/60 ml-0 tracking-widest">{userLocal.text} {userLocal.tz} your time</div>
+                            )}
+                          </div>
+                        );
+                      })()}
 
                       {/* Teams with records */}
                       {away ? (
@@ -672,23 +698,36 @@ function RampageContent() {
                         </div>
                         <div className="flex items-center gap-2 text-[10px] text-[--color-dim] border-t border-white/8 pt-1 mt-0.5">
                           <MapPin className="size-2.5 text-amber-400/60 shrink-0" />
-                          <span className="text-foreground">{h.distanceMiles} mi from {hotels.venue}</span>
+                          <span className="text-foreground">{h.distanceMiles} mi</span>
                           <span>·</span>
                           <Car className="size-2.5 shrink-0" />
                           <span>{h.driveMinutes} min</span>
+                          <span>·</span>
+                          <Footprints className="size-2.5 shrink-0" />
+                          <span>{h.walkMinutes} min</span>
                         </div>
                         <div className="flex items-center gap-2 text-[10px] text-[--color-dim]">
                           <span>UBER <span className="text-emerald-400">{h.uberEstimate}</span></span>
                           <span>LYFT <span className="text-emerald-400">{h.lyftEstimate}</span></span>
                         </div>
-                        <a
-                          href={h.directionsUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[10px] text-cyan-400/70 hover:text-cyan-400 inline-flex items-center gap-0.5 transition-colors"
-                        >
-                          DIRECTIONS <ArrowUpRight className="size-2.5" />
-                        </a>
+                        <div className="flex items-center gap-2">
+                          <a
+                            href={h.directionsUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] text-cyan-400/70 hover:text-cyan-400 inline-flex items-center gap-0.5 transition-colors"
+                          >
+                            DRIVE <ArrowUpRight className="size-2.5" />
+                          </a>
+                          <a
+                            href={h.transitDirectionsUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] text-cyan-400/70 hover:text-cyan-400 inline-flex items-center gap-0.5 transition-colors"
+                          >
+                            TRANSIT <ArrowUpRight className="size-2.5" />
+                          </a>
+                        </div>
                       </div>
                     ))}
                   </div>

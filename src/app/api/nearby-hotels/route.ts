@@ -11,6 +11,8 @@ interface HotelSuggestion {
   lng: number;
   distanceMiles: number;
   driveMinutes: number;
+  walkMinutes: number;
+  transitDirectionsUrl: string;
   uberEstimate: string;
   lyftEstimate: string;
   directionsUrl: string;
@@ -74,6 +76,8 @@ export async function GET(req: NextRequest) {
       const lyftLow = Math.max(6, Math.round(2.0 + 1.35 * roadMiles + 0.20 * driveMin));
       const lyftHigh = Math.round(lyftLow * 1.3);
 
+      const walkMin = Math.max(1, Math.round(dist * 20));
+
       return {
         name: place.name,
         vicinity: place.vicinity,
@@ -85,6 +89,8 @@ export async function GET(req: NextRequest) {
         lng: hLng,
         distanceMiles: Math.round(dist * 10) / 10,
         driveMinutes: driveMin,
+        walkMinutes: walkMin,
+        transitDirectionsUrl: `https://www.google.com/maps/dir/?api=1&origin=${hLat},${hLng}&destination=${venueLat},${venueLng}&travelmode=transit`,
         uberEstimate: uberLow === uberHigh ? `~$${uberLow}` : `~$${uberLow}–${uberHigh}`,
         lyftEstimate: lyftLow === lyftHigh ? `~$${lyftLow}` : `~$${lyftLow}–${lyftHigh}`,
         directionsUrl: `https://www.google.com/maps/dir/?api=1&origin=${hLat},${hLng}&destination=${venueLat},${venueLng}`,

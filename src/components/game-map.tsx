@@ -25,6 +25,7 @@ interface MapEvent {
   est_time: string | null;
   local_time?: string | null;
   tz?: string | null;
+  date_time_utc?: string | null;
   venue: string;
   city: string;
   state: string;
@@ -75,6 +76,7 @@ export interface VenueInfo {
     est_time: string | null;
     local_time?: string | null;
     tz?: string | null;
+    date_time_utc?: string | null;
     min_price: { amount: number; currency: string } | null;
     odds: {
       away_team: string;
@@ -241,6 +243,7 @@ export function GameMap({
             est_time: g.est_time,
             local_time: g.local_time,
             tz: g.tz,
+            date_time_utc: g.date_time_utc,
             min_price: g.min_price,
             odds: g.odds,
           })),
