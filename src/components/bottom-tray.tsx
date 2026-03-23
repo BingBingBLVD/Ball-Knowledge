@@ -1566,12 +1566,12 @@ export function BottomTray({
                           </summary>
                           <div className="mt-4">
                             {nLoading && !news && <div className="flex items-center gap-2 text-sm text-neutral-500"><Loader2 className="size-4 animate-spin" /> Loading...</div>}
-                            {news && news.length > 0 && <div className="space-y-3">{news.map((n, i) => (
-                              <a key={i} href={n.link} target="_blank" rel="noopener noreferrer" className="block rounded-xl hover:bg-neutral-50 px-3 py-3 -mx-3 no-underline transition-colors">
-                                <div className="text-sm font-medium text-neutral-900 leading-snug">{n.title}</div>
-                                <div className="flex items-center gap-2 mt-1 text-xs text-neutral-500">
-                                  <span>{n.source}</span>
-                                  {n.published && <span>{new Date(n.published).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>}
+                            {news && news.length > 0 && <div className="divide-y divide-neutral-100">{news.map((n, i) => (
+                              <a key={i} href={n.link} target="_blank" rel="noopener noreferrer" className="block py-4 no-underline hover:bg-neutral-50 -mx-3 px-3 rounded-lg transition-colors">
+                                <div className="text-[15px] font-medium text-neutral-900 leading-snug">{n.title}</div>
+                                <div className="flex items-center justify-between mt-1.5">
+                                  <span className="text-xs text-neutral-500">{n.source}</span>
+                                  {n.published && <span className="text-xs text-neutral-400">{new Date(n.published).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>}
                                 </div>
                               </a>
                             ))}</div>}
