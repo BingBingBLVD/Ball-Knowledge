@@ -776,7 +776,7 @@ export function BottomTray({
                     if (event.lat != null && event.lng != null) {
                       const vLat = event.lat!;
                       const vLng = event.lng!;
-                      for (const s of [...airports, ...trains, ...buses]) {
+                      for (const s of airports) {
                         handleEnrich(vLat, vLng, s);
                       }
                       handlePolicyLoad(event.venue);
