@@ -970,7 +970,7 @@ export function BottomTray({
             <span className="text-sm font-semibold text-neutral-900">
               {games.length} game{games.length !== 1 ? "s" : ""} on {(() => { const [y, m, d] = date.split("-").map(Number); return new Date(y, m - 1, d).toLocaleDateString("en-US", { month: "short", day: "numeric" }); })()}
             </span>
-            <ChevronUp className="size-4 text-[--color-dim]" />
+            <ChevronUp className="size-4 text-[--color-dim] hidden min-[867px]:block" />
           </button>
         ) : (
           <>
@@ -996,11 +996,11 @@ export function BottomTray({
                   gameCountByDate={gameCountByDate}
                 />
               </div>
-              {/* Expand/collapse (mobile only) */}
+              {/* Expand/collapse (mobile only, hidden on very small screens) */}
               {!isWide && (
                 <button
                   onClick={cycleTray}
-                  className="shrink-0 p-2 rounded-full hover:bg-neutral-100 transition-colors"
+                  className="shrink-0 p-2 rounded-full hover:bg-neutral-100 transition-colors hidden min-[867px]:block"
                 >
                   <ChevronUp className={`size-4 text-[--color-dim] transition-transform ${trayState === "expanded" ? "rotate-180" : ""}`} />
                 </button>
