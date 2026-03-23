@@ -885,38 +885,82 @@ export function BottomTray({
     else onTrayStateChange("collapsed");
   }, [trayState, onTrayStateChange]);
 
+  // Drag-to-resize
+  const dragStartY = useRef<number | null>(null);
+  const dragStartState = useRef<TrayState>(trayState);
+
+  const onDragStart = useCallback((e: React.PointerEvent) => {
+    dragStartY.current = e.clientY;
+    dragStartState.current = trayState;
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  }, [trayState]);
+
+  const onDragEnd = useCallback((e: React.PointerEvent) => {
+    if (dragStartY.current === null) return;
+    const dy = dragStartY.current - e.clientY;
+    dragStartY.current = null;
+    const threshold = 50;
+    if (dy > threshold) {
+      // Swiped up
+      if (dragStartState.current === "collapsed") onTrayStateChange("peek");
+      else if (dragStartState.current === "peek") onTrayStateChange("expanded");
+    } else if (dy < -threshold) {
+      // Swiped down
+      if (dragStartState.current === "expanded") onTrayStateChange("peek");
+      else if (dragStartState.current === "peek") onTrayStateChange("collapsed");
+    }
+  }, [onTrayStateChange]);
+
+  const isExpanded = trayState === "expanded";
   const height = trayState === "collapsed" ? "56px" : trayState === "peek" ? "50vh" : "100vh";
+  const sideMargin = isExpanded ? "0px" : "8px";
 
   return (
     <div
       className="fixed bottom-0 left-0 right-0 z-10 tray-transition pointer-events-auto"
-      style={{ height }}
+      style={{ height, marginLeft: sideMargin, marginRight: sideMargin }}
     >
-      <div className="h-full bg-white rounded-t-2xl border-t border-x border-neutral-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] flex flex-col">
-        {/* Header bar */}
-        <div className="flex items-center select-none border-b border-black/5">
-          {/* Search */}
-          <div className="flex-1 min-w-0 border-r border-black/5">
-            <SearchBar value={search} onChange={onSearchChange} onLocationChange={onLocationChange} />
-          </div>
-          {/* Date selector */}
-          <div className="shrink-0">
-            <DateSelector
-              currentDate={date}
-              availableDates={availableDates}
-              onDateChange={onDateChange}
-              gameCount={games.length}
-              gameCountByDate={gameCountByDate}
-            />
-          </div>
-          {/* Expand/collapse */}
-          <button
-            onClick={cycleTray}
-            className="shrink-0 px-2 py-2.5 hover:bg-neutral-50 transition-colors border-l border-black/5"
-          >
-            <ChevronUp className={`size-4 text-[--color-dim] transition-transform ${trayState === "expanded" ? "rotate-180" : ""}`} />
+      <div className={`h-full bg-white border-t border-x border-neutral-200 shadow-[0_-8px_30px_rgba(0,0,0,0.10)] flex flex-col ${isExpanded ? "rounded-t-none" : "rounded-t-[24px]"}`}>
+        {trayState === "collapsed" ? (
+          /* Collapsed: just a summary line */
+          <button onClick={cycleTray} onPointerDown={onDragStart} onPointerUp={onDragEnd} className="flex items-center justify-center h-full w-full gap-1.5 touch-none">
+            <span className="text-sm font-semibold text-neutral-900">
+              {games.length} game{games.length !== 1 ? "s" : ""} on {(() => { const [y, m, d] = date.split("-").map(Number); return new Date(y, m - 1, d).toLocaleDateString("en-US", { month: "short", day: "numeric" }); })()}
+            </span>
+            <ChevronUp className="size-4 text-[--color-dim]" />
           </button>
-        </div>
+        ) : (
+          <>
+            {/* Drag handle */}
+            <div className="flex justify-center pt-3 pb-1 cursor-grab touch-none" onPointerDown={onDragStart} onPointerUp={onDragEnd}>
+              <div className="w-10 h-1 rounded-full bg-neutral-300" />
+            </div>
+            {/* Header bar */}
+            <div className="flex items-center select-none border-b border-neutral-100 px-2 pb-2 gap-2">
+              {/* Search */}
+              <div className="flex-1 min-w-0">
+                <SearchBar value={search} onChange={onSearchChange} onLocationChange={onLocationChange} />
+              </div>
+              {/* Date selector */}
+              <div className="shrink-0">
+                <DateSelector
+                  currentDate={date}
+                  availableDates={availableDates}
+                  onDateChange={onDateChange}
+                  gameCount={games.length}
+                  gameCountByDate={gameCountByDate}
+                />
+              </div>
+              {/* Expand/collapse */}
+              <button
+                onClick={cycleTray}
+                className="shrink-0 p-2 rounded-full hover:bg-neutral-100 transition-colors"
+              >
+                <ChevronUp className={`size-4 text-[--color-dim] transition-transform ${trayState === "expanded" ? "rotate-180" : ""}`} />
+              </button>
+            </div>
+          </>
+        )}
 
         {/* Scrollable game cards — Airbnb listing style */}
         {trayState !== "collapsed" && (

@@ -229,7 +229,9 @@
 
 /* Tray transition */
 .tray-transition {
-  transition: height 300ms cubic-bezier(0.32, 0.72, 0, 1);
+  transition: height 300ms cubic-bezier(0.32, 0.72, 0, 1),
+              margin 300ms cubic-bezier(0.32, 0.72, 0, 1),
+              border-radius 300ms cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 /* Stadium card slide */

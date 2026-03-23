@@ -134,7 +134,7 @@ export function SearchBar({
 
   return (
     <div ref={containerRef} className="relative">
-      <div className="flex items-center px-3 py-2.5">
+      <div className="flex items-center px-4 py-3 bg-neutral-50 rounded-xl">
         <Search className="size-4 text-[--color-dim] shrink-0" />
         <input
           type="text"
