@@ -59,9 +59,9 @@ async function fetchGoogleDirections(
   if (!GOOGLE_API_KEY) return null;
   try {
     let url = `https://maps.googleapis.com/maps/api/directions/json?origin=${fromLat},${fromLng}&destination=${toLat},${toLng}&mode=${mode}&key=${GOOGLE_API_KEY}`;
-    if (mode === "transit" && timeConstraint?.arriveBy) {
+    if (timeConstraint?.arriveBy) {
       url += `&arrival_time=${timeConstraint.arriveBy}`;
-    } else if (mode === "transit" && timeConstraint?.departAfter) {
+    } else if (timeConstraint?.departAfter) {
       url += `&departure_time=${timeConstraint.departAfter}`;
     }
     if (mode === "transit" && transitMode) {
@@ -128,7 +128,7 @@ export async function getTravelTimes(
 
   // Fetch driving and transit in parallel
   const [driveResult, transitResult] = await Promise.all([
-    fetchGoogleDirections(fromLat, fromLng, toLat, toLng, "driving"),
+    fetchGoogleDirections(fromLat, fromLng, toLat, toLng, "driving", transitConstraint),
     fetchGoogleDirections(fromLat, fromLng, toLat, toLng, "transit", transitConstraint),
   ]);
 

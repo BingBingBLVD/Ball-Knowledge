@@ -473,14 +473,17 @@ export function BottomTray({
   const enrichKey = (vLat: number, vLng: number, sLat: number, sLng: number) =>
     `${vLat},${vLng};${sLat},${sLng}`;
 
-  const handleEnrich = useCallback(async (venueLat: number, venueLng: number, stop: TransitStop) => {
+  const handleEnrich = useCallback(async (venueLat: number, venueLng: number, stop: TransitStop, tipoffUtc?: string | null) => {
     const key = enrichKey(venueLat, venueLng, stop.lat, stop.lng);
     if (enriched[key] || enriching.has(key)) return;
     setEnriching((prev) => new Set(prev).add(key));
     try {
-      const res = await fetch(
-        `/api/travel-times?fromLat=${venueLat}&fromLng=${venueLng}&toLat=${stop.lat}&toLng=${stop.lng}`
-      );
+      let url = `/api/travel-times?fromLat=${venueLat}&fromLng=${venueLng}&toLat=${stop.lat}&toLng=${stop.lng}`;
+      if (tipoffUtc) {
+        const arriveBy = new Date(new Date(tipoffUtc).getTime() - 45 * 60 * 1000).toISOString();
+        url += `&arriveBy=${encodeURIComponent(arriveBy)}`;
+      }
+      const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         setEnriched((prev) => ({ ...prev, [key]: data }));
@@ -799,7 +802,7 @@ export function BottomTray({
                       const vLat = event.lat!;
                       const vLng = event.lng!;
                       for (const s of [...airports, ...trains, ...buses]) {
-                        handleEnrich(vLat, vLng, s);
+                        handleEnrich(vLat, vLng, s, event.date_time_utc);
                       }
                       handlePolicyLoad(event.venue);
                       handleHotelsLoad(event.venue, vLat, vLng, event.est_date || date);
@@ -921,6 +924,7 @@ export function BottomTray({
                       {(airports.length > 0 || trains.length > 0 || buses.length > 0) && event.lat != null && event.lng != null && (
                         <div className="mt-2 space-y-1">
                           <div className="text-[10px] font-mono tracking-widest text-[--primary]/70 uppercase">DISTANCE FROM STADIUM</div>
+                          <div className="text-[9px] text-[--color-dim]/60 -mt-0.5">Travel times target arrival 45 min before tipoff</div>
                           {airports.length > 0 && (
                             <TransitRows
                               stops={airports}
@@ -929,7 +933,7 @@ export function BottomTray({
                               vLng={event.lng!}
                               enriched={enriched}
                               enriching={enriching}
-                              onEnrich={(stop) => handleEnrich(event.lat!, event.lng!, stop)}
+                              onEnrich={(stop) => handleEnrich(event.lat!, event.lng!, stop, event.date_time_utc)}
                               onRouteFocus={onRouteFocus}
                               isAnimating={isAnimating}
                               venueName={event.venue}
@@ -944,7 +948,7 @@ export function BottomTray({
                               vLng={event.lng!}
                               enriched={enriched}
                               enriching={enriching}
-                              onEnrich={(stop) => handleEnrich(event.lat!, event.lng!, stop)}
+                              onEnrich={(stop) => handleEnrich(event.lat!, event.lng!, stop, event.date_time_utc)}
                               onRouteFocus={onRouteFocus}
                               isAnimating={isAnimating}
                               venueName={event.venue}
@@ -959,7 +963,7 @@ export function BottomTray({
                               vLng={event.lng!}
                               enriched={enriched}
                               enriching={enriching}
-                              onEnrich={(stop) => handleEnrich(event.lat!, event.lng!, stop)}
+                              onEnrich={(stop) => handleEnrich(event.lat!, event.lng!, stop, event.date_time_utc)}
                               onRouteFocus={onRouteFocus}
                               isAnimating={isAnimating}
                               venueName={event.venue}

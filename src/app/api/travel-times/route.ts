@@ -8,6 +8,8 @@ export async function GET(req: NextRequest) {
   const toLat = parseFloat(sp.get("toLat") ?? "");
   const toLng = parseFloat(sp.get("toLng") ?? "");
 
+  const arriveBy = sp.get("arriveBy") ?? "";
+
   if ([fromLat, fromLng, toLat, toLng].some(isNaN)) {
     return NextResponse.json(
       { error: "Missing or invalid coordinates" },
@@ -15,6 +17,7 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const times = await getTravelTimes(fromLat, fromLng, toLat, toLng);
+  const constraint = arriveBy ? { arriveBy: Math.floor(new Date(arriveBy).getTime() / 1000) } : undefined;
+  const times = await getTravelTimes(fromLat, fromLng, toLat, toLng, constraint);
   return NextResponse.json(times);
 }
