@@ -1301,7 +1301,7 @@ export function BottomTray({
                       <div className="flex items-center gap-2">
                         <Clock className="size-5 text-neutral-400" />
                         <div>
-                          <div className="text-sm font-semibold text-neutral-900">{formatTime(event.local_time ?? event.est_time, event.tz)}</div>
+                          <div className="text-sm font-semibold text-neutral-900">{event.est_date ? new Date(event.est_date + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }) : date} · {formatTime(event.local_time ?? event.est_time, event.tz)}</div>
                           {showLocal && <div className="text-xs text-neutral-500">{userLocal.text} your time</div>}
                         </div>
                       </div>
@@ -1311,7 +1311,7 @@ export function BottomTray({
                           <div>
                             <div className={`text-sm font-semibold ${price < 30 ? "text-emerald-600" : "text-neutral-900"}`}>From ${price}</div>
                             {event.espn_price?.available != null && event.espn_price.available > 0 && (
-                              <div className="text-xs text-neutral-500">{event.espn_price.available} tickets left</div>
+                              <div className="text-xs text-neutral-500">{event.espn_price.available.toLocaleString()} left</div>
                             )}
                           </div>
                         </div>
@@ -1425,19 +1425,19 @@ export function BottomTray({
                           <h2 className="text-[22px] font-semibold text-neutral-900 mb-4">Airport status</h2>
                           {dLoading && !delays && <div className="flex items-center gap-2 text-sm text-neutral-500"><Loader2 className="size-4 animate-spin" /> Checking delays...</div>}
                           {delays && (
-                            <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-6 px-6 pb-2">
+                            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
                               {delays.map((d) => {
                                 const hasDelay = (d.departureDel != null && d.departureDel > 0) || (d.arrivalDel != null && d.arrivalDel > 0);
                                 return (
-                                  <div key={d.code} className="shrink-0 min-w-[240px] flex-1 rounded-xl border border-neutral-200 p-4 text-center">
-                                    <div className="text-lg font-bold text-neutral-900">{d.code}</div>
+                                  <div key={d.code} className={`shrink-0 rounded-xl px-4 py-2.5 text-center min-w-[80px] ${hasDelay ? "bg-amber-50 border border-amber-200" : "bg-neutral-50"}`}>
+                                    <div className="text-sm font-bold text-neutral-900">{d.code}</div>
                                     {hasDelay ? (
-                                      <div className="mt-1 space-y-0.5">
-                                        {d.departureDel != null && d.departureDel > 0 && <div className="text-sm text-amber-600 font-medium">Departures +{d.departureDel} min</div>}
-                                        {d.arrivalDel != null && d.arrivalDel > 0 && <div className="text-sm text-amber-600 font-medium">Arrivals +{d.arrivalDel} min</div>}
+                                      <div className="mt-0.5">
+                                        {d.departureDel != null && d.departureDel > 0 && <div className="text-xs text-amber-600 font-medium">+{d.departureDel}m</div>}
+                                        {d.arrivalDel != null && d.arrivalDel > 0 && <div className="text-xs text-amber-600 font-medium">+{d.arrivalDel}m</div>}
                                       </div>
                                     ) : (
-                                      <div className="text-sm text-emerald-600 font-medium mt-1">On time</div>
+                                      <div className="text-xs text-emerald-600 font-medium mt-0.5">On time</div>
                                     )}
                                   </div>
                                 );
