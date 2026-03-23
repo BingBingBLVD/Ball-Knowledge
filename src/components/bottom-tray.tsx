@@ -1485,7 +1485,7 @@ export function BottomTray({
                         }}
                         className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl font-mono text-base font-semibold tracking-wider bg-[--primary] text-[--primary-foreground] shadow-lg hover:brightness-110 transition-all press-scale"
                       >
-                        <Navigation className="size-5" /> TAKE ME
+                        <Navigation className="size-5" /> RUN IT!
                       </button>
                     ) : (
                       <div className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl font-mono text-sm text-[--color-dim] bg-white/[0.03] border border-white/5">
