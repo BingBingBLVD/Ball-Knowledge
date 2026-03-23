@@ -1477,21 +1477,27 @@ export function BottomTray({
                     const nLoading = newsLoading.has(newsKey);
                     if (!news && !nLoading) return null;
                     return (
-                      <div className="py-5 border-b border-white/5">
-                        <h3 className="text-xs font-mono uppercase tracking-widest text-[--color-dim] mb-3 flex items-center gap-2"><Newspaper className="size-4" /> Local News</h3>
-                        {nLoading && !news && <div className="flex items-center gap-2 text-sm text-[--color-dim]"><Loader2 className="size-4 animate-spin" /> Loading news...</div>}
-                        {news && news.length > 0 && <div className="space-y-2">{news.map((n, i) => (
-                          <a key={i} href={n.link} target="_blank" rel="noopener noreferrer" className="block rounded-lg hover:bg-white/5 px-3 py-2 no-underline transition-colors">
-                            <div className="text-sm text-foreground leading-snug">{n.title}</div>
-                            <div className="flex items-center gap-3 mt-1 text-[10px] text-[--color-dim] font-mono">
-                              <span>{n.source}</span>
-                              {n.published && <span>{new Date(n.published).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>}
-                              <ExternalLink className="size-2.5 ml-auto" />
-                            </div>
-                          </a>
-                        ))}</div>}
-                        {news && news.length === 0 && <div className="text-sm text-[--color-dim] font-mono">No recent news found</div>}
-                      </div>
+                      <details className="py-5 border-b border-white/5 group">
+                        <summary className="text-xs font-mono uppercase tracking-widest text-[--color-dim] flex items-center gap-2 cursor-pointer list-none select-none">
+                          <Newspaper className="size-4" /> Local News
+                          {news && news.length > 0 && <span className="text-[10px] opacity-60">({news.length})</span>}
+                          <ChevronDown className="size-4 ml-auto transition-transform group-open:rotate-180" />
+                        </summary>
+                        <div className="mt-3">
+                          {nLoading && !news && <div className="flex items-center gap-2 text-sm text-[--color-dim]"><Loader2 className="size-4 animate-spin" /> Loading news...</div>}
+                          {news && news.length > 0 && <div className="space-y-2">{news.map((n, i) => (
+                            <a key={i} href={n.link} target="_blank" rel="noopener noreferrer" className="block rounded-lg hover:bg-white/5 px-3 py-2 no-underline transition-colors">
+                              <div className="text-sm text-foreground leading-snug">{n.title}</div>
+                              <div className="flex items-center gap-3 mt-1 text-[10px] text-[--color-dim] font-mono">
+                                <span>{n.source}</span>
+                                {n.published && <span>{new Date(n.published).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>}
+                                <ExternalLink className="size-2.5 ml-auto" />
+                              </div>
+                            </a>
+                          ))}</div>}
+                          {news && news.length === 0 && <div className="text-sm text-[--color-dim] font-mono">No recent news found</div>}
+                        </div>
+                      </details>
                     );
                   })()}
 
