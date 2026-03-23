@@ -294,10 +294,10 @@ function TransitRows({
                     </div>
                     <div className="flex items-center gap-3 text-[10px] border-t border-black/5 pt-1.5">
                       <span className="text-[--color-dim] cursor-pointer" onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(uberDeepLink(vLat, vLng, stop.lat, stop.lng), "_blank"); }}>
-                        <span className="font-bold">UBER</span> <span className="text-emerald-400">{times.uberEstimate ? `~${extractUpperBound(times.uberEstimate)}` : "--"}</span>
+                        <span className="font-bold">UBER</span> <span className="text-emerald-600">{times.uberEstimate ? `~${extractUpperBound(times.uberEstimate)}` : "--"}</span>
                       </span>
                       <span className="text-[--color-dim] cursor-pointer" onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(lyftDeepLink(vLat, vLng, stop.lat, stop.lng), "_blank"); }}>
-                        <span className="font-bold">LYFT</span> <span className="text-emerald-400">{times.lyftEstimate ? `~${extractUpperBound(times.lyftEstimate)}` : "--"}</span>
+                        <span className="font-bold">LYFT</span> <span className="text-emerald-600">{times.lyftEstimate ? `~${extractUpperBound(times.lyftEstimate)}` : "--"}</span>
                       </span>
                     </div>
                   </a>
@@ -325,7 +325,7 @@ function TransitRows({
                         <span className="text-xs font-bold text-foreground">{formatDriveTime(times.transitMinutes)}</span>
                         <span className="text-[10px] text-[--color-dim]">Transit</span>
                       </div>
-                      <div className="text-[10px] text-emerald-400 mt-1">{times.transitFare ?? "No fare info"}</div>
+                      <div className="text-[10px] text-emerald-600 mt-1">{times.transitFare ?? "No fare info"}</div>
                     </a>
                     <div className="rounded-lg overflow-hidden border border-black/5">
                       <iframe
@@ -1087,10 +1087,10 @@ export function BottomTray({
                       {visibleColumns.has("ticket") && (
                         <div className="flex flex-col items-start shrink-0 gap-0.5 min-w-[2.5rem]">
                           {price != null && (
-                            <span className={`font-mono text-sm font-semibold ${price < 30 ? "text-emerald-400" : price < 80 ? "text-emerald-300/80" : "text-foreground"}`}>${price}</span>
+                            <span className={`font-mono text-sm font-semibold ${price < 30 ? "text-emerald-600" : price < 80 ? "text-emerald-700" : "text-foreground"}`}>${price}</span>
                           )}
                           {event.espn_price?.available != null && event.espn_price.available > 0 && (
-                            <span className={`font-mono text-[10px] ${event.espn_price.available < 1000 ? "text-[#facc15]" : "text-[--color-dim]"}`}>{event.espn_price.available}<br/>available</span>
+                            <span className={`font-mono text-[10px] ${event.espn_price.available < 1000 ? "text-amber-600" : "text-[--color-dim]"}`}>{event.espn_price.available}<br/>available</span>
                           )}
                         </div>
                       )}
@@ -1099,8 +1099,8 @@ export function BottomTray({
                         <div className="flex flex-col items-start shrink-0 gap-0.5 min-w-[3.2rem]">
                           {away ? (
                             <>
-                              <span className={`font-mono text-xs tabular-nums ${isCloseMatchup ? "text-[#facc15]" : "text-[--color-dim]"}`}>{event.away_record || "—"}</span>
-                              <span className={`font-mono text-xs tabular-nums ${isCloseMatchup ? "text-[#facc15]" : "text-[--color-dim]"}`}>{event.home_record || "—"}</span>
+                              <span className={`font-mono text-xs tabular-nums ${isCloseMatchup ? "text-amber-600" : "text-[--color-dim]"}`}>{event.away_record || "—"}</span>
+                              <span className={`font-mono text-xs tabular-nums ${isCloseMatchup ? "text-amber-600" : "text-[--color-dim]"}`}>{event.home_record || "—"}</span>
                             </>
                           ) : <span className="text-xs">&nbsp;</span>}
                         </div>
@@ -1110,9 +1110,9 @@ export function BottomTray({
                         <div className="flex flex-col items-start shrink-0 gap-0.5 min-w-[2.5rem]">
                           {away && event.odds ? (
                             <>
-                              <span className={`font-mono text-xs tabular-nums ${isCloseOdds ? "text-[#facc15] font-semibold" : "text-[--color-dim]"}`}>{event.odds.away_win}%</span>
-                              <span className={`font-mono text-xs tabular-nums ${isCloseOdds ? "text-[#facc15] font-semibold" : "text-[--color-dim]"}`}>{event.odds.home_win}%</span>
-                              <span className={`font-mono text-[10px] ${isCloseOdds ? "text-[#facc15]" : "text-[--color-dim]"}`}>±{spread}</span>
+                              <span className={`font-mono text-xs tabular-nums ${isCloseOdds ? "text-amber-600 font-semibold" : "text-[--color-dim]"}`}>{event.odds.away_win}%</span>
+                              <span className={`font-mono text-xs tabular-nums ${isCloseOdds ? "text-amber-600 font-semibold" : "text-[--color-dim]"}`}>{event.odds.home_win}%</span>
+                              <span className={`font-mono text-[10px] ${isCloseOdds ? "text-amber-600" : "text-[--color-dim]"}`}>±{spread}</span>
                             </>
                           ) : <span className="text-xs">&nbsp;</span>}
                         </div>
@@ -1134,7 +1134,7 @@ export function BottomTray({
                       {visibleColumns.has("stadium") && (
                         <div className="flex-1 min-w-0 flex flex-col gap-0.5">
                           <span className="text-[11px] text-[--color-dim] font-mono truncate">{event.venue}</span>
-                          <span className={`text-[10px] font-mono truncate ${dist != null && dist < 250 ? "text-[#facc15]" : "text-[--color-dim]"}`}>{event.city}, {event.state}{dist != null ? ` · ${Math.round(dist)}mi` : ""}</span>
+                          <span className={`text-[10px] font-mono truncate ${dist != null && dist < 250 ? "text-amber-600" : "text-[--color-dim]"}`}>{event.city}, {event.state}{dist != null ? ` · ${Math.round(dist)}mi` : ""}</span>
                         </div>
                       )}
                       {/* Col: Time */}
@@ -1182,7 +1182,7 @@ export function BottomTray({
               onClick={closePopover}
             >
               {/* Backdrop */}
-              <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+              <div className="absolute inset-0 bg-white/60 backdrop-blur-sm" />
 
               {/* Panel */}
               <div
@@ -1227,9 +1227,9 @@ export function BottomTray({
                     {price != null && (
                       <div className="bg-black/5 rounded-xl p-3">
                         <div className="text-[10px] font-mono text-[--color-dim] uppercase tracking-widest mb-1">From</div>
-                        <div className={`text-xl font-bold font-mono ${price < 30 ? "text-emerald-400" : price < 80 ? "text-emerald-300/80" : "text-foreground"}`}>${price}</div>
+                        <div className={`text-xl font-bold font-mono ${price < 30 ? "text-emerald-600" : price < 80 ? "text-emerald-700" : "text-foreground"}`}>${price}</div>
                         {event.espn_price?.available != null && event.espn_price.available > 0 && (
-                          <div className={`text-xs font-mono mt-0.5 ${event.espn_price.available < 1000 ? "text-[#facc15]" : "text-[--color-dim]"}`}>{event.espn_price.available} left</div>
+                          <div className={`text-xs font-mono mt-0.5 ${event.espn_price.available < 1000 ? "text-amber-600" : "text-[--color-dim]"}`}>{event.espn_price.available} left</div>
                         )}
                       </div>
                     )}
@@ -1304,8 +1304,8 @@ export function BottomTray({
                                   <WeatherIcon code={h.weatherCode} className="size-4 text-foreground" />
                                   <span className="text-foreground font-bold">{h.temp}°</span>
                                   <span className="text-[--color-dim] text-[9px]">FL {h.feelsLike}°</span>
-                                  {h.precipProb > 0 && <span className="text-cyan-400 text-[9px] flex items-center gap-0.5"><Droplets className="size-2" />{h.precipProb}%</span>}
-                                  {h.windSpeed >= 10 && <span className="text-amber-400 text-[9px] flex items-center gap-0.5"><Wind className="size-2" />{h.windSpeed}</span>}
+                                  {h.precipProb > 0 && <span className="text-cyan-600 text-[9px] flex items-center gap-0.5"><Droplets className="size-2" />{h.precipProb}%</span>}
+                                  {h.windSpeed >= 10 && <span className="text-amber-600 text-[9px] flex items-center gap-0.5"><Wind className="size-2" />{h.windSpeed}</span>}
                                 </div>
                               );
                             })}
@@ -1362,7 +1362,7 @@ export function BottomTray({
                         {dLoading && !delays && <div className="flex items-center gap-2 text-sm text-[--color-dim]"><Loader2 className="size-4 animate-spin" /> Checking delays...</div>}
                         {delays && <div className="space-y-2">{delays.map((d) => {
                           const hasDelay = (d.departureDel != null && d.departureDel > 0) || (d.arrivalDel != null && d.arrivalDel > 0);
-                          return (<div key={d.code} className="flex items-center gap-3 text-sm font-mono"><span className="font-bold text-[--color-flight]">{d.code}</span>{hasDelay ? (<div className="flex items-center gap-3 flex-wrap">{d.departureDel != null && d.departureDel > 0 && <span className="text-amber-400 flex items-center gap-1"><AlertTriangle className="size-3.5" /> DEP +{d.departureDel}min</span>}{d.arrivalDel != null && d.arrivalDel > 0 && <span className="text-amber-400 flex items-center gap-1"><Clock className="size-3.5" /> ARR +{d.arrivalDel}min</span>}{d.reasons?.map((r, i) => <span key={i} className="text-[--color-dim] text-xs">{r}</span>)}</div>) : <span className="text-emerald-400">No major delays</span>}</div>);
+                          return (<div key={d.code} className="flex items-center gap-3 text-sm font-mono"><span className="font-bold text-[--color-flight]">{d.code}</span>{hasDelay ? (<div className="flex items-center gap-3 flex-wrap">{d.departureDel != null && d.departureDel > 0 && <span className="text-amber-600 flex items-center gap-1"><AlertTriangle className="size-3.5" /> DEP +{d.departureDel}min</span>}{d.arrivalDel != null && d.arrivalDel > 0 && <span className="text-amber-600 flex items-center gap-1"><Clock className="size-3.5" /> ARR +{d.arrivalDel}min</span>}{d.reasons?.map((r, i) => <span key={i} className="text-[--color-dim] text-xs">{r}</span>)}</div>) : <span className="text-emerald-600">No major delays</span>}</div>);
                         })}</div>}
                       </div>
                     );
@@ -1382,7 +1382,7 @@ export function BottomTray({
                         {ltData && ltData.length > 0 && <div className="space-y-2">{ltData.map((lt) => {
                           const depTime = lt.lastDeparture ? new Date(lt.lastDeparture) : null;
                           const depStr = depTime ? depTime.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }) : null;
-                          return (<div key={lt.stopCode} className="flex items-center gap-3 text-sm font-mono"><span className="font-bold text-[--color-train]">{lt.stopCode}</span>{lt.available && depStr ? (<div className="flex items-center gap-3 flex-wrap"><span className={lt.warning ? "text-red-400 font-semibold" : "text-[--color-dim]"}>Last dep {depStr}</span>{lt.durationMinutes && <span className="text-[--color-dim] text-xs">{lt.durationMinutes}min ride</span>}{lt.warning && <span className="text-red-400 text-xs flex items-center gap-1"><AlertTriangle className="size-3" /> May end before game</span>}</div>) : <span className="text-[--color-dim] text-xs">{lt.available ? "Schedule available" : "No late service found"}</span>}</div>);
+                          return (<div key={lt.stopCode} className="flex items-center gap-3 text-sm font-mono"><span className="font-bold text-[--color-train]">{lt.stopCode}</span>{lt.available && depStr ? (<div className="flex items-center gap-3 flex-wrap"><span className={lt.warning ? "text-red-600 font-semibold" : "text-[--color-dim]"}>Last dep {depStr}</span>{lt.durationMinutes && <span className="text-[--color-dim] text-xs">{lt.durationMinutes}min ride</span>}{lt.warning && <span className="text-red-600 text-xs flex items-center gap-1"><AlertTriangle className="size-3" /> May end before game</span>}</div>) : <span className="text-[--color-dim] text-xs">{lt.available ? "Schedule available" : "No late service found"}</span>}</div>);
                         })}<div className="text-[10px] text-[--color-dim]/60 mt-1">Post-game transit from venue area</div></div>}
                       </div>
                     );
@@ -1400,10 +1400,10 @@ export function BottomTray({
                         <h3 className="text-xs font-mono uppercase tracking-widest text-[--color-dim] mb-3 flex items-center gap-2"><ShieldCheck className="size-4" /> Venue Policy</h3>
                         {loading && !policy && <div className="flex items-center gap-2 text-sm text-[--color-dim]"><Loader2 className="size-4 animate-spin" /> Loading policy...</div>}
                         {policy && (<div>
-                          <div className="text-sm font-mono text-[--color-dim] mb-2">{policy.clearBagRequired && <span className="text-amber-400 font-semibold">Clear bag required</span>}{policy.maxBagSize && <span>{policy.clearBagRequired ? " · " : ""}Max {policy.maxBagSize}</span>}</div>
+                          <div className="text-sm font-mono text-[--color-dim] mb-2">{policy.clearBagRequired && <span className="text-amber-600 font-semibold">Clear bag required</span>}{policy.maxBagSize && <span>{policy.clearBagRequired ? " · " : ""}Max {policy.maxBagSize}</span>}</div>
                           <div className="grid grid-cols-2 gap-4 text-sm font-mono">
-                            {allowed.length > 0 && <div className="space-y-1">{allowed.map((item) => <div key={item.name} className="flex items-start gap-1.5 text-emerald-400"><Check className="size-4 shrink-0 mt-0.5" /><span>{item.name}</span></div>)}</div>}
-                            {prohibited.length > 0 && <div className="space-y-1">{prohibited.map((item) => <div key={item.name} className="flex items-start gap-1.5 text-red-400"><Ban className="size-4 shrink-0 mt-0.5" /><span>{item.name}</span></div>)}</div>}
+                            {allowed.length > 0 && <div className="space-y-1">{allowed.map((item) => <div key={item.name} className="flex items-start gap-1.5 text-emerald-600"><Check className="size-4 shrink-0 mt-0.5" /><span>{item.name}</span></div>)}</div>}
+                            {prohibited.length > 0 && <div className="space-y-1">{prohibited.map((item) => <div key={item.name} className="flex items-start gap-1.5 text-red-600"><Ban className="size-4 shrink-0 mt-0.5" /><span>{item.name}</span></div>)}</div>}
                           </div>
                           {policy.policyUrl && <a href={policy.policyUrl} target="_blank" rel="noopener noreferrer" className="mt-3 text-xs font-mono text-[--color-dim] hover:text-foreground underline inline-flex items-center gap-1">View full policy <ArrowUpRight className="size-3" /></a>}
                         </div>)}
@@ -1423,18 +1423,18 @@ export function BottomTray({
                         {loading && !hotels && <div className="flex items-center gap-2 text-sm text-[--color-dim]"><Loader2 className="size-4 animate-spin" /> Loading hotels...</div>}
                         {hotels && hotels.length > 0 && <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{hotels.map((h, hi) => (
                           <div key={hi} className="rounded-xl bg-black/5 p-3 space-y-2">
-                            <a href={h.bookingUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-foreground hover:text-amber-400 transition-colors no-underline block truncate">{h.name}</a>
+                            <a href={h.bookingUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-foreground hover:text-amber-600 transition-colors no-underline block truncate">{h.name}</a>
                             <div className="flex items-center gap-3 text-xs font-mono">
-                              {h.rating && <span className="flex items-center gap-0.5 text-amber-400"><Star className="size-3" /> {h.rating}</span>}
-                              <span className="text-emerald-400">{h.estimatedPrice}</span>
+                              {h.rating && <span className="flex items-center gap-0.5 text-amber-600"><Star className="size-3" /> {h.rating}</span>}
+                              <span className="text-emerald-600">{h.estimatedPrice}</span>
                               <span className="text-[--color-dim] flex items-center gap-0.5"><MapPin className="size-3" /> {h.distanceMiles}mi</span>
                             </div>
                             <div className="flex items-center gap-3 text-xs font-mono text-[--color-dim] flex-wrap">
                               <a href={gmapsUrl(h.lat, h.lng, event.lat!, event.lng!, "driving", arriveByEpoch)} target="_blank" rel="noopener noreferrer" className="hover:text-foreground no-underline flex items-center gap-1"><Car className="size-3" />{h.driveMinutes}min</a>
-                              {h.transitMinutes != null && <a href={gmapsUrl(h.lat, h.lng, event.lat!, event.lng!, "transit", arriveByEpoch)} target="_blank" rel="noopener noreferrer" className="hover:text-foreground no-underline flex items-center gap-1"><Bus className="size-3" />{h.transitMinutes}min{h.transitFare && <span className="text-emerald-400 ml-0.5">{h.transitFare}</span>}</a>}
+                              {h.transitMinutes != null && <a href={gmapsUrl(h.lat, h.lng, event.lat!, event.lng!, "transit", arriveByEpoch)} target="_blank" rel="noopener noreferrer" className="hover:text-foreground no-underline flex items-center gap-1"><Bus className="size-3" />{h.transitMinutes}min{h.transitFare && <span className="text-emerald-600 ml-0.5">{h.transitFare}</span>}</a>}
                               <span className="flex items-center gap-1"><Footprints className="size-3" />{h.walkMinutes}min</span>
-                              <span>UBER <span className="text-emerald-400">{h.uberEstimate}</span></span>
-                              <span>LYFT <span className="text-emerald-400">{h.lyftEstimate}</span></span>
+                              <span>UBER <span className="text-emerald-600">{h.uberEstimate}</span></span>
+                              <span>LYFT <span className="text-emerald-600">{h.lyftEstimate}</span></span>
                             </div>
                           </div>
                         ))}</div>}
@@ -1452,19 +1452,19 @@ export function BottomTray({
                       <div className="py-5 border-b border-black/5">
                         <div className="flex items-center justify-between mb-3">
                           <h3 className="text-xs font-mono uppercase tracking-widest text-[--color-dim] flex items-center gap-2"><ParkingSquare className="size-4" /> Parking</h3>
-                          {spots && spots.length > 0 && <a href={spots[0].spotHeroUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] font-mono text-cyan-400 hover:text-cyan-300 no-underline flex items-center gap-1">Reserve on SpotHero <ExternalLink className="size-3" /></a>}
+                          {spots && spots.length > 0 && <a href={spots[0].spotHeroUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] font-mono text-cyan-600 hover:text-cyan-600 no-underline flex items-center gap-1">Reserve on SpotHero <ExternalLink className="size-3" /></a>}
                         </div>
                         {pLoading && !spots && <div className="flex items-center gap-2 text-sm text-[--color-dim]"><Loader2 className="size-4 animate-spin" /> Finding parking...</div>}
                         {spots && spots.length > 0 && <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">{spots.map((p, i) => (
                           <a key={i} href={p.directionsUrl} target="_blank" rel="noopener noreferrer" className="rounded-lg bg-black/5 hover:bg-black/5 transition-colors p-2.5 no-underline block">
                             <div className="flex items-center justify-between">
                               <div className="text-xs font-mono text-foreground font-semibold truncate">{p.name}</div>
-                              {p.priceLevel && <span className="text-emerald-400 text-[10px] font-mono font-bold shrink-0 ml-1">{p.priceLevel}</span>}
+                              {p.priceLevel && <span className="text-emerald-600 text-[10px] font-mono font-bold shrink-0 ml-1">{p.priceLevel}</span>}
                             </div>
                             <div className="flex items-center gap-2 text-[10px] text-[--color-dim] mt-1 font-mono flex-wrap">
                               <span className="flex items-center gap-0.5"><Footprints className="size-2.5" />{p.walkMinutes}min to stadium</span>
-                              {p.rating && <span className="text-amber-400"><Star className="size-2.5 inline" /> {p.rating}</span>}
-                              {p.openNow != null && <span className={p.openNow ? "text-emerald-400" : "text-red-400"}>{p.openNow ? "Open now" : "Closed"}</span>}
+                              {p.rating && <span className="text-amber-600"><Star className="size-2.5 inline" /> {p.rating}</span>}
+                              {p.openNow != null && <span className={p.openNow ? "text-emerald-600" : "text-red-600"}>{p.openNow ? "Open now" : "Closed"}</span>}
                             </div>
                           </a>
                         ))}</div>}
