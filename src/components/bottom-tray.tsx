@@ -576,22 +576,6 @@ export function BottomTray({
   const height = trayState === "collapsed" ? "56px" : trayState === "peek" ? "50vh" : "100vh";
 
   return (
-    <>
-    {/* Date selector — floated top center on small screens */}
-    <div className="fixed top-3 left-0 right-0 z-20 pointer-events-none sm:hidden">
-      <div className="pointer-events-auto flex justify-center">
-        <div className="panel rounded-lg">
-          <DateSelector
-            currentDate={date}
-            availableDates={availableDates}
-            onDateChange={onDateChange}
-            gameCount={games.length}
-            gameCountByDate={gameCountByDate}
-          />
-        </div>
-      </div>
-    </div>
-
     <div
       className="fixed bottom-0 left-0 right-0 z-10 tray-transition pointer-events-auto"
       style={{ height }}
@@ -649,8 +633,8 @@ export function BottomTray({
               </div>
             )}
           </div>
-          {/* Date selector — hidden on small screens (floated to top) */}
-          <div className="shrink-0 hidden sm:block">
+          {/* Date selector */}
+          <div className="shrink-0">
             <DateSelector
               currentDate={date}
               availableDates={availableDates}
@@ -1189,6 +1173,5 @@ export function BottomTray({
         )}
       </div>
     </div>
-    </>
   );
 }
