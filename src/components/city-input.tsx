@@ -59,7 +59,7 @@ export function CityInputMulti({
 
   return (
     <div className="relative">
-      <label htmlFor={id} className="block text-xs font-mono font-semibold text-[--color-dim] mb-1">{label.toUpperCase()}</label>
+      <label htmlFor={id} className="block text-xs font-semibold text-[--color-dim] mb-1">{label.toUpperCase()}</label>
       <div
         className="min-h-[38px] w-full border border-white/8 rounded px-2.5 py-1.5 bg-white/5 focus-within:ring-2 focus-within:ring-[--primary]/50 flex flex-wrap gap-1.5 items-center cursor-text"
         onClick={() => setOpen(true)}
@@ -82,7 +82,7 @@ export function CityInputMulti({
           value={query}
           autoComplete="off"
           placeholder={values.length === 0 ? "City or airport code..." : "Add more..."}
-          className="flex-1 min-w-[80px] text-sm font-mono outline-none bg-transparent text-foreground placeholder:text-[--color-dim] py-0.5"
+          className="flex-1 min-w-[80px] text-sm outline-none bg-transparent text-foreground placeholder:text-[--color-dim] py-0.5"
           onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
           onFocus={() => setOpen(true)}
           onBlur={() => setTimeout(() => setOpen(false), 150)}
@@ -92,7 +92,7 @@ export function CityInputMulti({
         <ul className="absolute z-20 w-full panel-elevated rounded mt-1 max-h-72 overflow-auto">
           {showSuggested && (
             <>
-              <li className="px-3 py-1 text-[10px] font-mono font-semibold text-[--color-dim] uppercase tracking-widest">
+              <li className="px-3 py-1 text-[10px] font-semibold text-[--color-dim] uppercase tracking-widest">
                 Suggested
               </li>
               {suggested.map((opt) => (
@@ -103,17 +103,17 @@ export function CityInputMulti({
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     {opt.iata && (
-                      <span className="text-xs font-mono font-bold text-[--primary] bg-[--primary]/10 border border-[--primary]/20 px-1.5 py-0.5 rounded shrink-0">
+                      <span className="text-xs font-bold text-[--primary] bg-[--primary]/10 border border-[--primary]/20 px-1.5 py-0.5 rounded shrink-0">
                         {opt.iata}
                       </span>
                     )}
                     <span className="truncate text-foreground">{opt.city}</span>
                   </div>
-                  <span className="text-xs font-mono text-[--color-dim] shrink-0">{opt.distMi.toLocaleString()} mi</span>
+                  <span className="text-xs text-[--color-dim] shrink-0">{opt.distMi.toLocaleString()} mi</span>
                 </li>
               ))}
               {filtered.length > 0 && (
-                <li className="px-3 py-1 text-[10px] font-mono font-semibold text-[--color-dim] uppercase tracking-widest border-t border-white/5">
+                <li className="px-3 py-1 text-[10px] font-semibold text-[--color-dim] uppercase tracking-widest border-t border-white/5">
                   All airports
                 </li>
               )}
@@ -126,7 +126,7 @@ export function CityInputMulti({
               onMouseDown={() => select(opt.city)}
             >
               {opt.iata && (
-                <span className="text-xs font-mono font-bold text-[--primary] bg-[--primary]/10 border border-[--primary]/20 px-1.5 py-0.5 rounded shrink-0">
+                <span className="text-xs font-bold text-[--primary] bg-[--primary]/10 border border-[--primary]/20 px-1.5 py-0.5 rounded shrink-0">
                   {opt.iata}
                 </span>
               )}

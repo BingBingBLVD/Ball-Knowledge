@@ -129,7 +129,7 @@ export function DateSelector({
             <ChevronLeft className="size-4 text-[--color-dim]" />
           </button>
           {prevDate && (
-            <span className="text-[9px] font-mono text-emerald-600 leading-none -mt-0.5">
+            <span className="text-[10px] text-emerald-600 leading-none -mt-0.5">
               {gameCountByDate[prevDate] ?? 0}
             </span>
           )}
@@ -140,11 +140,11 @@ export function DateSelector({
           onClick={() => setOpen((o) => !o)}
           className="text-center min-w-[120px] px-1 rounded hover:bg-neutral-100 transition-colors py-0.5"
         >
-          <div className="text-sm font-mono font-medium leading-tight text-foreground tracking-wide">
+          <div className="text-sm font-semibold leading-tight text-neutral-900">
             {formatDateMono(currentDate)}
           </div>
-          <div className="text-[10px] font-mono text-[--primary] leading-tight tracking-widest uppercase">
-            {gameCount} GAMES
+          <div className="text-xs text-neutral-500 leading-tight">
+            {gameCount} games
           </div>
         </button>
 
@@ -160,7 +160,7 @@ export function DateSelector({
             <ChevronRight className="size-4 text-[--color-dim]" />
           </button>
           {nextDate && (
-            <span className="text-[9px] font-mono text-emerald-600 leading-none -mt-0.5">
+            <span className="text-[10px] text-emerald-600 leading-none -mt-0.5">
               {gameCountByDate[nextDate] ?? 0}
             </span>
           )}
@@ -183,7 +183,7 @@ export function DateSelector({
                 <ChevronLeft className="size-4 text-[--color-dim]" />
               </button>
               <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-foreground font-mono tracking-wide">{monthLabel}</span>
+                <span className="text-sm font-semibold text-foreground tracking-wide">{monthLabel}</span>
                 {(() => {
                   const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
                   const todayAvailable = availableSet.has(today);
@@ -197,7 +197,7 @@ export function DateSelector({
                         }
                       }}
                       disabled={!todayAvailable || isAlreadyToday}
-                      className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold tracking-wide transition-all ${
+                      className={`px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wide transition-all ${
                         isAlreadyToday
                           ? "bg-[--primary]/20 text-[--primary] cursor-default"
                           : todayAvailable
@@ -218,7 +218,7 @@ export function DateSelector({
             {/* Day headers */}
             <div className="grid grid-cols-7 mb-1">
               {DAY_NAMES.map((d) => (
-                <div key={d} className="text-center text-[10px] font-mono font-semibold text-[--color-dim] py-1">{d}</div>
+                <div key={d} className="text-center text-[10px] font-semibold text-[--color-dim] py-1">{d}</div>
               ))}
             </div>
 
@@ -246,7 +246,7 @@ export function DateSelector({
                       }
                     }}
                     disabled={!hasGames}
-                    className={`relative h-10 flex flex-col items-center justify-center rounded-md text-xs font-mono transition-all ${
+                    className={`relative h-10 flex flex-col items-center justify-center rounded-md text-xs transition-all ${
                       isSelected
                         ? "bg-[--primary] text-[--primary-foreground] font-bold shadow-md shadow-[--primary]/25"
                         : hasGames

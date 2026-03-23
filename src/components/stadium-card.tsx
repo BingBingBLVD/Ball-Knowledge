@@ -112,7 +112,7 @@ export function StadiumCard({
                   <Clock className="size-3" />
                   {formatTime(game.local_time ?? game.est_time, game.tz)}
                   {price && (
-                  <span className="text-emerald-600 font-mono">
+                  <span className="text-emerald-600">
                     {price}
                   </span>
                 )}
@@ -121,7 +121,7 @@ export function StadiumCard({
                     href={kalshiUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="font-mono text-emerald-600 hover:underline"
+                    className="text-emerald-600 hover:underline"
                   >
                     {game.odds.away_win}%-{game.odds.home_win}%
                   </a>
@@ -144,7 +144,7 @@ export function StadiumCard({
                 <span className="flex items-center gap-1">
                   <Plane className="size-3" />
                   {venue.airports.length === 1 ? (
-                    <span className="font-mono font-semibold">{venue.airports[0].code}</span>
+                    <span className="font-semibold">{venue.airports[0].code}</span>
                   ) : (
                     <span>{venue.airports.length} nearby</span>
                   )}
@@ -154,7 +154,7 @@ export function StadiumCard({
                 <span className="flex items-center gap-1">
                   <TrainFront className="size-3" />
                   {venue.trains.length === 1 ? (
-                    <span className="font-mono font-semibold">{venue.trains[0].code}</span>
+                    <span className="font-semibold">{venue.trains[0].code}</span>
                   ) : (
                     <span>{venue.trains.length} nearby</span>
                   )}
@@ -164,7 +164,7 @@ export function StadiumCard({
                 <span className="flex items-center gap-1">
                   <BusFront className="size-3" />
                   {venue.buses.length === 1 ? (
-                    <span className="font-mono font-semibold">{venue.buses[0].code}</span>
+                    <span className="font-semibold">{venue.buses[0].code}</span>
                   ) : (
                     <span>{venue.buses.length} nearby</span>
                   )}

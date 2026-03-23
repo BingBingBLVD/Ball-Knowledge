@@ -178,7 +178,7 @@ export function RampageButton({
         >
           <Zap className="size-4" />
           {rampage.active && (
-            <span className="text-[11px] font-mono font-semibold tracking-wider">
+            <span className="text-[11px] font-semibold tracking-wider">
               {gameCount > 0 ? `${gameCount} GAME${gameCount !== 1 ? "S" : ""}` : "RAMPAGE"}
             </span>
           )}
@@ -243,11 +243,11 @@ export function RampageButton({
           {/* Selected games list */}
           {sortedGames.length > 0 && (
             <div className="border-t border-neutral-100">
-              <div className="px-3 py-1.5 text-[10px] font-mono tracking-widest text-[--color-dim] uppercase">
+              <div className="px-3 py-1.5 text-[10px] tracking-widest text-[--color-dim] uppercase">
                 Selected Games
               </div>
               {sortedGames.map((g, i) => (
-                <div key={g.id} className="flex items-center gap-2 px-3 py-1.5 text-xs font-mono hover:bg-neutral-50">
+                <div key={g.id} className="flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-neutral-50">
                   <span className="size-5 shrink-0 rounded-full bg-[--color-rampage] text-white flex items-center justify-center text-[10px] font-bold">
                     {i + 1}
                   </span>
@@ -273,14 +273,14 @@ export function RampageButton({
           <div className="border-t border-white/8 p-2 flex gap-2">
             <button
               onClick={handleCancel}
-              className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-mono text-[--color-dim] hover:text-foreground hover:bg-white/[0.06] transition-all"
+              className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs text-[--color-dim] hover:text-foreground hover:bg-white/[0.06] transition-all"
             >
               <X className="size-3" /> CANCEL
             </button>
             <button
               onClick={handlePlanRampage}
               disabled={gameCount < 1}
-              className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg font-mono text-xs font-semibold transition-all ${
+              className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
                 gameCount >= 1
                   ? "bg-[--color-rampage] text-white shadow-md shadow-[--color-rampage]/20 hover:brightness-110"
                   : "bg-white/[0.04] text-[--color-dim] cursor-not-allowed"
@@ -324,7 +324,7 @@ function LocationRow({
   return (
     <div className="border-b border-neutral-100">
       <div className="flex items-center gap-2 px-3 py-2.5">
-        <span className="text-[10px] font-mono tracking-widest text-[--color-dim] w-8 shrink-0">{label}</span>
+        <span className="text-[10px] tracking-widest text-[--color-dim] w-8 shrink-0">{label}</span>
         {editing ? (
           <div className="flex-1 flex items-center gap-1.5 border border-white/10 rounded px-2 py-1">
             <Search className="size-3 text-[--color-dim] shrink-0" />
@@ -340,7 +340,7 @@ function LocationRow({
         ) : (
           <button
             onClick={onEdit}
-            className="flex-1 text-left text-xs font-mono text-foreground hover:text-[--color-rampage] transition-colors truncate"
+            className="flex-1 text-left text-xs text-foreground hover:text-[--color-rampage] transition-colors truncate"
           >
             {location ? (
               <span className="flex items-center gap-1">

@@ -372,12 +372,12 @@ export function FrontierPanel({
     <div className="px-4 py-3 border-b border-white/5 bg-[#0a0a0f]">
       <div className="flex items-center gap-2 mb-3">
         <Plane className="size-4 text-[--color-flight]" />
-        <span className="text-xs font-mono font-bold text-foreground tracking-wider">FRONTIER FLIGHTS</span>
+        <span className="text-xs font-bold text-foreground tracking-wider">FRONTIER FLIGHTS</span>
         {loading && (
-          <span className="text-xs font-mono text-[--color-dim] ml-auto animate-pulse">SEARCHING...</span>
+          <span className="text-xs text-[--color-dim] ml-auto animate-pulse">SEARCHING...</span>
         )}
         {!loading && resultCount !== null && (
-          <span className="text-xs font-mono text-[--color-dim] ml-auto">
+          <span className="text-xs text-[--color-dim] ml-auto">
             {resultCount} route{resultCount !== 1 ? "s" : ""}
           </span>
         )}
@@ -388,17 +388,17 @@ export function FrontierPanel({
       </div>
       <div className="flex flex-wrap items-end gap-3">
         <div>
-          <label htmlFor="fp-date" className="block text-xs font-mono font-semibold text-[--color-dim] mb-1">TRAVEL DATE</label>
+          <label htmlFor="fp-date" className="block text-xs font-semibold text-[--color-dim] mb-1">TRAVEL DATE</label>
           <input
             id="fp-date"
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="h-[38px] px-2.5 border border-white/8 rounded bg-white/5 text-sm text-foreground font-mono focus:ring-2 focus:ring-[--primary]/50 outline-none"
+            className="h-[38px] px-2.5 border border-white/8 rounded bg-white/5 text-sm text-foreground focus:ring-2 focus:ring-[--primary]/50 outline-none"
           />
         </div>
         <div className="min-w-[140px]">
-          <label className="block text-xs font-mono font-semibold text-[--color-dim] mb-1">
+          <label className="block text-xs font-semibold text-[--color-dim] mb-1">
             MAX STOPS: <span className="text-[--primary] font-bold">{sliderLabel(slider)}</span>
           </label>
           <Slider
@@ -413,7 +413,7 @@ export function FrontierPanel({
         <button
           onClick={() => doSearch(froms, tos)}
           disabled={loading || froms.length === 0 || tos.length === 0}
-          className="h-[38px] px-5 rounded bg-[--primary] text-[--primary-foreground] text-sm font-mono font-semibold hover:opacity-90 transition-colors disabled:opacity-50"
+          className="h-[38px] px-5 rounded bg-[--primary] text-[--primary-foreground] text-sm font-semibold hover:opacity-90 transition-colors disabled:opacity-50"
         >
           Search
         </button>

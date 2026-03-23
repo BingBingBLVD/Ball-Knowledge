@@ -25,12 +25,23 @@ export interface EspnTicketInfo {
   url: string | null;
 }
 
+export interface EspnBroadcastInfo {
+  national: string[];   // e.g. ["ESPN", "TNT"]
+  local: string[];      // e.g. ["NBC Sports Bay Area", "Bally Sports"]
+}
+
+export interface EspnScoreboardData {
+  tickets: Record<string, EspnTicketInfo>;
+  broadcasts: Record<string, EspnBroadcastInfo>;
+}
+
 /**
- * Fetch ticket prices from ESPN scoreboard for a set of dates.
- * Returns a map keyed by "AWAYCODE@HOMECODE" (normalized Kalshi codes) → ticket info.
+ * Fetch ticket prices and broadcast info from ESPN scoreboard for a set of dates.
+ * Returns maps keyed by "AWAYCODE@HOMECODE" (normalized Kalshi codes).
  */
-export async function fetchEspnTickets(dates: string[]): Promise<Record<string, EspnTicketInfo>> {
-  const results: Record<string, EspnTicketInfo> = {};
+export async function fetchEspnScoreboard(dates: string[]): Promise<EspnScoreboardData> {
+  const tickets: Record<string, EspnTicketInfo> = {};
+  const broadcasts: Record<string, EspnBroadcastInfo> = {};
   const uniqueDates = [...new Set(dates)];
 
   await Promise.all(
@@ -61,22 +72,53 @@ export async function fetchEspnTickets(dates: string[]): Promise<Record<string, 
           }
 
           if (!homeCode || !awayCode) continue;
+          const key = `${awayCode}@${homeCode}`;
 
           // Extract ticket info
-          const tickets = ev.tickets ?? comp.tickets ?? [];
-          if (tickets.length === 0) continue;
+          const ticketArr = ev.tickets ?? comp.tickets ?? [];
+          if (ticketArr.length > 0) {
+            const ticket = ticketArr[0];
+            const summary: string = ticket.summary ?? "";
+            const priceMatch = summary.match(/\$(\d+)/);
+            if (priceMatch) {
+              tickets[key] = {
+                price: parseInt(priceMatch[1], 10),
+                available: ticket.numberAvailable ?? 0,
+                url: ticket.links?.[0]?.href ?? null,
+              };
+            }
+          }
 
-          const ticket = tickets[0];
-          const summary: string = ticket.summary ?? "";
-          const priceMatch = summary.match(/\$(\d+)/);
-          if (!priceMatch) continue;
-
-          const key = `${awayCode}@${homeCode}`;
-          results[key] = {
-            price: parseInt(priceMatch[1], 10),
-            available: ticket.numberAvailable ?? 0,
-            url: ticket.links?.[0]?.href ?? null,
-          };
+          // Extract broadcast info
+          const geoBroadcasts = comp.geoBroadcasts ?? [];
+          const national: string[] = [];
+          const local: string[] = [];
+          for (const gb of geoBroadcasts) {
+            const name = gb.media?.shortName ?? "";
+            if (!name) continue;
+            const market = gb.market?.type ?? "";
+            if (market === "National" || market === "Home" && (name === "ESPN" || name === "TNT" || name === "ABC" || name === "NBA TV")) {
+              if (!national.includes(name)) national.push(name);
+            } else {
+              if (!local.includes(name)) local.push(name);
+            }
+          }
+          // Fallback: check top-level broadcasts array
+          if (national.length === 0 && local.length === 0) {
+            const topBroadcasts = comp.broadcasts ?? [];
+            for (const b of topBroadcasts) {
+              for (const name of b.names ?? []) {
+                if (["ESPN", "TNT", "ABC", "NBA TV"].includes(name)) {
+                  if (!national.includes(name)) national.push(name);
+                } else {
+                  if (!local.includes(name)) local.push(name);
+                }
+              }
+            }
+          }
+          if (national.length > 0 || local.length > 0) {
+            broadcasts[key] = { national, local };
+          }
         }
       } catch {
         // skip failed date
@@ -84,7 +126,13 @@ export async function fetchEspnTickets(dates: string[]): Promise<Record<string, 
     })
   );
 
-  return results;
+  return { tickets, broadcasts };
+}
+
+/** @deprecated Use fetchEspnScoreboard instead */
+export async function fetchEspnTickets(dates: string[]): Promise<Record<string, EspnTicketInfo>> {
+  const data = await fetchEspnScoreboard(dates);
+  return data.tickets;
 }
 
 export async function fetchNBAStandings(): Promise<Record<string, TeamRecord>> {

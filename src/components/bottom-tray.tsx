@@ -47,6 +47,8 @@ import {
   Ticket,
   UtensilsCrossed,
   Beer,
+  Tv,
+  HeartPulse,
 } from "lucide-react";
 import type { VenuePolicy } from "@/lib/venue-policies";
 import { SearchBar } from "./search-bar";
@@ -81,6 +83,7 @@ interface GameEvent {
   away_record?: string | null;
   home_record?: string | null;
   espn_price?: { amount: number; available: number; url: string | null } | null;
+  broadcasts?: { national: string[]; local: string[] } | null;
   nearbyAirports?: TransitStop[];
   nearbyTrainStations?: TransitStop[];
   nearbyBusStations?: TransitStop[];
@@ -831,6 +834,33 @@ export function BottomTray({
     }
   }, [lastTransit, lastTransitLoading]);
 
+  // Injury report state
+  interface PlayerInjury { name: string; position: string; team: string; teamAbbr: string; status: string; description: string }
+  const [injuries, setInjuries] = useState<Record<string, PlayerInjury[]>>({});
+  const [injuriesLoading, setInjuriesLoading] = useState<Set<string>>(new Set());
+  const injuriesFailed = useRef<Set<string>>(new Set());
+
+  const handleInjuriesLoad = useCallback(async (awayCode: string | null, homeCode: string | null) => {
+    const codes = [awayCode, homeCode].filter(Boolean) as string[];
+    if (codes.length === 0) return;
+    const key = codes.sort().join(",");
+    if (injuries[key] || injuriesLoading.has(key) || injuriesFailed.current.has(key)) return;
+    setInjuriesLoading((prev) => new Set(prev).add(key));
+    try {
+      const res = await fetch(`/api/injuries?teams=${encodeURIComponent(key)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setInjuries((prev) => ({ ...prev, [key]: data.injuries }));
+      } else {
+        injuriesFailed.current.add(key);
+      }
+    } catch {
+      injuriesFailed.current.add(key);
+    } finally {
+      setInjuriesLoading((prev) => { const next = new Set(prev); next.delete(key); return next; });
+    }
+  }, [injuries, injuriesLoading]);
+
   // Auto-scroll and expand when a marker is clicked (selectedVenue changes)
   useEffect(() => {
     if (!selectedVenue || trayState === "collapsed") return;
@@ -957,7 +987,7 @@ export function BottomTray({
         {/* Column headers — clickable to sort */}
         {trayState !== "collapsed" && (
           <div className="px-6 py-1.5 border-b border-[--primary]/10 overflow-x-auto no-scrollbar bg-black/[0.02]">
-            <div className="flex items-center gap-2.5 text-[9px] font-semibold tracking-widest uppercase" style={{ minWidth: visibleColumns.size > 3 ? "600px" : undefined }}>
+            <div className="flex items-center gap-2.5 text-[10px] font-semibold tracking-widest uppercase" style={{ minWidth: visibleColumns.size > 3 ? "600px" : undefined }}>
               {visibleColumns.has("ticket") && (
                 <span onClick={() => handleHeaderSort("price")} className={`shrink-0 min-w-[2.5rem] cursor-pointer hover:text-foreground transition-colors ${sortKey === "price" ? "text-[--primary] font-semibold" : "text-[--color-dim]"}`}>
                   TICKET{sortKey === "price" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
@@ -1100,6 +1130,7 @@ export function BottomTray({
                         handleLastTransitLoad(vLat, vLng, event.date_time_utc, transitStops);
                       }
                       handleHotelsLoad(event.venue, vLat, vLng, event.est_date || date);
+                      handleInjuriesLoad(event.odds?.away_team ?? null, event.odds?.home_team ?? null);
                       const venueGames = games.filter((g) => g.venue === event.venue);
                       onVenueClick({
                         venue: event.venue,
@@ -1199,7 +1230,7 @@ export function BottomTray({
                       {/* Col: Stadium */}
                       {visibleColumns.has("stadium") && (
                         <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-                          <span className="text-[11px] text-[--color-dim] truncate">{event.venue}</span>
+                          <span className="text-xs text-[--color-dim] truncate">{event.venue}</span>
                           <span className={`text-[10px] truncate ${dist != null && dist < 250 ? "text-amber-600" : "text-[--color-dim]"}`}>{event.city}, {event.state}{dist != null ? ` · ${Math.round(dist)}mi` : ""}</span>
                         </div>
                       )}
@@ -1372,6 +1403,19 @@ export function BottomTray({
                           </div>
                         </div>
                       )}
+                      {event.broadcasts && (event.broadcasts.national.length > 0 || event.broadcasts.local.length > 0) && (
+                        <div className="flex items-center gap-2">
+                          <Tv className="size-5 text-neutral-400" />
+                          <div className="text-sm">
+                            {event.broadcasts.national.length > 0 && (
+                              <div className="font-semibold text-neutral-900">{event.broadcasts.national.join(", ")}</div>
+                            )}
+                            {event.broadcasts.local.length > 0 && (
+                              <div className="text-xs text-neutral-500">{event.broadcasts.local.join(", ")}</div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Odds section */}
@@ -1394,6 +1438,59 @@ export function BottomTray({
                         </div>
                       </div>
                     )}
+
+                    {/* Injury Report */}
+                    {(() => {
+                      const codes = [event.odds?.away_team, event.odds?.home_team].filter(Boolean).sort() as string[];
+                      if (codes.length === 0) return null;
+                      const injKey = codes.join(",");
+                      const inj = injuries[injKey];
+                      const iLoading = injuriesLoading.has(injKey);
+                      if (!inj && !iLoading) return null;
+                      const statusColor = (s: string) => {
+                        if (s === "Out") return "text-red-600 bg-red-50";
+                        if (s === "Doubtful") return "text-orange-600 bg-orange-50";
+                        if (s === "Day-To-Day" || s === "Questionable") return "text-amber-600 bg-amber-50";
+                        return "text-emerald-600 bg-emerald-50";
+                      };
+                      // Group by team
+                      const byTeam: Record<string, typeof inj> = {};
+                      for (const p of (inj ?? [])) {
+                        if (!byTeam[p.team]) byTeam[p.team] = [];
+                        byTeam[p.team].push(p);
+                      }
+                      return (
+                        <div className="py-8 border-b border-neutral-200">
+                          <h2 className="text-[22px] font-semibold text-neutral-900 mb-1">Injury report</h2>
+                          <p className="text-sm text-neutral-500 mb-4">Key player availability</p>
+                          {iLoading && !inj && <div className="flex items-center gap-2 text-sm text-neutral-500"><Loader2 className="size-4 animate-spin" /> Checking injuries...</div>}
+                          {inj && inj.length === 0 && <div className="text-sm text-emerald-600 font-medium">No injuries reported — full strength</div>}
+                          {inj && inj.length > 0 && (
+                            <div className="space-y-5">
+                              {Object.entries(byTeam).map(([team, players]) => (
+                                <div key={team}>
+                                  <h3 className="text-sm font-semibold text-neutral-900 mb-2">{team}</h3>
+                                  <div className="space-y-2">
+                                    {players.map((p) => (
+                                      <div key={p.name} className="flex items-center justify-between py-2 border-b border-neutral-100 last:border-0">
+                                        <div className="flex items-center gap-2 min-w-0">
+                                          <HeartPulse className="size-4 shrink-0 text-neutral-400" />
+                                          <div className="min-w-0">
+                                            <div className="text-sm font-medium text-neutral-900 truncate">{p.name} <span className="text-neutral-400 font-normal">{p.position}</span></div>
+                                            {p.description && <div className="text-xs text-neutral-500">{p.description}</div>}
+                                          </div>
+                                        </div>
+                                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 ml-2 ${statusColor(p.status)}`}>{p.status}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
 
                     {/* Weather */}
                     {(() => {

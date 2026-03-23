@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { fetchNBAEvents, type TMEvent } from "@/lib/ticketmaster";
 import { fetchNBAOdds, matchOddsToEvent, findTeamCode } from "@/lib/kalshi";
-import { fetchNBAStandings, fetchEspnTickets } from "@/lib/espn";
+import { fetchNBAStandings, fetchEspnScoreboard } from "@/lib/espn";
 import stadiumAirportsData from "../../../../data/stadium-airports.json";
 
 interface AirportCoord {
@@ -209,27 +209,32 @@ export async function GET() {
         _awayCode: awayCode,
         _homeCode: homeCode,
         espn_price: null as { amount: number; available: number; url: string | null } | null,
+        broadcasts: null as { national: string[]; local: string[] } | null,
         nearbyAirports: [] as AirportCoord[],
         nearbyTrainStations: [] as AirportCoord[],
         nearbyBusStations: [] as AirportCoord[],
       };
     });
 
-    // Fetch ESPN ticket prices for all relevant dates
+    // Fetch ESPN scoreboard data (tickets + broadcasts) for all relevant dates
     const allDates = [...new Set(mapped.map((e) => e.est_date))];
-    const espnTickets = await fetchEspnTickets(allDates).catch(() => ({}) as Record<string, import("@/lib/espn").EspnTicketInfo>);
+    const espnData = await fetchEspnScoreboard(allDates).catch(() => ({ tickets: {}, broadcasts: {} } as import("@/lib/espn").EspnScoreboardData));
 
-    // Merge ESPN prices into mapped events
+    // Merge ESPN prices and broadcasts into mapped events
     for (const event of mapped) {
       if (event._awayCode && event._homeCode) {
         const key = `${event._awayCode}@${event._homeCode}`;
-        const ticket = espnTickets[key];
+        const ticket = espnData.tickets[key];
         if (ticket) {
           event.espn_price = {
             amount: ticket.price,
             available: ticket.available,
             url: ticket.url,
           };
+        }
+        const bc = espnData.broadcasts[key];
+        if (bc) {
+          event.broadcasts = bc;
         }
       }
     }
