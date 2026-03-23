@@ -261,8 +261,6 @@ function TransitRows({
           <div
             key={stop.code}
             className="rounded-xl bg-white/5 p-3 font-mono"
-            onMouseEnter={() => !isAnimating && onRouteFocus(baseFocus)}
-            onMouseLeave={() => !isAnimating && onRouteFocus(null)}
           >
             {/* Header: code + distance */}
             <div className="flex items-center gap-2 mb-2">
@@ -308,7 +306,7 @@ function TransitRows({
                       className="w-full h-[180px]"
                       loading="lazy"
                       referrerPolicy="no-referrer-when-downgrade"
-                      src={`https://www.google.com/maps/embed/v1/directions?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&origin=${stop.lat},${stop.lng}&destination=${vLat},${vLng}&mode=driving`}
+                      src={`https://www.google.com/maps/embed/v1/directions?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&origin=${stop.lat},${stop.lng}&destination=${vLat},${vLng}&mode=driving&zoom=10`}
                     />
                   </div>
                 </div>
@@ -333,7 +331,7 @@ function TransitRows({
                         className="w-full h-[180px]"
                         loading="lazy"
                         referrerPolicy="no-referrer-when-downgrade"
-                        src={`https://www.google.com/maps/embed/v1/directions?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&origin=${stop.lat},${stop.lng}&destination=${vLat},${vLng}&mode=transit`}
+                        src={`https://www.google.com/maps/embed/v1/directions?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&origin=${stop.lat},${stop.lng}&destination=${vLat},${vLng}&mode=transit&zoom=10`}
                       />
                     </div>
                   </div>
