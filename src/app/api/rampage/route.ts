@@ -29,6 +29,7 @@ interface RampageLeg {
   date: string;
   itineraries: Itinerary[];
   transitOption?: TransitOption | null;
+  googleFlightsUrl?: string;
 }
 
 interface HotelSuggestion {
@@ -236,6 +237,7 @@ export async function POST(req: NextRequest) {
             to: leg.to,
             date: leg.date,
             itineraries,
+            googleFlightsUrl: result.googleFlightsUrl,
           };
         } catch (err) {
           console.error(`[rampage] Route search failed for ${leg.from.name} → ${leg.to.name}:`, err);

@@ -70,6 +70,7 @@ interface RampageLeg {
   date: string;
   itineraries: Itinerary[];
   transitOption?: TransitOption | null;
+  googleFlightsUrl?: string;
 }
 
 interface HotelSuggestion {
@@ -447,21 +448,18 @@ function RampageContent() {
         <div className="flex items-center gap-5 flex-wrap text-sm">
           <span className="text-neutral-500"><span className="font-semibold text-foreground">{result.summary.gameCount}</span> game{result.summary.gameCount !== 1 ? "s" : ""}</span>
           <span className="text-neutral-500"><span className="font-semibold text-foreground">{formatDuration(result.summary.totalMinutes)}</span> travel</span>
-          {result.summary.ticketCost > 0 && <span className="text-neutral-500"><span className="font-semibold text-foreground font-data">${result.summary.ticketCost}</span> tickets</span>}
-          {result.summary.transportCost != null && <span className="text-neutral-500"><span className="font-semibold text-foreground font-data">~${result.summary.transportCost}</span> transport</span>}
-          {result.summary.totalCost != null && <span className="font-semibold text-[--color-rampage] font-data">~${result.summary.totalCost} total</span>}
+          {result.summary.ticketCost > 0 && <span className="text-neutral-500"><span className="font-semibold text-foreground font-sans">${result.summary.ticketCost}</span> tickets</span>}
+          {result.summary.transportCost != null && <span className="text-neutral-500"><span className="font-semibold text-foreground font-sans">~${result.summary.transportCost}</span> transport</span>}
+          {result.summary.totalCost != null && <span className="font-semibold text-[--color-rampage] font-sans">~${result.summary.totalCost} total</span>}
         </div>
       </div>
 
       {/* Timeline */}
       <div className="max-w-3xl mx-auto px-5 py-6">
         {/* Start */}
-        <div className="flex items-center gap-3 px-4 py-3.5">
-          <div className="size-9 rounded-full bg-emerald-50 flex items-center justify-center shrink-0"><MapPin className="size-4 text-emerald-600" /></div>
-          <div>
-            <div className="text-xs font-medium text-emerald-600">Start</div>
-            <div className="text-sm font-semibold text-foreground">{cow.startLocation.label}</div>
-          </div>
+        <div className="py-5">
+          <div className="text-[15px] font-semibold text-neutral-900 leading-snug">{cow.startLocation.label}</div>
+          {result.games[0] && <div className="text-sm text-neutral-500 mt-0.5">{result.games[0].city}, {result.games[0].state}</div>}
         </div>
 
         {/* Games */}
@@ -493,7 +491,7 @@ function RampageContent() {
                   </div>
                   {price != null && (
                     <div className="shrink-0 text-right pt-0.5">
-                      <div className="text-[15px] font-semibold text-neutral-900 font-data">${price}</div>
+                      <div className="text-[15px] font-semibold text-neutral-900 font-sans">${price}</div>
                       <div className="text-xs text-neutral-500">{game.espn_price?.available ? `${game.espn_price.available.toLocaleString()} left` : "per ticket"}</div>
                     </div>
                   )}
@@ -512,12 +510,9 @@ function RampageContent() {
         })()}
 
         {/* End */}
-        <div className="flex items-center gap-3 px-4 py-3.5">
-          <div className="size-9 rounded-full bg-red-50 flex items-center justify-center shrink-0"><MapPin className="size-4 text-red-500" /></div>
-          <div>
-            <div className="text-xs font-medium text-red-500">End</div>
-            <div className="text-sm font-semibold text-foreground">{cow.endLocation.label}</div>
-          </div>
+        <div className="py-5">
+          <div className="text-[15px] font-semibold text-neutral-900 leading-snug">{cow.endLocation.label}</div>
+          {result.games[result.games.length - 1] && <div className="text-sm text-neutral-500 mt-0.5">{result.games[result.games.length - 1].city}, {result.games[result.games.length - 1].state}</div>}
         </div>
       </div>
 
@@ -527,9 +522,9 @@ function RampageContent() {
           <div className="flex items-center gap-5 flex-wrap">
             <span className="text-neutral-500"><span className="text-[--color-rampage] font-semibold">{result.summary.gameCount}</span> game{result.summary.gameCount !== 1 ? "s" : ""}</span>
             <span className="text-neutral-500"><span className="text-foreground font-semibold">{formatDuration(result.summary.totalMinutes)}</span> travel</span>
-            {result.summary.ticketCost > 0 && <span className="text-neutral-500"><Ticket className="size-3.5 inline mr-0.5" /><span className="text-foreground font-semibold font-data">${result.summary.ticketCost}</span> tickets</span>}
-            {result.summary.transportCost != null && <span className="text-neutral-500"><Car className="size-3.5 inline mr-0.5" /><span className="text-foreground font-semibold font-data">~${result.summary.transportCost}</span> transport</span>}
-            {result.summary.totalCost != null && <span className="text-neutral-500 pl-5"><span className="text-[--color-rampage] font-bold font-data">~${result.summary.totalCost}</span> total</span>}
+            {result.summary.ticketCost > 0 && <span className="text-neutral-500"><Ticket className="size-3.5 inline mr-0.5" /><span className="text-foreground font-semibold font-sans">${result.summary.ticketCost}</span> tickets</span>}
+            {result.summary.transportCost != null && <span className="text-neutral-500"><Car className="size-3.5 inline mr-0.5" /><span className="text-foreground font-semibold font-sans">~${result.summary.transportCost}</span> transport</span>}
+            {result.summary.totalCost != null && <span className="text-neutral-500 pl-5"><span className="text-[--color-rampage] font-bold font-sans">~${result.summary.totalCost}</span> total</span>}
           </div>
         </div>
       </div>
@@ -558,86 +553,123 @@ function RampageContent() {
   );
 }
 
-/** Travel leg card — vertical stop sequence */
+/** Render a single itinerary's legs vertically inside a card */
+function ItinLegs({ itin }: { itin: Itinerary }) {
+  return (
+    <div className="flex flex-col gap-0.5 mt-1">
+      {itin.legs.map((l, li) => (
+        <div key={li} className="py-1 px-1.5">
+          <a href={l.bookingUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-xs hover:bg-neutral-100 rounded-lg transition-colors no-underline">
+            <span className={`shrink-0 ${modeColor(l.mode)}`}>{modeIcon(l.mode)}</span>
+            <span className="text-neutral-500 shrink-0">{modeLabel(l.mode)}</span>
+            <span className="text-foreground font-semibold shrink-0">{formatDuration(l.minutes)}</span>
+            {l.miles > 0 && <span className="text-neutral-400 shrink-0">{l.miles}mi</span>}
+            {l.cost != null && <span className="text-[--color-price] font-semibold shrink-0">${l.cost}</span>}
+            <ArrowUpRight className="size-3 text-neutral-400 shrink-0 ml-auto" />
+          </a>
+          <div className="text-[9px] text-neutral-400 ml-6 leading-tight">
+            {l.mode === "drive" || l.mode === "rideshare" ? `Drive to ${l.to}` : `${modeLabel(l.mode)} from ${l.from} to ${l.to}`}
+          </div>
+          {(l.mode === "drive" || l.mode === "rideshare") && (
+            <div className="flex items-center gap-2 ml-6 mt-0.5 text-[10px]">
+              <a href={`https://m.uber.com/ul/?action=setPickup&pickup[latitude]=${l.fromLat}&pickup[longitude]=${l.fromLng}&dropoff[latitude]=${l.toLat}&dropoff[longitude]=${l.toLng}`} target="_blank" rel="noopener noreferrer" className="text-neutral-900 font-medium hover:opacity-70 transition-opacity no-underline">Uber</a>
+              <a href={`https://ride.lyft.com/ridetype?pickup[latitude]=${l.fromLat}&pickup[longitude]=${l.fromLng}&destination[latitude]=${l.toLat}&destination[longitude]=${l.toLng}`} target="_blank" rel="noopener noreferrer" className="text-[#FF00BF] font-medium hover:opacity-70 transition-opacity no-underline">Lyft</a>
+            </div>
+          )}
+        </div>
+      ))}
+      {itin.totalCost != null && (
+        <div className="text-xs text-[--color-price] font-semibold mt-1 px-1.5">${itin.totalCost} total</div>
+      )}
+    </div>
+  );
+}
+
+/** Label for an itinerary card based on its primary mode */
+function itinLabel(itin: Itinerary): { icon: React.ReactNode; label: string; color: string } {
+  const hasFlight = itin.legs.some(l => l.mode === "flight");
+  const hasBus = itin.legs.some(l => l.mode === "bus");
+  const hasTrain = itin.legs.some(l => l.mode === "train");
+  if (hasFlight) return { icon: <Plane className="size-4" />, label: "Fly", color: "text-[--color-flight]" };
+  if (hasTrain) return { icon: <TrainFront className="size-4" />, label: "Train", color: "text-[--color-train]" };
+  if (hasBus) return { icon: <BusFront className="size-4" />, label: "Bus", color: "text-[--color-bus]" };
+  return { icon: <Car className="size-4" />, label: "Drive", color: "text-[--color-drive]" };
+}
+
+/** Travel leg — horizontally scrollable option cards */
 function TravelLegCard({ leg, cheapest }: { leg: RampageLeg; cheapest: Itinerary | null }) {
   if (!cheapest) return null;
   const t = leg.transitOption;
 
+  // Deduplicate: pick best itinerary per primary mode (drive, flight, bus, train)
+  const seen = new Set<string>();
+  const uniqueItins: Itinerary[] = [];
+  for (const itin of leg.itineraries) {
+    const { label } = itinLabel(itin);
+    if (!seen.has(label)) {
+      seen.add(label);
+      uniqueItins.push(itin);
+    }
+  }
+
+  const cards: React.ReactNode[] = [];
+
+  // One card per unique itinerary type
+  for (const itin of uniqueItins) {
+    const { icon, label, color } = itinLabel(itin);
+    cards.push(
+      <div key={itin.id} className="shrink-0 w-[260px] rounded-2xl bg-neutral-50 px-4 py-3.5 snap-start">
+        <div className="flex items-center gap-2">
+          <span className={color}>{icon}</span>
+          <span className="text-xs font-semibold text-foreground">{label}</span>
+          <span className="text-xs text-neutral-400 ml-auto">{formatDuration(itin.totalMinutes)}</span>
+        </div>
+        <ItinLegs itin={itin} />
+      </div>
+    );
+  }
+
+  // Google Flights fallback if no flight itinerary
+  if (!seen.has("Fly") && leg.googleFlightsUrl) {
+    cards.push(
+      <a key="fly-link" href={leg.googleFlightsUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 w-[260px] rounded-2xl bg-neutral-50 px-4 py-3.5 snap-start no-underline hover:bg-neutral-100 transition-colors">
+        <div className="flex items-center gap-2">
+          <Plane className="size-4 text-[--color-flight]" />
+          <span className="text-xs font-semibold text-foreground">Fly</span>
+        </div>
+        <div className="text-xs text-neutral-500 mt-2">Search flights on Google</div>
+        <div className="flex items-center gap-1 text-xs text-neutral-400 mt-1.5">
+          <span>Google Flights</span>
+          <ArrowUpRight className="size-3" />
+        </div>
+      </a>
+    );
+  }
+
+  // Google Transit card
+  if (t) {
+    cards.push(
+      <a key="transit" href={t.googleMapsUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 w-[260px] rounded-2xl bg-neutral-50 px-4 py-3.5 snap-start no-underline hover:bg-neutral-100 transition-colors">
+        <div className="flex items-center gap-2">
+          <Bus className="size-4 text-[--color-transit]" />
+          <span className="text-xs font-semibold text-foreground">Google Transit</span>
+          <span className="text-xs text-neutral-400 ml-auto">{formatDuration(t.transitMinutes)}</span>
+        </div>
+        <div className="text-xs text-neutral-500 mt-2">Public transit via Google Maps</div>
+        {t.transitFare && <div className="text-xs text-[--color-price] font-semibold mt-1.5">{t.transitFare}</div>}
+      </a>
+    );
+  }
+
   return (
-    <div className="my-2.5 rounded-2xl bg-neutral-50 px-5 py-3.5">
-      <div className="flex items-center gap-2 text-xs text-neutral-500 mb-2.5">
+    <div className="my-2.5">
+      <div className="flex items-center gap-2 text-xs text-neutral-500 mb-2 px-1">
         <span className="font-semibold text-foreground">{leg.from.name}</span>
         <ArrowRight className="size-3 text-[--color-rampage]" />
         <span className="font-semibold text-foreground">{leg.to.name}</span>
-        <span className="text-neutral-400 ml-auto font-data">{formatDuration(cheapest.totalMinutes)}</span>
-        {cheapest.totalCost != null && <span className="text-[--color-price] font-semibold font-data">${cheapest.totalCost}</span>}
       </div>
-
-      <div className="flex flex-col ml-1">
-        {cheapest.legs.map((l, li) => {
-          const isLast = li === cheapest.legs.length - 1 && !t;
-          return (
-            <div key={li} className="flex items-stretch gap-0">
-              <div className="flex flex-col items-center w-4 shrink-0">
-                <div className="size-2 rounded-full bg-[--color-rampage] mt-[7px] shrink-0 opacity-50" />
-                {!isLast && <div className="w-px flex-1 bg-neutral-300" />}
-              </div>
-              <div className="flex flex-col pb-1 min-w-0 flex-1">
-                <a href={l.bookingUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-xs py-1.5 hover:bg-neutral-100 rounded-lg px-2 -ml-0.5 transition-colors no-underline">
-                  <span className={`shrink-0 ${modeColor(l.mode)}`}>{modeIcon(l.mode)}</span>
-                  <span className="text-neutral-500 shrink-0 w-14">{modeLabel(l.mode)}</span>
-                  <span className="text-foreground font-semibold shrink-0 font-data">{formatDuration(l.minutes)}</span>
-                  {l.miles > 0 && <span className="text-neutral-400 shrink-0 font-data">{l.miles}mi</span>}
-                  {l.cost != null && <span className="text-[--color-price] font-semibold shrink-0 font-data">${l.cost}</span>}
-                  <span className="text-neutral-400 truncate text-[11px]">{l.from} → {l.to}</span>
-                  <ArrowUpRight className="size-3 text-neutral-400 shrink-0 ml-auto" />
-                </a>
-                {l.uberEstimate && (
-                  <div className="flex items-center gap-3 text-[11px] text-neutral-400 px-2 -ml-0.5">
-                    <span>Uber <span className="text-[--color-price] font-data">{l.uberEstimate}</span></span>
-                    {l.lyftEstimate && <span>Lyft <span className="text-[--color-price] font-data">{l.lyftEstimate}</span></span>}
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-
-        {t && (
-          <div className="flex items-stretch gap-0">
-            <div className="flex flex-col items-center w-4 shrink-0">
-              <div className="size-2 rounded-full bg-[--color-transit] mt-[7px] shrink-0 opacity-50" />
-              {(t.uberEstimate || t.lyftEstimate) ? <div className="w-px flex-1 bg-neutral-300" /> : null}
-            </div>
-            <div className="flex flex-col pb-1 min-w-0 flex-1">
-              <a href={t.googleMapsUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-xs py-1.5 hover:bg-neutral-100 rounded-lg px-2 -ml-0.5 transition-colors no-underline">
-                <Bus className="size-4 text-[--color-transit] shrink-0" />
-                <span className="text-[--color-transit] shrink-0 w-14">Transit</span>
-                <span className="text-foreground font-semibold shrink-0 font-data">{formatDuration(t.transitMinutes)}</span>
-                {t.transitFare && <span className="text-[--color-price] font-semibold shrink-0 font-data">{t.transitFare}</span>}
-                <ArrowUpRight className="size-3 text-neutral-400 shrink-0 ml-auto" />
-              </a>
-            </div>
-          </div>
-        )}
-
-        {t && (t.uberEstimate || t.lyftEstimate) && (
-          <div className="flex items-stretch gap-0">
-            <div className="flex flex-col items-center w-4 shrink-0">
-              <div className="size-1.5 rounded-full bg-neutral-300 mt-[7px] shrink-0" />
-            </div>
-            <div className="flex items-center gap-3 text-[11px] text-neutral-400 py-0.5 px-2 -ml-0.5">
-              {t.uberEstimate && <span>Uber <span className="text-[--color-price] font-data">{t.uberEstimate}</span></span>}
-              {t.lyftEstimate && <span>Lyft <span className="text-[--color-price] font-data">{t.lyftEstimate}</span></span>}
-            </div>
-          </div>
-        )}
-
-        <div className="flex items-center gap-0">
-          <div className="flex flex-col items-center w-4 shrink-0">
-            <div className="size-2 rounded-full bg-[--color-rampage] shrink-0 opacity-50" />
-          </div>
-        </div>
+      <div className="flex gap-3 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-1">
+        {cards}
       </div>
     </div>
   );
