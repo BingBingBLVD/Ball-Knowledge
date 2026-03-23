@@ -295,6 +295,8 @@ export async function POST(req: NextRequest) {
     // Summary: sum cheapest transport cost + ticket costs
     let transportCost: number | null = 0;
     let totalMinutes = 0;
+    let minMinutes = 0;
+    let maxMinutes = 0;
     let ticketCost = 0;
 
     for (const leg of legResults) {
@@ -308,6 +310,9 @@ export async function POST(req: NextRequest) {
           transportCost = null;
         }
         totalMinutes += cheapest.totalMinutes;
+        const times = leg.itineraries.map((i) => i.totalMinutes);
+        minMinutes += Math.min(...times);
+        maxMinutes += Math.max(...times);
       }
     }
 
@@ -326,6 +331,8 @@ export async function POST(req: NextRequest) {
         ticketCost,
         totalCost: transportCost != null ? transportCost + ticketCost : null,
         totalMinutes,
+        minMinutes,
+        maxMinutes,
         gameCount: sorted.length,
       },
     });

@@ -138,6 +138,8 @@ interface RampageResult {
     ticketCost: number;
     totalCost: number | null;
     totalMinutes: number;
+    minMinutes?: number;
+    maxMinutes?: number;
     gameCount: number;
   };
 }
@@ -453,7 +455,7 @@ function RampageContent() {
       <div className="max-w-3xl mx-auto px-5 pt-4">
         <div className="flex items-center gap-5 flex-wrap text-sm">
           <span className="text-neutral-500"><span className="font-semibold text-foreground">{result.summary.gameCount}</span> game{result.summary.gameCount !== 1 ? "s" : ""}</span>
-          <span className="text-neutral-500"><span className="font-semibold text-foreground">{formatDuration(result.summary.totalMinutes)}</span> travel</span>
+          <span className="text-neutral-500"><span className="font-semibold text-foreground">{result.summary.minMinutes != null && result.summary.maxMinutes != null && result.summary.minMinutes !== result.summary.maxMinutes ? `${formatDuration(result.summary.minMinutes)}–${formatDuration(result.summary.maxMinutes)}` : formatDuration(result.summary.totalMinutes)}</span> travel</span>
           {result.summary.ticketCost > 0 && <span className="text-neutral-500"><span className="font-semibold text-foreground font-sans">${result.summary.ticketCost}</span> tickets</span>}
           {result.summary.transportCost != null && <span className="text-neutral-500"><span className="font-semibold text-foreground font-sans">~${result.summary.transportCost}</span> transport</span>}
           {result.summary.totalCost != null && <span className="font-semibold text-[--color-rampage] font-sans">~${result.summary.totalCost} total</span>}
@@ -527,7 +529,7 @@ function RampageContent() {
         <div className="flex items-center justify-between px-5 py-3.5 max-w-3xl mx-auto text-sm">
           <div className="flex items-center gap-5 flex-wrap">
             <span className="text-neutral-500"><span className="text-[--color-rampage] font-semibold">{result.summary.gameCount}</span> game{result.summary.gameCount !== 1 ? "s" : ""}</span>
-            <span className="text-neutral-500"><span className="text-foreground font-semibold">{formatDuration(result.summary.totalMinutes)}</span> travel</span>
+            <span className="text-neutral-500"><span className="text-foreground font-semibold">{result.summary.minMinutes != null && result.summary.maxMinutes != null && result.summary.minMinutes !== result.summary.maxMinutes ? `${formatDuration(result.summary.minMinutes)}–${formatDuration(result.summary.maxMinutes)}` : formatDuration(result.summary.totalMinutes)}</span> travel</span>
             {result.summary.ticketCost > 0 && <span className="text-neutral-500"><Ticket className="size-3.5 inline mr-0.5" /><span className="text-foreground font-semibold font-sans">${result.summary.ticketCost}</span> tickets</span>}
             {result.summary.transportCost != null && <span className="text-neutral-500"><Car className="size-3.5 inline mr-0.5" /><span className="text-foreground font-semibold font-sans">~${result.summary.transportCost}</span> transport</span>}
             {result.summary.totalCost != null && <span className="text-neutral-500 pl-5"><span className="text-[--color-rampage] font-bold font-sans">~${result.summary.totalCost}</span> total</span>}
