@@ -168,6 +168,8 @@ function toIso(dateYYYYMMDD: string, estMinutes: number): string {
 export interface SearchResult {
   itineraries: Itinerary[];
   googleFlightsUrl?: string; // link to Google Flights for this origin→destination+date
+  originAirportCode?: string;
+  destAirportCode?: string;
 }
 
 export async function searchRoutes(
@@ -715,5 +717,7 @@ export async function searchRoutes(
       ...transit.slice(0, Math.max(0, remaining)),
     ],
     googleFlightsUrl,
+    originAirportCode: airportPairs.length > 0 ? airportPairs[0].orig.code : undefined,
+    destAirportCode: airportPairs.length > 0 ? airportPairs[0].dest.code : undefined,
   };
 }

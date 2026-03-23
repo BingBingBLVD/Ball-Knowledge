@@ -71,6 +71,8 @@ interface RampageLeg {
   itineraries: Itinerary[];
   transitOption?: TransitOption | null;
   googleFlightsUrl?: string;
+  originAirportCode?: string;
+  destAirportCode?: string;
 }
 
 interface HotelSuggestion {
@@ -361,7 +363,11 @@ function RampageContent() {
 
   function handleShare() {
     const url = window.location.href;
-    navigator.clipboard.writeText(url).then(() => { alert("Link copied to clipboard!"); });
+    if (navigator.share) {
+      navigator.share({ title: "Ball Knowledge Rampage", url }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(url).then(() => { alert("Link copied to clipboard!"); });
+    }
   }
 
   if (error) {
@@ -630,14 +636,19 @@ function TravelLegCard({ leg, cheapest }: { leg: RampageLeg; cheapest: Itinerary
   }
 
   // Google Flights fallback if no flight itinerary
-  if (!seen.has("Fly") && leg.googleFlightsUrl) {
+  if (!seen.has("Fly")) {
+    const flightsUrl = leg.googleFlightsUrl ?? `https://www.google.com/travel/flights?q=Flights+from+${leg.from.lat},${leg.from.lng}+to+${leg.to.lat},${leg.to.lng}+on+${leg.date}`;
     cards.push(
-      <a key="fly-link" href={leg.googleFlightsUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 w-[260px] rounded-2xl bg-neutral-50 px-4 py-3.5 snap-start no-underline hover:bg-neutral-100 transition-colors">
+      <a key="fly-link" href={flightsUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 w-[260px] rounded-2xl bg-neutral-50 px-4 py-3.5 snap-start no-underline hover:bg-neutral-100 transition-colors">
         <div className="flex items-center gap-2">
           <Plane className="size-4 text-[--color-flight]" />
           <span className="text-xs font-semibold text-foreground">Fly</span>
         </div>
-        <div className="text-xs text-neutral-500 mt-2">Search flights on Google</div>
+        <div className="text-xs text-neutral-500 mt-2">
+          {leg.originAirportCode && leg.destAirportCode
+            ? `Search ${leg.originAirportCode} → ${leg.destAirportCode}`
+            : "Search flights on Google"}
+        </div>
         <div className="flex items-center gap-1 text-xs text-neutral-400 mt-1.5">
           <span>Google Flights</span>
           <ArrowUpRight className="size-3" />
