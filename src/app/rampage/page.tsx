@@ -110,6 +110,8 @@ interface RampageGame {
   lng: number;
   est_date: string;
   est_time: string | null;
+  local_time?: string | null;
+  tz?: string | null;
   min_price: { amount: number; currency: string } | null;
   espn_price?: { amount: number; available: number; url: string | null } | null;
   odds?: { away_team: string; home_team: string; away_win: number; home_win: number; kalshi_event: string } | null;
@@ -152,12 +154,12 @@ function formatDate(dateStr: string): string {
   return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 }
 
-function formatTimeEST(time: string | null): string {
+function formatTime(time: string | null, tz?: string | null): string {
   if (!time) return "TBD";
   const [h, m] = time.split(":").map(Number);
   const period = h >= 12 ? "PM" : "AM";
   const hour12 = h % 12 || 12;
-  return `${hour12}:${String(m).padStart(2, "0")} ${period} ET`;
+  return `${hour12}:${String(m).padStart(2, "0")} ${period} ${tz ?? "ET"}`;
 }
 
 function modeIcon(mode: string) {
@@ -210,26 +212,40 @@ function RampageContent() {
   const googleMapRef = useRef<google.maps.Map | null>(null);
   const [venuePolicies, setVenuePolicies] = useState<Record<string, VenuePolicy>>({});
 
-  // Load cow from localStorage
+  // Load cow from localStorage, falling back to DB for shared links
   useEffect(() => {
     if (!cowId) {
       setError("No rampage ID provided");
       setLoading(false);
       return;
     }
+
+    // Try localStorage first
     try {
       const raw = localStorage.getItem(`balltastic_cow_${cowId}`);
-      if (!raw) {
-        setError("Rampage plan not found");
-        setLoading(false);
+      if (raw) {
+        setCow(JSON.parse(raw));
         return;
       }
-      const parsed: SavedCow = JSON.parse(raw);
-      setCow(parsed);
-    } catch {
-      setError("Failed to load rampage plan");
-      setLoading(false);
-    }
+    } catch { /* fall through to API */ }
+
+    // Fetch from DB (shared link)
+    fetch(`/api/cow?id=${encodeURIComponent(cowId)}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Not found");
+        return res.json();
+      })
+      .then((data: SavedCow) => {
+        setCow(data);
+        // Cache locally for future visits
+        try {
+          localStorage.setItem(`balltastic_cow_${cowId}`, JSON.stringify(data));
+        } catch { /* ignore */ }
+      })
+      .catch(() => {
+        setError("Rampage plan not found");
+        setLoading(false);
+      });
   }, [cowId]);
 
   // Fetch routes once cow is loaded
@@ -498,7 +514,7 @@ function RampageContent() {
                         <span>{formatDate(game.est_date)}</span>
                         <span>·</span>
                         <Clock className="size-3" />
-                        <span>{formatTimeEST(game.est_time)}</span>
+                        <span>{formatTime(game.local_time ?? game.est_time, game.tz)}</span>
                       </div>
 
                       {/* Teams with records */}

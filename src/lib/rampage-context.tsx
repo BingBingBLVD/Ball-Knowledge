@@ -12,6 +12,8 @@ export interface SelectedGame {
   lng: number;
   est_date: string;
   est_time: string | null;
+  local_time?: string | null;
+  tz?: string | null;
   min_price: { amount: number; currency: string } | null;
   espn_price?: { amount: number; available: number; url: string | null } | null;
   odds?: {
@@ -165,6 +167,12 @@ export function RampageProvider({ children }: { children: ReactNode }) {
     try {
       localStorage.setItem(COW_PREFIX + id, JSON.stringify(cow));
     } catch { /* ignore */ }
+    // Persist to DB for shareable links
+    fetch("/api/cow", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, data: cow }),
+    }).catch(() => { /* best-effort */ });
     setCowId(id);
     return id;
   }, [startLocation, endLocation, selectedGames]);

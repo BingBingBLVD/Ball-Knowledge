@@ -10,12 +10,12 @@ import {
   Maximize2,
 } from "lucide-react";
 
-function formatTimeEST(time: string | null) {
+function formatTime(time: string | null, tz?: string | null) {
   if (!time) return "TBD";
   const [h, m] = time.split(":").map(Number);
   const period = h >= 12 ? "PM" : "AM";
   const hour12 = h % 12 || 12;
-  return `${hour12}:${String(m).padStart(2, "0")} ${period}`;
+  return `${hour12}:${String(m).padStart(2, "0")} ${period} ${tz ?? "ET"}`;
 }
 
 function formatPrice(price: { amount: number; currency: string } | null) {
@@ -95,7 +95,7 @@ export function StadiumCard({
             return (
               <div key={game.id} className="flex items-center gap-2 text-xs text-[--color-dim]">
                 <Clock className="size-3" />
-                {formatTimeEST(game.est_time)}
+                {formatTime(game.local_time ?? game.est_time, game.tz)}
                 {price && (
                   <span className="text-emerald-600 font-mono">
                     {price}

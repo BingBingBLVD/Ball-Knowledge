@@ -66,6 +66,52 @@ function toEST(utcDateTime: string): { date: string; time: string } {
   };
 }
 
+const STATE_TZ: Record<string, string> = {
+  // Eastern
+  CT: "America/New_York", DC: "America/New_York", DE: "America/New_York",
+  FL: "America/New_York", GA: "America/New_York", IN: "America/Indiana/Indianapolis",
+  KY: "America/New_York", MA: "America/New_York", MD: "America/New_York",
+  ME: "America/New_York", MI: "America/Detroit", NC: "America/New_York",
+  NH: "America/New_York", NJ: "America/New_York", NY: "America/New_York",
+  OH: "America/New_York", PA: "America/New_York", RI: "America/New_York",
+  SC: "America/New_York", VA: "America/New_York", VT: "America/New_York",
+  WV: "America/New_York", ON: "America/Toronto",
+  // Central
+  AL: "America/Chicago", AR: "America/Chicago", IA: "America/Chicago",
+  IL: "America/Chicago", KS: "America/Chicago", LA: "America/Chicago",
+  MN: "America/Chicago", MO: "America/Chicago", MS: "America/Chicago",
+  NE: "America/Chicago", OK: "America/Chicago", TN: "America/Chicago",
+  TX: "America/Chicago", WI: "America/Chicago",
+  // Mountain
+  CO: "America/Denver", MT: "America/Denver", NM: "America/Denver",
+  UT: "America/Denver", WY: "America/Denver",
+  AZ: "America/Phoenix",
+  // Pacific
+  CA: "America/Los_Angeles", NV: "America/Los_Angeles",
+  OR: "America/Los_Angeles", WA: "America/Los_Angeles",
+};
+
+function toLocalTime(utcDateTime: string, stateCode: string): { time: string; tz: string } {
+  const d = new Date(utcDateTime);
+  const iana = STATE_TZ[stateCode] ?? "America/New_York";
+  const timeFormatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: iana,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+  const tzFormatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: iana,
+    timeZoneName: "short",
+  });
+  const parts = tzFormatter.formatToParts(d);
+  const tzAbbr = parts.find((p) => p.type === "timeZoneName")?.value ?? "ET";
+  return {
+    time: timeFormatter.format(d).replace(/\u202f/g, " "),
+    tz: tzAbbr,
+  };
+}
+
 export async function GET() {
   try {
     // Fetch TM events, Kalshi odds, and ESPN standings in parallel
@@ -96,16 +142,23 @@ export async function GET() {
 
     const mapped = unique.map((event) => {
       const venue = event._embedded?.venues?.[0];
+      const venueState = venue?.state?.stateCode ?? "";
       let estDate: string;
       let estTime: string | null;
+      let localTime: string | null = null;
+      let tz: string | null = null;
 
       if (event.dates.start.dateTime) {
         const est = toEST(event.dates.start.dateTime);
         estDate = est.date;
         estTime = est.time;
+        const local = toLocalTime(event.dates.start.dateTime, venueState);
+        localTime = local.time;
+        tz = local.tz;
       } else {
         estDate = event.dates.start.localDate;
         estTime = event.dates.start.localTime ?? null;
+        localTime = estTime;
       }
 
       // Match Kalshi odds
@@ -132,6 +185,8 @@ export async function GET() {
         url: event.url,
         est_date: estDate,
         est_time: estTime,
+        local_time: localTime,
+        tz: tz,
         venue: venue?.name ?? "Unknown Venue",
         city: venue?.city.name ?? "",
         state: venue?.state?.stateCode ?? "",

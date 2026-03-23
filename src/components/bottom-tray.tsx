@@ -38,6 +38,8 @@ interface GameEvent {
   url: string;
   est_date?: string;
   est_time: string | null;
+  local_time?: string | null;
+  tz?: string | null;
   venue: string;
   city: string;
   state: string;
@@ -75,12 +77,12 @@ interface HotelSuggestion {
   directionsUrl: string;
 }
 
-function formatTimeEST(time: string | null) {
+function formatTime(time: string | null, tz?: string | null) {
   if (!time) return "TBD";
   const [h, m] = time.split(":").map(Number);
   const period = h >= 12 ? "PM" : "AM";
   const hour12 = h % 12 || 12;
-  return `${hour12}:${String(m).padStart(2, "0")} ${period} ET`;
+  return `${hour12}:${String(m).padStart(2, "0")} ${period} ${tz ?? "ET"}`;
 }
 
 function formatDriveTime(minutes: number): string {
@@ -756,6 +758,8 @@ export function BottomTray({
                         lng: event.lng!,
                         est_date: event.est_date,
                         est_time: event.est_time,
+                        local_time: event.local_time,
+                        tz: event.tz,
                         min_price: event.min_price,
                         espn_price: event.espn_price,
                         odds: event.odds,
@@ -793,6 +797,8 @@ export function BottomTray({
                           name: g.name,
                           url: g.url,
                           est_time: g.est_time,
+                          local_time: g.local_time,
+                          tz: g.tz,
                           min_price: g.min_price,
                           odds: g.odds,
                           away_record: g.away_record,
@@ -807,7 +813,7 @@ export function BottomTray({
                   }}
                 >
                   {/* Card header — always visible */}
-                  <div className="px-3 py-2.5 overflow-x-auto no-scrollbar">
+                  <div className={`px-3 py-2.5 overflow-x-auto no-scrollbar ${isHovered && !isRampageSelected ? "font-bold" : ""}`}>
                     <div className="flex items-start gap-2.5" style={{ minWidth: visibleColumns.size > 3 ? "600px" : undefined }}>
                       {/* Rampage selection indicator */}
                       {rampage.active && (
@@ -876,7 +882,7 @@ export function BottomTray({
                       {/* Col: Time */}
                       {visibleColumns.has("time") && (
                         <div className="shrink-0">
-                          <span className="font-mono text-sm text-foreground">{formatTimeEST(event.est_time)}</span>
+                          <span className="font-mono text-sm text-foreground">{formatTime(event.local_time ?? event.est_time, event.tz)}</span>
                         </div>
                       )}
                     </div>
@@ -1089,6 +1095,8 @@ export function BottomTray({
                                 lng: event.lng!,
                                 est_date: event.est_date || date,
                                 est_time: event.est_time,
+                                local_time: event.local_time,
+                                tz: event.tz,
                                 min_price: event.min_price,
                                 espn_price: event.espn_price,
                                 odds: event.odds,
@@ -1097,6 +1105,12 @@ export function BottomTray({
                               }],
                             };
                             localStorage.setItem(`balltastic_cow_${id}`, JSON.stringify(cow));
+                            // Persist to DB for shareable links
+                            fetch("/api/cow", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ id, data: cow }),
+                            }).catch(() => {});
                             router.push(`/rampage?cow=${id}`);
                           }}
                           className="mt-3 flex items-center justify-center gap-2 w-full py-2.5 rounded-lg font-mono text-sm font-semibold tracking-wider bg-[--primary] text-[--primary-foreground] shadow-lg backdrop-blur-md hover:brightness-110 transition-all press-scale"
