@@ -26,9 +26,11 @@ interface Suggestion {
 export function RampageButton({
   userLocation,
   onCancelRampage,
+  onPlanLoading,
 }: {
   userLocation: { lat: number; lng: number } | null;
   onCancelRampage: () => void;
+  onPlanLoading?: (loading: boolean) => void;
 }) {
   const rampage = useRampage();
   const router = useRouter();
@@ -143,8 +145,33 @@ export function RampageButton({
     resetModalState();
   }
 
-  function handlePlanRampage() {
+  async function handlePlanRampage() {
     const cowId = rampage.saveCow();
+    onPlanLoading?.(true);
+    try {
+      // Load the cow we just saved to build the API request
+      const raw = localStorage.getItem(`balltastic_cow_${cowId}`);
+      if (!raw) { router.push(`/rampage?cow=${cowId}`); return; }
+      const cow = JSON.parse(raw);
+      const res = await fetch("/api/rampage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          startLocation: cow.startLocation,
+          endLocation: cow.endLocation,
+          games: cow.games.map((g: any) => ({
+            venue: g.venue, lat: g.lat, lng: g.lng, date: g.est_date,
+            time: g.est_time ?? "19:00", name: g.name,
+            min_price: g.min_price, espn_price: g.espn_price,
+          })),
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        data.games = cow.games;
+        try { localStorage.setItem(`balltastic_rampage_result_${cowId}`, JSON.stringify(data)); } catch {}
+      }
+    } catch { /* navigate anyway */ }
     router.push(`/rampage?cow=${cowId}`);
   }
 

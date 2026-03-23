@@ -275,9 +275,23 @@ function RampageContent() {
       .catch(() => { setError("Rampage plan not found"); setLoading(false); });
   }, [cowId]);
 
-  // Fetch routes once cow is loaded
+  // Fetch routes once cow is loaded (skip if pre-fetched from main page)
   useEffect(() => {
     if (!cow) return;
+    // Check for pre-fetched result from main page
+    const prefetchKey = `balltastic_rampage_result_${cowId}`;
+    try {
+      const cached = localStorage.getItem(prefetchKey);
+      if (cached) {
+        localStorage.removeItem(prefetchKey);
+        const data: RampageResult = JSON.parse(cached);
+        data.games = cow.games;
+        setResult(data);
+        setLoading(false);
+        return;
+      }
+    } catch { /* fall through to fetch */ }
+
     async function fetchRampage() {
       try {
         const res = await fetch("/api/rampage", {
@@ -301,7 +315,7 @@ function RampageContent() {
       finally { setLoading(false); }
     }
     fetchRampage();
-  }, [cow]);
+  }, [cow, cowId]);
 
   // Init map
   useEffect(() => {

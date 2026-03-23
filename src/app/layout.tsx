@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -11,6 +11,10 @@ const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jb-mono",
   subsets: ["latin"],
 });
+
+export const viewport: Viewport = {
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   title: "Ball Knowledge\u2122",

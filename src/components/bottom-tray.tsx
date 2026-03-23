@@ -1017,7 +1017,7 @@ export function BottomTray({
           <>
             {/* Drag handle (mobile only) */}
             {!isWide && (
-              <div className="flex justify-center pt-3 pb-1 cursor-grab touch-none" onPointerDown={onDragStart} onPointerUp={onDragEnd}>
+              <div className="flex justify-center pt-3 pb-1 cursor-grab touch-none" style={isExpanded ? { paddingTop: `max(0.75rem, env(safe-area-inset-top))` } : undefined} onPointerDown={onDragStart} onPointerUp={onDragEnd}>
                 <div className="w-10 h-1 rounded-full bg-neutral-300" />
               </div>
             )}
@@ -1241,12 +1241,6 @@ export function BottomTray({
                               : <span> · {userLocal.text} {userLocal.tz}</span>
                           )}
                         </div>
-                        {!isWide && event.away_record && event.home_record && (
-                          <span>{event.away_record} vs {event.home_record}</span>
-                        )}
-                        {!isWide && event.odds && (
-                          <span>{event.odds.away_win}–{event.odds.home_win}%</span>
-                        )}
                       </div>
                     </div>
 

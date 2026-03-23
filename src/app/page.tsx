@@ -94,6 +94,7 @@ function HomeInner() {
   const [data, setData] = useState<EventsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [rampageLoading, setRampageLoading] = useState(false);
   const [currentDate, setCurrentDate] = useState(() => loadState().date ?? todayEST());
   const [search, setSearch] = useState(() => loadState().search ?? "");
   const [selectedVenue, setSelectedVenue] = useState<VenueInfo | null>(null);
@@ -355,7 +356,7 @@ function HomeInner() {
 
       {/* Rampage button — floating top left */}
       {(isWide || trayState !== "expanded") && (
-        <RampageButton userLocation={userLocation} onCancelRampage={handleCancelRampage} />
+        <RampageButton userLocation={userLocation} onCancelRampage={handleCancelRampage} onPlanLoading={setRampageLoading} />
       )}
 
       {/* Bottom tray — intel panel */}
@@ -386,7 +387,7 @@ function HomeInner() {
       )}
 
       {/* Loading overlay */}
-      {loading && (
+      {(loading || rampageLoading) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-3">
             <div className="w-8 h-8 border-2 border-neutral-200 border-t-neutral-900 rounded-full animate-spin" />
