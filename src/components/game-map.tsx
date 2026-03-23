@@ -159,6 +159,7 @@ export function GameMap({
       directionsRendererRef.current = new google.maps.DirectionsRenderer({
         map,
         suppressMarkers: true,
+        preserveViewport: true,
         polylineOptions: {
           strokeColor: "#d4a843",
           strokeWeight: 4,
