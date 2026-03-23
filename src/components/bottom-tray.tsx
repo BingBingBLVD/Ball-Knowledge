@@ -117,7 +117,14 @@ function formatTime(time: string | null, tz?: string | null) {
   return `${hour12}:${String(m).padStart(2, "0")} ${period} ${tz ?? "ET"}`;
 }
 
-function formatUserLocalTime(utc: string | null | undefined): { text: string; tz: string } | null {
+const TZ_ABBR_TO_IANA: Record<string, string> = {
+  ET: "America/New_York", EDT: "America/New_York", EST: "America/New_York",
+  CT: "America/Chicago", CDT: "America/Chicago", CST: "America/Chicago",
+  MT: "America/Denver", MDT: "America/Denver", MST: "America/Denver",
+  PT: "America/Los_Angeles", PDT: "America/Los_Angeles", PST: "America/Los_Angeles",
+};
+
+function formatUserLocalTime(utc: string | null | undefined, venueTz?: string | null): { text: string; tz: string; offsetLabel: string | null } | null {
   if (!utc) return null;
   const d = new Date(utc);
   if (isNaN(d.getTime())) return null;
@@ -125,7 +132,18 @@ function formatUserLocalTime(utc: string | null | undefined): { text: string; tz
   const timeFmt = new Intl.DateTimeFormat("en-US", { timeZone: userTz, hour: "numeric", minute: "2-digit", hour12: true });
   const tzFmt = new Intl.DateTimeFormat("en-US", { timeZone: userTz, timeZoneName: "short" });
   const tzAbbr = tzFmt.formatToParts(d).find((p) => p.type === "timeZoneName")?.value ?? "";
-  return { text: timeFmt.format(d).replace(/\u202f/g, " "), tz: tzAbbr };
+  // Compute hour offset between venue time and user time
+  let offsetLabel: string | null = null;
+  const venueIana = venueTz ? TZ_ABBR_TO_IANA[venueTz] ?? null : null;
+  if (venueIana) {
+    const venueHour = parseInt(new Intl.DateTimeFormat("en-US", { timeZone: venueIana, hour: "numeric", hour12: false }).format(d));
+    const userHour = parseInt(new Intl.DateTimeFormat("en-US", { timeZone: userTz, hour: "numeric", hour12: false }).format(d));
+    const diff = userHour - venueHour;
+    if (diff !== 0) {
+      offsetLabel = diff > 0 ? `(+${diff}h)` : `(${diff}h)`;
+    }
+  }
+  return { text: timeFmt.format(d).replace(/\u202f/g, " "), tz: tzAbbr, offsetLabel };
 }
 
 function formatDriveTime(minutes: number): string {
@@ -1007,7 +1025,7 @@ export function BottomTray({
               const buses = event.nearbyBusStations ?? [];
               const price = event.espn_price?.amount ?? event.min_price?.amount;
               const dist = distanceMap[event.id];
-              const userLocal = formatUserLocalTime(event.date_time_utc);
+              const userLocal = formatUserLocalTime(event.date_time_utc, event.tz);
               const showLocal = userLocal && userLocal.tz !== (event.tz ?? "ET");
 
               return (
@@ -1146,9 +1164,15 @@ export function BottomTray({
                     {/* Main content */}
                     <div className="flex-1 min-w-0">
                       {/* Title */}
-                      <div className="text-[15px] font-semibold text-neutral-900 leading-snug">
-                        {away ? <>{away} <span className="text-neutral-400 font-normal">@</span> {home}</> : event.name}
-                      </div>
+                      {isWide ? (
+                        <div className="text-[15px] font-semibold text-neutral-900 leading-snug">
+                          {away ? <><div>{away}</div><div><span className="text-neutral-400 font-normal">@ </span>{home}</div></> : event.name}
+                        </div>
+                      ) : (
+                        <div className="text-[15px] font-semibold text-neutral-900 leading-snug">
+                          {away ? <>{away} <span className="text-neutral-400 font-normal">@</span> {home}</> : event.name}
+                        </div>
+                      )}
 
                       {/* Venue + location */}
                       <div className="text-sm text-neutral-500 mt-0.5">
@@ -1156,13 +1180,19 @@ export function BottomTray({
                       </div>
 
                       {/* Time + records */}
-                      <div className="flex items-center gap-2 mt-1 text-xs text-neutral-400">
-                        <span className="text-neutral-600 font-medium">{formatTime(event.local_time ?? event.est_time, event.tz)}</span>
-                        {showLocal && <span>{userLocal.text}</span>}
-                        {event.away_record && event.home_record && (
+                      <div className={`mt-1 text-xs text-neutral-400 ${isWide ? "" : "flex items-center gap-2"}`}>
+                        <div className={isWide ? "" : "contents"}>
+                          <span className="text-neutral-600 font-medium">{formatTime(event.local_time ?? event.est_time, event.tz)}</span>
+                          {showLocal && (
+                            isWide
+                              ? <div className="text-neutral-400">{userLocal.text} {userLocal.tz}</div>
+                              : <span> · {userLocal.text} {userLocal.tz}</span>
+                          )}
+                        </div>
+                        {!isWide && event.away_record && event.home_record && (
                           <span>{event.away_record} vs {event.home_record}</span>
                         )}
-                        {event.odds && (
+                        {!isWide && event.odds && (
                           <span>{event.odds.away_win}–{event.odds.home_win}%</span>
                         )}
                       </div>
@@ -1198,7 +1228,7 @@ export function BottomTray({
           const kalshiUrl = event.odds ? `https://kalshi.com/markets/KXNBAGAME/${event.odds.kalshi_event}` : null;
           const price = event.espn_price?.amount ?? event.min_price?.amount;
           const dist = distanceMap[event.id];
-          const userLocal = formatUserLocalTime(event.date_time_utc);
+          const userLocal = formatUserLocalTime(event.date_time_utc, event.tz);
           const showLocal = userLocal && userLocal.tz !== (event.tz ?? "ET");
 
           return createPortal(
@@ -1677,7 +1707,7 @@ export function BottomTray({
                             <h2 className="text-[22px] font-semibold text-neutral-900">Good Eats</h2>
                             <a href={yelpUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-neutral-900 underline hover:text-neutral-600">More on Yelp</a>
                           </div>
-                          <p className="text-sm text-neutral-500 mb-4">Top-rated spots near the arena</p>
+                          <p className="text-sm text-neutral-500 mb-4">Open 1h before tipoff &amp; 1h after the game</p>
                           {rLoading && !spots && <div className="flex items-center gap-2 text-sm text-neutral-500"><Loader2 className="size-4 animate-spin" /> Finding restaurants...</div>}
 
                           {pregame.length > 0 && (

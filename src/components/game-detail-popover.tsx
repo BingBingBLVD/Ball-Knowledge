@@ -1088,7 +1088,7 @@ export function GameDetailPopover({
                     <h2 className="text-[22px] font-semibold text-neutral-900">Good Eats</h2>
                     <a href={yelpUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-neutral-900 underline hover:text-neutral-600">More on Yelp</a>
                   </div>
-                  <p className="text-sm text-neutral-500 mb-4">Top-rated spots near the arena</p>
+                  <p className="text-sm text-neutral-500 mb-4">Open 1h before tipoff &amp; 1h after the game</p>
                   {rLoading && !spots && <div className="flex items-center gap-2 text-sm text-neutral-500"><Loader2 className="size-4 animate-spin" /> Finding restaurants...</div>}
 
                   {pregame.length > 0 && (

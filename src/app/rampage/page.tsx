@@ -156,7 +156,14 @@ function formatTime(time: string | null, tz?: string | null): string {
   return `${hour12}:${String(m).padStart(2, "0")} ${period} ${tz ?? "ET"}`;
 }
 
-function formatUserLocalTime(utc: string | null | undefined): { text: string; tz: string } | null {
+const TZ_ABBR_TO_IANA: Record<string, string> = {
+  ET: "America/New_York", EDT: "America/New_York", EST: "America/New_York",
+  CT: "America/Chicago", CDT: "America/Chicago", CST: "America/Chicago",
+  MT: "America/Denver", MDT: "America/Denver", MST: "America/Denver",
+  PT: "America/Los_Angeles", PDT: "America/Los_Angeles", PST: "America/Los_Angeles",
+};
+
+function formatUserLocalTime(utc: string | null | undefined, venueTz?: string | null): { text: string; tz: string; offsetLabel: string | null } | null {
   if (!utc) return null;
   const d = new Date(utc);
   if (isNaN(d.getTime())) return null;
@@ -164,7 +171,15 @@ function formatUserLocalTime(utc: string | null | undefined): { text: string; tz
   const timeFmt = new Intl.DateTimeFormat("en-US", { timeZone: userTz, hour: "numeric", minute: "2-digit", hour12: true });
   const tzFmt = new Intl.DateTimeFormat("en-US", { timeZone: userTz, timeZoneName: "short" });
   const tzAbbr = tzFmt.formatToParts(d).find((p) => p.type === "timeZoneName")?.value ?? "";
-  return { text: timeFmt.format(d).replace(/\u202f/g, " "), tz: tzAbbr };
+  let offsetLabel: string | null = null;
+  const venueIana = venueTz ? TZ_ABBR_TO_IANA[venueTz] ?? null : null;
+  if (venueIana) {
+    const venueHour = parseInt(new Intl.DateTimeFormat("en-US", { timeZone: venueIana, hour: "numeric", hour12: false }).format(d));
+    const userHour = parseInt(new Intl.DateTimeFormat("en-US", { timeZone: userTz, hour: "numeric", hour12: false }).format(d));
+    const diff = userHour - venueHour;
+    if (diff !== 0) offsetLabel = diff > 0 ? `(+${diff}h)` : `(${diff}h)`;
+  }
+  return { text: timeFmt.format(d).replace(/\u202f/g, " "), tz: tzAbbr, offsetLabel };
 }
 
 function modeIcon(mode: string) {
@@ -457,8 +472,7 @@ function RampageContent() {
                     </div>
                     <div className="text-sm text-neutral-500 mt-0.5">{game.venue} · {game.city}, {game.state}</div>
                     <div className="flex items-center gap-2 mt-1 text-xs text-neutral-400">
-                      <span className="text-neutral-600 font-medium">{formatTime(game.local_time ?? game.est_time, game.tz)}</span>
-                      {(() => { const u = formatUserLocalTime(game.date_time_utc); return u && u.tz !== (game.tz ?? "ET") ? <span>{u.text}</span> : null; })()}
+                      <span className="text-neutral-600 font-medium">{formatTime(game.local_time ?? game.est_time, game.tz)}{(() => { const u = formatUserLocalTime(game.date_time_utc, game.tz); return u && u.tz !== (game.tz ?? "ET") ? ` · ${u.text} ${u.tz}` : ""; })()}</span>
                       {game.away_record && game.home_record && <span>{game.away_record} vs {game.home_record}</span>}
                       {game.odds && <span>{game.odds.away_win}–{game.odds.home_win}%</span>}
                     </div>
