@@ -289,7 +289,7 @@ function TransitRows({
                     onClick={(e) => e.stopPropagation()}
                   >
                     <div className="flex items-center gap-2">
-                      <Car className="size-4 text-neutral-400" />
+                      <Car className="size-4 text-[--color-dim]" />
                       <span className="text-xs font-bold text-neutral-900">{formatDriveTime(times.driveMinutes)}</span>
                       <span className="text-[10px] text-neutral-500">Drive</span>
                     </div>
