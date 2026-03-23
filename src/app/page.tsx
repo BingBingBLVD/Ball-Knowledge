@@ -107,6 +107,7 @@ function HomeInner() {
   });
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(() => loadState().loc ?? null);
   const [vh, setVh] = useState(800);
+  const [vw, setVw] = useState(0);
 
   // Persist state changes
   useEffect(() => { saveState({ date: currentDate }); }, [currentDate]);
@@ -114,10 +115,11 @@ function HomeInner() {
   useEffect(() => { saveState({ tray: trayState }); }, [trayState]);
   useEffect(() => { saveState({ loc: userLocation }); }, [userLocation]);
 
-  // Track viewport height
+  // Track viewport size
   useEffect(() => {
     setVh(window.innerHeight);
-    const onResize = () => setVh(window.innerHeight);
+    setVw(window.innerWidth);
+    const onResize = () => { setVh(window.innerHeight); setVw(window.innerWidth); };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
@@ -268,7 +270,8 @@ function HomeInner() {
     return diffDays <= 3;
   }, [currentDate]);
 
-  const bottomPadding = trayState === "collapsed" ? 56 : trayState === "peek" ? Math.round(vh * 0.5) : vh;
+  const isWide = vw >= 867;
+  const bottomPadding = isWide ? 0 : trayState === "collapsed" ? 56 : trayState === "peek" ? Math.round(vh * 0.5) : vh;
 
   return (
     <main className="relative h-dvh w-dvw overflow-hidden">
@@ -289,12 +292,12 @@ function HomeInner() {
       />
 
       {/* Location button — floating top right */}
-      {trayState !== "expanded" && (
+      {(isWide || trayState !== "expanded") && (
         <LocationButton userLocation={userLocation} onLocationChange={setUserLocation} />
       )}
 
       {/* Rampage button — floating top left */}
-      {trayState !== "expanded" && (
+      {(isWide || trayState !== "expanded") && (
         <RampageButton userLocation={userLocation} onCancelRampage={handleCancelRampage} />
       )}
 

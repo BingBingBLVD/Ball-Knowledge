@@ -449,7 +449,7 @@ export function GameMap({
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 w-dvw h-dvh z-0"
+      className="fixed inset-0 w-dvw h-dvh z-0 min-[867px]:w-1/2 min-[867px]:right-auto"
     />
   );
 }

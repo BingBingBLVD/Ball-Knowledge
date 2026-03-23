@@ -156,7 +156,7 @@ export function LocationButton({
   }
 
   return (
-    <div ref={containerRef} className="fixed top-4 right-4 z-20">
+    <div ref={containerRef} className="fixed top-4 right-4 min-[867px]:right-[calc(50%+1rem)] z-20">
       {/* Toggle button */}
       <button
         onClick={() => { setOpen(!open); setAddressMode(false); setQuery(""); setSuggestions([]); }}

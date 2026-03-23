@@ -858,6 +858,16 @@ export function BottomTray({
     return () => clearTimeout(timer);
   }, [selectedVenue, trayState, games]);
 
+  // Eagerly load venue photos on wide screens for card images
+  useEffect(() => {
+    if (!isWide) return;
+    for (const g of games) {
+      if (g.lat != null && g.lng != null) {
+        handlePhotosLoad(g.venue, g.lat, g.lng);
+      }
+    }
+  }, [isWide, games]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Scroll to and highlight hovered venue (from map marker hover)
   useEffect(() => {
     if (!hoveredVenue || trayState === "collapsed") return;
@@ -911,18 +921,27 @@ export function BottomTray({
     }
   }, [onTrayStateChange]);
 
+  // Wide screen detection for side-by-side layout
+  const [isWide, setIsWide] = useState(false);
+  useEffect(() => {
+    const check = () => setIsWide(window.innerWidth >= 867);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
   const isExpanded = trayState === "expanded";
-  const height = trayState === "collapsed" ? "56px" : trayState === "peek" ? "50vh" : "100vh";
-  const sideMargin = isExpanded ? "0px" : "8px";
+  const height = isWide ? "100dvh" : trayState === "collapsed" ? "56px" : trayState === "peek" ? "50vh" : "100vh";
+  const sideMargin = isWide ? "0px" : isExpanded ? "0px" : "8px";
 
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 z-10 tray-transition pointer-events-auto"
-      style={{ height, marginLeft: sideMargin, marginRight: sideMargin }}
+      className={`${isWide ? "fixed top-0 right-0 w-1/2" : "fixed bottom-0 left-0 right-0"} z-10 tray-transition pointer-events-auto`}
+      style={isWide ? { height } : { height, marginLeft: sideMargin, marginRight: sideMargin }}
     >
-      <div className={`h-full bg-white border-t border-x border-neutral-200 shadow-[0_-8px_30px_rgba(0,0,0,0.10)] flex flex-col ${isExpanded ? "rounded-t-none" : "rounded-t-[24px]"}`}>
-        {trayState === "collapsed" ? (
-          /* Collapsed: just a summary line */
+      <div className={`h-full bg-white ${isWide ? "border-l" : "border-t border-x"} border-neutral-200 shadow-[0_-8px_30px_rgba(0,0,0,0.10)] flex flex-col ${!isWide && !isExpanded ? "rounded-t-[24px]" : "rounded-t-none"}`}>
+        {!isWide && trayState === "collapsed" ? (
+          /* Collapsed: just a summary line (mobile only) */
           <button onClick={cycleTray} onPointerDown={onDragStart} onPointerUp={onDragEnd} className="flex items-center justify-center h-full w-full gap-1.5 touch-none">
             <span className="text-sm font-semibold text-neutral-900">
               {games.length} game{games.length !== 1 ? "s" : ""} on {(() => { const [y, m, d] = date.split("-").map(Number); return new Date(y, m - 1, d).toLocaleDateString("en-US", { month: "short", day: "numeric" }); })()}
@@ -931,12 +950,14 @@ export function BottomTray({
           </button>
         ) : (
           <>
-            {/* Drag handle */}
-            <div className="flex justify-center pt-3 pb-1 cursor-grab touch-none" onPointerDown={onDragStart} onPointerUp={onDragEnd}>
-              <div className="w-10 h-1 rounded-full bg-neutral-300" />
-            </div>
+            {/* Drag handle (mobile only) */}
+            {!isWide && (
+              <div className="flex justify-center pt-3 pb-1 cursor-grab touch-none" onPointerDown={onDragStart} onPointerUp={onDragEnd}>
+                <div className="w-10 h-1 rounded-full bg-neutral-300" />
+              </div>
+            )}
             {/* Header bar */}
-            <div className="flex items-center select-none border-b border-neutral-100 px-2 pb-2 gap-2">
+            <div className={`flex items-center select-none border-b border-neutral-100 px-2 ${isWide ? "py-3" : "pb-2"} gap-2`}>
               {/* Search */}
               <div className="flex-1 min-w-0">
                 <SearchBar value={search} onChange={onSearchChange} onLocationChange={onLocationChange} />
@@ -951,19 +972,21 @@ export function BottomTray({
                   gameCountByDate={gameCountByDate}
                 />
               </div>
-              {/* Expand/collapse */}
-              <button
-                onClick={cycleTray}
-                className="shrink-0 p-2 rounded-full hover:bg-neutral-100 transition-colors"
-              >
-                <ChevronUp className={`size-4 text-[--color-dim] transition-transform ${trayState === "expanded" ? "rotate-180" : ""}`} />
-              </button>
+              {/* Expand/collapse (mobile only) */}
+              {!isWide && (
+                <button
+                  onClick={cycleTray}
+                  className="shrink-0 p-2 rounded-full hover:bg-neutral-100 transition-colors"
+                >
+                  <ChevronUp className={`size-4 text-[--color-dim] transition-transform ${trayState === "expanded" ? "rotate-180" : ""}`} />
+                </button>
+              )}
             </div>
           </>
         )}
 
-        {/* Scrollable game cards — Airbnb listing style */}
-        {trayState !== "collapsed" && (
+        {/* Scrollable game cards */}
+        {(isWide || trayState !== "collapsed") && (
           <div ref={scrollRef} className={`flex-1 overflow-y-auto no-scrollbar px-4 pb-4 ${isAnimating ? "pointer-events-none" : ""}`}>
             {games.length === 0 && (
               <div className="flex flex-col items-center justify-center py-16 gap-2">
@@ -971,7 +994,7 @@ export function BottomTray({
                 <span className="text-neutral-500 text-sm">Try a different date</span>
               </div>
             )}
-            <div className="divide-y divide-neutral-100">
+            <div className={isWide ? "grid grid-cols-2 gap-4 pt-2" : "divide-y divide-neutral-100"}>
             {sortedGames.map((event) => {
               const parts = event.name.split(/\s+(?:vs?\.?|VS\.?)\s+/);
               const home = parts[0].replace(/\s*\(.*?\)/g, "").trim();
@@ -993,10 +1016,10 @@ export function BottomTray({
                   data-venue={event.venue}
                   onMouseEnter={() => onVenueHover?.(event.venue)}
                   onMouseLeave={() => onVenueHover?.(null)}
-                  className={`py-5 card-enter transition-all cursor-pointer ${
-                    isRampageSelected
-                      ? "bg-violet-50 -mx-4 px-4 border-l-3 border-violet-500"
-                      : ""
+                  className={`card-enter transition-all cursor-pointer ${
+                    isWide
+                      ? `rounded-2xl bg-neutral-50/60 p-4 hover:bg-neutral-100/60 ${isRampageSelected ? "ring-2 ring-violet-500 bg-violet-50" : ""}`
+                      : `py-5 ${isRampageSelected ? "bg-violet-50 -mx-4 px-4 border-l-3 border-violet-500" : ""}`
                   }`}
                   onClick={() => {
                     // RAMPAGE mode: toggle game selection
@@ -1091,7 +1114,23 @@ export function BottomTray({
                     }
                   }}
                 >
-                  {/* Airbnb-style card layout */}
+                  {/* Venue photo — wide grid only */}
+                  {isWide && (() => {
+                    const photos = venuePhotos[event.venue];
+                    const src = photos?.[0];
+                    return (
+                      <div className="relative w-full h-32 -mt-4 -mx-4 mb-3 overflow-hidden rounded-t-2xl" style={{ width: "calc(100% + 2rem)" }}>
+                        {src ? (
+                          <img src={src} alt={event.venue} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-neutral-100 flex items-center justify-center">
+                            <Map className="size-6 text-neutral-300" />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                  {/* Card layout */}
                   <div className="flex items-start gap-4">
                     {/* Rampage checkbox */}
                     {rampage.active && (
