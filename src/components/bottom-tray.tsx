@@ -398,18 +398,34 @@ export function BottomTray({
   const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
   const [popoverEventId, setPopoverEventId] = useState<string | null>(null);
   const [popoverVisible, setPopoverVisible] = useState(false);
+  const [popoverScrolled, setPopoverScrolled] = useState(false);
+  const popoverTitleRef = useRef<HTMLDivElement>(null);
+  const popoverScrollRef = useRef<HTMLDivElement>(null);
   const [transitTab, setTransitTab] = useState<"flights" | "trains" | "buses">("flights");
 
   const openPopover = useCallback((id: string) => {
     setPopoverEventId(id);
-    // Trigger animation on next frame
+    setPopoverScrolled(false);
     requestAnimationFrame(() => requestAnimationFrame(() => setPopoverVisible(true)));
   }, []);
 
   const closePopover = useCallback(() => {
     setPopoverVisible(false);
-    setTimeout(() => setPopoverEventId(null), 300); // match transition duration
+    setTimeout(() => setPopoverEventId(null), 300);
   }, []);
+
+  // Watch title visibility for sticky header
+  useEffect(() => {
+    const el = popoverTitleRef.current;
+    const root = popoverScrollRef.current;
+    if (!el || !root || !popoverEventId) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setPopoverScrolled(!entry.isIntersecting),
+      { root, threshold: 0 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [popoverEventId, popoverVisible]);
 
 
   // Sort state
@@ -1212,10 +1228,15 @@ export function BottomTray({
                 {/* Sticky header — Airbnb style */}
                 <div className="sticky top-0 z-10 bg-white border-b border-neutral-200">
                   <div className="max-w-3xl mx-auto flex items-center justify-between px-6 py-4">
-                    <button onClick={closePopover} className="p-2 -ml-2 rounded-full hover:bg-neutral-100 transition-colors">
-                      <X className="size-5 text-neutral-600" />
-                    </button>
                     <div className="flex items-center gap-3">
+                      <button onClick={closePopover} className="p-2 -ml-2 rounded-full hover:bg-neutral-100 transition-colors shrink-0">
+                        <X className="size-5 text-neutral-600" />
+                      </button>
+                      <div className={`truncate transition-opacity duration-200 ${popoverScrolled ? "opacity-100" : "opacity-0"}`}>
+                        <div className="text-sm font-semibold text-neutral-900 truncate">{away ? `${away} @ ${home}` : event.name}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
                       {price != null && <span className="text-sm font-semibold">From ${price}</span>}
                       <button
                         onClick={() => {
@@ -1241,7 +1262,7 @@ export function BottomTray({
                 </div>
 
                 {/* Scrollable content */}
-                <div className="flex-1 overflow-y-auto no-scrollbar">
+                <div ref={popoverScrollRef} className="flex-1 overflow-y-auto no-scrollbar">
                   <div className="max-w-3xl mx-auto px-6">
                     {/* Venue photos — Airbnb grid */}
                     {(() => {
@@ -1277,7 +1298,7 @@ export function BottomTray({
                     })()}
 
                     {/* Title section */}
-                    <div className="pt-8 pb-6">
+                    <div ref={popoverTitleRef} className="pt-8 pb-6">
                       {away ? (
                         <h1 className="text-[26px] font-bold text-neutral-900 leading-tight">
                           {away} <span className="text-neutral-400 font-normal">@</span> {home}
