@@ -984,53 +984,16 @@ export function BottomTray({
           </button>
         </div>
 
-        {/* Column headers — clickable to sort */}
+        {/* Scrollable game cards — Airbnb listing style */}
         {trayState !== "collapsed" && (
-          <div className="px-6 py-1.5 border-b border-[--primary]/10 overflow-x-auto no-scrollbar bg-black/[0.02]">
-            <div className="flex items-center gap-2.5 text-[10px] font-semibold tracking-widest uppercase" style={{ minWidth: visibleColumns.size > 3 ? "600px" : undefined }}>
-              {visibleColumns.has("ticket") && (
-                <span onClick={() => handleHeaderSort("price")} className={`shrink-0 min-w-[2.5rem] cursor-pointer hover:text-foreground transition-colors ${sortKey === "price" ? "text-[--primary] font-semibold" : "text-[--color-dim]"}`}>
-                  TICKET{sortKey === "price" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
-                </span>
-              )}
-              {visibleColumns.has("record") && (
-                <span onClick={() => handleHeaderSort("record")} className={`shrink-0 min-w-[3.2rem] cursor-pointer hover:text-foreground transition-colors ${sortKey === "record" ? "text-[--primary] font-semibold" : "text-[--color-dim]"}`}>
-                  REC{sortKey === "record" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
-                </span>
-              )}
-              {showOdds && visibleColumns.has("odds") && (
-                <span onClick={() => handleHeaderSort("odds")} className={`shrink-0 min-w-[2.5rem] cursor-pointer hover:text-foreground transition-colors ${sortKey === "odds" ? "text-[--primary] font-semibold" : "text-[--color-dim]"}`}>
-                  ODDS{sortKey === "odds" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
-                </span>
-              )}
-              {visibleColumns.has("team") && (
-                <span onClick={() => handleHeaderSort("team")} className={`flex-1 min-w-0 cursor-pointer hover:text-foreground transition-colors ${sortKey === "team" ? "text-[--primary] font-semibold" : "text-[--color-dim]"}`}>
-                  TEAM{sortKey === "team" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
-                </span>
-              )}
-              {visibleColumns.has("stadium") && (
-                <span onClick={() => handleHeaderSort("dist")} className={`flex-1 min-w-0 cursor-pointer hover:text-foreground transition-colors ${sortKey === "dist" ? "text-[--primary] font-semibold" : "text-[--color-dim]"}`}>
-                  STADIUM{sortKey === "dist" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
-                </span>
-              )}
-              {visibleColumns.has("time") && (
-                <span onClick={() => handleHeaderSort("time")} className={`shrink-0 cursor-pointer hover:text-foreground transition-colors ${sortKey === "time" ? "text-[--primary] font-semibold" : "text-[--color-dim]"}`}>
-                  TIME{sortKey === "time" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
-                </span>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Scrollable game cards */}
-        {trayState !== "collapsed" && (
-          <div ref={scrollRef} className={`flex-1 overflow-y-auto no-scrollbar px-3 pb-3 space-y-2 ${isAnimating ? "pointer-events-none" : ""}`}>
+          <div ref={scrollRef} className={`flex-1 overflow-y-auto no-scrollbar px-4 pb-4 ${isAnimating ? "pointer-events-none" : ""}`}>
             {games.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-12 gap-2">
-                <span className="text-[--color-dim] text-sm">NO GAMES AVAILABLE</span>
-                <span className="text-[--color-dim]/60 text-xs">Try a different date</span>
+              <div className="flex flex-col items-center justify-center py-16 gap-2">
+                <span className="text-neutral-900 text-base font-semibold">No games available</span>
+                <span className="text-neutral-500 text-sm">Try a different date</span>
               </div>
             )}
+            <div className="divide-y divide-neutral-100">
             {sortedGames.map((event) => {
               const parts = event.name.split(/\s+(?:vs?\.?|VS\.?)\s+/);
               const home = parts[0].replace(/\s*\(.*?\)/g, "").trim();
@@ -1038,27 +1001,13 @@ export function BottomTray({
               const isRampageSelected = rampage.active && event.est_date && rampage.selectedGames.has(event.est_date) && rampage.selectedGames.get(event.est_date)!.id === event.id;
               const isSelected = !rampage.active && selectedVenue === event.venue;
               const isHovered = hoveredVenue === event.venue;
-              const isExpanded = !rampage.active && expandedCardId === event.id;
               const airports = event.nearbyAirports ?? [];
               const trains = event.nearbyTrainStations ?? [];
               const buses = event.nearbyBusStations ?? [];
-              const kalshiUrl = event.odds
-                ? `https://kalshi.com/markets/KXNBAGAME/${event.odds.kalshi_event}`
-                : null;
               const price = event.espn_price?.amount ?? event.min_price?.amount;
               const dist = distanceMap[event.id];
-              const spread = event.odds ? Math.abs(event.odds.away_win - event.odds.home_win) : null;
-              const isCloseOdds = spread != null && spread <= 10;
-              const isCloseMatchup = (() => {
-                if (!event.away_record || !event.home_record) return false;
-                const pa = event.away_record.split("-").map(Number);
-                const ph = event.home_record.split("-").map(Number);
-                if (pa.length < 2 || ph.length < 2) return false;
-                const tA = pa[0] + pa[1];
-                const tH = ph[0] + ph[1];
-                if (tA === 0 || tH === 0) return false;
-                return Math.abs(pa[0] / tA - ph[0] / tH) <= 0.05;
-              })();
+              const userLocal = formatUserLocalTime(event.date_time_utc);
+              const showLocal = userLocal && userLocal.tz !== (event.tz ?? "ET");
 
               return (
                 <div
@@ -1066,14 +1015,11 @@ export function BottomTray({
                   data-venue={event.venue}
                   onMouseEnter={() => onVenueHover?.(event.venue)}
                   onMouseLeave={() => onVenueHover?.(null)}
-                  className={`rounded-lg card-enter transition-all cursor-pointer ${
+                  className={`py-5 card-enter transition-all cursor-pointer ${
                     isRampageSelected
-                      ? "border-l-2 border-[--color-rampage] bg-[--color-rampage]/8 shadow-lg shadow-[--color-rampage]/5"
-                      : isSelected || isHovered
-                        ? "shadow-lg"
-                        : "hover:bg-neutral-50"
+                      ? "bg-orange-50 -mx-4 px-4 border-l-3 border-orange-500"
+                      : ""
                   }`}
-                  style={isHovered && !isSelected && !isRampageSelected ? { borderColor: "white" } : undefined}
                   onClick={() => {
                     // RAMPAGE mode: toggle game selection
                     if (rampage.active && event.lat != null && event.lng != null && event.est_date) {
@@ -1167,93 +1113,58 @@ export function BottomTray({
                     }
                   }}
                 >
-                  {/* Card header — always visible */}
-                  <div className={`px-3 py-2.5 overflow-x-auto no-scrollbar ${isHovered && !isRampageSelected ? "font-bold" : ""}`}>
-                    <div className="flex items-start gap-2.5" style={{ minWidth: visibleColumns.size > 3 ? "600px" : undefined }}>
-                      {/* Rampage selection indicator */}
-                      {rampage.active && (
-                        <div className="shrink-0 flex items-center pt-0.5">
-                          {isRampageSelected ? (
-                            <CheckCircle2 className="size-5 text-[--color-rampage]" />
-                          ) : (
-                            <Circle className="size-5 text-[--color-dim]" />
-                          )}
-                        </div>
-                      )}
-                      {/* Col: Ticket */}
-                      {visibleColumns.has("ticket") && (
-                        <div className="flex flex-col items-start shrink-0 gap-0.5 min-w-[2.5rem]">
-                          {price != null && (
-                            <span className={`text-sm font-semibold ${price < 30 ? "text-emerald-600" : price < 80 ? "text-emerald-700" : "text-foreground"}`}>${price}</span>
-                          )}
-                          {event.espn_price?.available != null && event.espn_price.available > 0 && (
-                            <span className={`text-[10px] ${event.espn_price.available < 1000 ? "text-amber-600" : "text-[--color-dim]"}`}>{event.espn_price.available}<br/>available</span>
-                          )}
-                        </div>
-                      )}
-                      {/* Col: Records */}
-                      {visibleColumns.has("record") && (
-                        <div className="flex flex-col items-start shrink-0 gap-0.5 min-w-[3.2rem]">
-                          {away ? (
-                            <>
-                              <span className={`text-xs tabular-nums ${isCloseMatchup ? "text-amber-600" : "text-[--color-dim]"}`}>{event.away_record || "—"}</span>
-                              <span className={`text-xs tabular-nums ${isCloseMatchup ? "text-amber-600" : "text-[--color-dim]"}`}>{event.home_record || "—"}</span>
-                            </>
-                          ) : <span className="text-xs">&nbsp;</span>}
-                        </div>
-                      )}
-                      {/* Col: Odds + spread */}
-                      {showOdds && visibleColumns.has("odds") && (
-                        <div className="flex flex-col items-start shrink-0 gap-0.5 min-w-[2.5rem]">
-                          {away && event.odds ? (
-                            <>
-                              <span className={`text-xs tabular-nums ${isCloseOdds ? "text-amber-600 font-semibold" : "text-[--color-dim]"}`}>{event.odds.away_win}%</span>
-                              <span className={`text-xs tabular-nums ${isCloseOdds ? "text-amber-600 font-semibold" : "text-[--color-dim]"}`}>{event.odds.home_win}%</span>
-                              <span className={`text-[10px] ${isCloseOdds ? "text-amber-600" : "text-[--color-dim]"}`}>±{spread}</span>
-                            </>
-                          ) : <span className="text-xs">&nbsp;</span>}
-                        </div>
-                      )}
-                      {/* Col: Team */}
-                      {visibleColumns.has("team") && (
-                        <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-                          {away ? (
-                            <>
-                              <span className="text-sm font-semibold uppercase text-foreground truncate">{away}</span>
-                              <span className="text-sm font-semibold uppercase text-foreground truncate"><span className="text-[--primary]/60 font-normal mr-1">@</span>{home}</span>
-                            </>
-                          ) : (
-                            <span className="text-sm font-semibold uppercase text-foreground truncate">{event.name}</span>
-                          )}
-                        </div>
-                      )}
-                      {/* Col: Stadium */}
-                      {visibleColumns.has("stadium") && (
-                        <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-                          <span className="text-xs text-[--color-dim] truncate">{event.venue}</span>
-                          <span className={`text-[10px] truncate ${dist != null && dist < 250 ? "text-amber-600" : "text-[--color-dim]"}`}>{event.city}, {event.state}{dist != null ? ` · ${Math.round(dist)}mi` : ""}</span>
-                        </div>
-                      )}
-                      {/* Col: Time */}
-                      {visibleColumns.has("time") && (() => {
-                        const userLocal = formatUserLocalTime(event.date_time_utc);
-                        const showLocal = userLocal && userLocal.tz !== (event.tz ?? "ET");
-                        return (
-                          <div className="shrink-0 text-right">
-                            <span className="text-sm text-foreground">{formatTime(event.local_time ?? event.est_time, event.tz)}</span>
-                            {showLocal && (
-                              <div className="text-[10px] text-[--color-dim]">{userLocal.text} {userLocal.tz}</div>
-                            )}
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  </div>
+                  {/* Airbnb-style card layout */}
+                  <div className="flex items-start gap-4">
+                    {/* Rampage checkbox */}
+                    {rampage.active && (
+                      <div className="shrink-0 pt-1">
+                        {isRampageSelected ? (
+                          <CheckCircle2 className="size-5 text-orange-500" />
+                        ) : (
+                          <Circle className="size-5 text-neutral-300" />
+                        )}
+                      </div>
+                    )}
 
-                  {/* Card no longer expands inline — popover renders via portal */}
+                    {/* Main content */}
+                    <div className="flex-1 min-w-0">
+                      {/* Title */}
+                      <div className="text-[15px] font-semibold text-neutral-900 leading-snug">
+                        {away ? <>{away} <span className="text-neutral-400 font-normal">@</span> {home}</> : event.name}
+                      </div>
+
+                      {/* Venue + location */}
+                      <div className="text-sm text-neutral-500 mt-0.5">
+                        {event.venue} · {event.city}, {event.state}{dist != null ? ` · ${Math.round(dist)} mi` : ""}
+                      </div>
+
+                      {/* Time + records */}
+                      <div className="flex items-center gap-3 mt-1.5 text-sm text-neutral-500">
+                        <span className="text-neutral-900 font-medium">{formatTime(event.local_time ?? event.est_time, event.tz)}</span>
+                        {showLocal && <span>{userLocal.text}</span>}
+                        {event.away_record && event.home_record && (
+                          <span>{event.away_record} vs {event.home_record}</span>
+                        )}
+                        {event.odds && (
+                          <span>{event.odds.away_win}–{event.odds.home_win}%</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Price — right side */}
+                    {price != null && (
+                      <div className="shrink-0 text-right pt-0.5">
+                        <div className="text-[15px] font-semibold text-neutral-900">${price}</div>
+                        <div className="text-xs text-neutral-500">
+                          {event.espn_price?.available ? `${event.espn_price.available.toLocaleString()} left` : "per ticket"}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               );
             })}
+            </div>
           </div>
         )}
 
