@@ -1441,7 +1441,7 @@ export function BottomTray({
                       return (
                         <div className="py-8 border-b border-neutral-200">
                           <h2 className="text-[22px] font-semibold text-neutral-900 mb-1">Getting home</h2>
-                          <p className="text-sm text-neutral-500 mb-4">Latest post-game transit from {event.venue} to nearby stations</p>
+                          <p className="text-sm text-neutral-500 mb-4">Last transit after the game</p>
                           {ltLoading && !ltData && <div className="flex items-center gap-2 text-sm text-neutral-500"><Loader2 className="size-4 animate-spin" /> Checking...</div>}
                           {ltData && ltData.length > 0 && <div className="space-y-3">{ltData.map((lt) => {
                             const depTime = lt.lastDeparture ? new Date(lt.lastDeparture) : null;
@@ -1449,7 +1449,7 @@ export function BottomTray({
                             return (<div key={lt.stopCode} className="flex items-center justify-between py-3 border-b border-neutral-100 last:border-0">
                               <div>
                                 <div className="text-base font-semibold text-neutral-900">{lt.stopCode}</div>
-                                <div className="text-xs text-neutral-500">Venue → {lt.stopName || lt.stopCode} station</div>
+                                <div className="text-xs text-neutral-500">→ {lt.stopName || lt.stopCode}</div>
                               </div>
                               {lt.available && depStr ? (
                                 <div className="text-right">
