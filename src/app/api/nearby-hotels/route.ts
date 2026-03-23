@@ -8,6 +8,7 @@ interface HotelSuggestion {
   priceLevel: number | null;
   estimatedPrice: string;
   bookingUrl: string;
+  photoUrl: string | null;
   lat: number;
   lng: number;
   distanceMiles: number;
@@ -67,6 +68,7 @@ export async function GET(req: NextRequest) {
       vicinity: string;
       rating?: number;
       price_level?: number;
+      photos?: { photo_reference: string }[];
       geometry: { location: { lat: number; lng: number } };
     }) => {
       const hLat = place.geometry.location.lat;
@@ -82,7 +84,7 @@ export async function GET(req: NextRequest) {
       )
     );
 
-    const hotels: HotelSuggestion[] = topPlaces.map((entry: { place: { name: string; vicinity: string; rating?: number; price_level?: number }; hLat: number; hLng: number; dist: number }, i: number) => {
+    const hotels: HotelSuggestion[] = topPlaces.map((entry: { place: { name: string; vicinity: string; rating?: number; price_level?: number; photos?: { photo_reference: string }[] }; hLat: number; hLng: number; dist: number }, i: number) => {
       const { place, hLat, hLng, dist } = entry;
       const times = travelResults[i];
       const roadMiles = dist * 1.3;
@@ -100,6 +102,9 @@ export async function GET(req: NextRequest) {
         return low === high ? `~$${low}` : `~$${low}–${high}`;
       })();
 
+      const photoRef = place.photos?.[0]?.photo_reference;
+      const photoUrl = photoRef ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${photoRef}&key=${apiKey}` : null;
+
       return {
         name: place.name,
         vicinity: place.vicinity,
@@ -107,6 +112,7 @@ export async function GET(req: NextRequest) {
         priceLevel: place.price_level ?? null,
         estimatedPrice: place.price_level ? PRICE_LEVEL_MAP[place.price_level] ?? "Unknown" : "Check price",
         bookingUrl: `https://www.google.com/travel/hotels/?q=hotels+near+${encodeURIComponent(venueName)}&dates=${date},${checkout}`,
+        photoUrl,
         lat: hLat,
         lng: hLng,
         distanceMiles: Math.round(dist * 10) / 10,

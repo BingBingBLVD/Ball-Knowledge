@@ -91,6 +91,7 @@ interface HotelSuggestion {
   priceLevel: number | null;
   estimatedPrice: string;
   bookingUrl: string;
+  photoUrl: string | null;
   lat: number;
   lng: number;
   distanceMiles: number;
@@ -1502,23 +1503,34 @@ export function BottomTray({
                         <div className="py-8 border-b border-neutral-200">
                           <h2 className="text-[22px] font-semibold text-neutral-900 mb-4">Where to stay</h2>
                           {loading && !hotels && <div className="flex items-center gap-2 text-sm text-neutral-500"><Loader2 className="size-4 animate-spin" /> Loading...</div>}
-                          {hotels && hotels.length > 0 && <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{hotels.map((h, hi) => (
-                            <a key={hi} href={h.bookingUrl} target="_blank" rel="noopener noreferrer" className="rounded-xl border border-neutral-200 p-4 hover:shadow-md transition-shadow no-underline block">
-                              <div className="text-base font-semibold text-neutral-900 truncate">{h.name}</div>
-                              <div className="flex items-center gap-2 mt-1 text-sm text-neutral-500">
-                                {h.rating && <span className="flex items-center gap-0.5"><Star className="size-3.5 text-neutral-900" /> {h.rating}</span>}
-                                <span>{h.distanceMiles} mi from venue</span>
-                              </div>
-                              <div className="text-sm font-semibold text-neutral-900 mt-2">{h.estimatedPrice}</div>
-                              <div className="flex items-center gap-3 mt-2 text-xs text-neutral-500 flex-wrap">
-                                <a href={gmapsUrl(h.lat, h.lng, event.lat!, event.lng!, "driving", arriveByEpoch)} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-900 no-underline" onClick={(e) => e.stopPropagation()}>{h.driveMinutes} min drive</a>
-                                {h.transitMinutes != null && <a href={gmapsUrl(h.lat, h.lng, event.lat!, event.lng!, "transit", arriveByEpoch)} target="_blank" rel="noopener noreferrer" className="hover:text-neutral-900 no-underline" onClick={(e) => e.stopPropagation()}>{h.transitMinutes} min transit{h.transitFare && <span className="text-emerald-600 ml-0.5">{h.transitFare}</span>}</a>}
-                                <span>{h.walkMinutes} min walk</span>
-                                <span>Uber {h.uberEstimate}</span>
-                                <span>Lyft {h.lyftEstimate}</span>
-                              </div>
-                            </a>
-                          ))}</div>}
+                          {hotels && hotels.length > 0 && (
+                            <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-6 px-6 pb-2">
+                              {hotels.map((h, hi) => (
+                                <a key={hi} href={h.bookingUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 w-[240px] rounded-xl overflow-hidden hover:shadow-lg transition-shadow no-underline block group">
+                                  <div className="h-[160px] bg-neutral-100 overflow-hidden">
+                                    {h.photoUrl ? (
+                                      <img src={h.photoUrl} alt={h.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center text-neutral-400"><Hotel className="size-10" /></div>
+                                    )}
+                                  </div>
+                                  <div className="p-3">
+                                    <div className="flex items-center justify-between">
+                                      <div className="text-sm font-semibold text-neutral-900 truncate flex-1">{h.name}</div>
+                                      {h.rating && <span className="flex items-center gap-0.5 text-sm shrink-0 ml-2"><Star className="size-3.5 text-neutral-900" /> {h.rating}</span>}
+                                    </div>
+                                    <div className="text-sm text-neutral-500 mt-0.5">{h.distanceMiles} mi from venue</div>
+                                    <div className="text-sm font-semibold text-neutral-900 mt-1">{h.estimatedPrice}</div>
+                                    <div className="flex items-center gap-2 mt-2 text-xs text-neutral-500">
+                                      <span className="flex items-center gap-1"><Car className="size-3" /> {h.driveMinutes}m</span>
+                                      {h.transitMinutes != null && <span className="flex items-center gap-1"><Bus className="size-3" /> {h.transitMinutes}m</span>}
+                                      <span className="flex items-center gap-1"><Footprints className="size-3" /> {h.walkMinutes}m</span>
+                                    </div>
+                                  </div>
+                                </a>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       );
                     })()}
