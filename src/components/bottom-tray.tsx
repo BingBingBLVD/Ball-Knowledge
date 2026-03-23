@@ -40,6 +40,8 @@ import {
   Newspaper,
   ChevronDown,
   ExternalLink,
+  ParkingSquare,
+  Timer,
 } from "lucide-react";
 import type { VenuePolicy } from "@/lib/venue-policies";
 import { SearchBar } from "./search-bar";
@@ -686,6 +688,57 @@ export function BottomTray({
     }
   }, [localNews, newsLoading]);
 
+  // Nearby parking state
+  interface ParkingSpot { name: string; vicinity: string; lat: number; lng: number; distanceMiles: number; walkMinutes: number; rating: number | null; totalRatings: number; openNow: boolean | null; spotHeroUrl: string; directionsUrl: string }
+  const [nearbyParking, setNearbyParking] = useState<Record<string, ParkingSpot[]>>({});
+  const [parkingLoading, setParkingLoading] = useState<Set<string>>(new Set());
+  const parkingFailed = useRef<Set<string>>(new Set());
+
+  const handleParkingLoad = useCallback(async (venueName: string, venueLat: number, venueLng: number, gameDate: string) => {
+    const key = `${venueLat},${venueLng}`;
+    if (nearbyParking[key] || parkingLoading.has(key) || parkingFailed.current.has(key)) return;
+    setParkingLoading((prev) => new Set(prev).add(key));
+    try {
+      const res = await fetch(`/api/nearby-parking?venueLat=${venueLat}&venueLng=${venueLng}&venueName=${encodeURIComponent(venueName)}&date=${gameDate}`);
+      if (res.ok) {
+        const data = await res.json();
+        setNearbyParking((prev) => ({ ...prev, [key]: data.parking }));
+      } else {
+        parkingFailed.current.add(key);
+      }
+    } catch {
+      parkingFailed.current.add(key);
+    } finally {
+      setParkingLoading((prev) => { const next = new Set(prev); next.delete(key); return next; });
+    }
+  }, [nearbyParking, parkingLoading]);
+
+  // Last transit home state
+  interface LastTransitInfo { stopCode: string; stopName: string; stopLat: number; stopLng: number; lastDeparture: string | null; lastArrival: string | null; durationMinutes: number | null; available: boolean; warning: boolean }
+  const [lastTransit, setLastTransit] = useState<Record<string, LastTransitInfo[]>>({});
+  const [lastTransitLoading, setLastTransitLoading] = useState<Set<string>>(new Set());
+  const lastTransitFailed = useRef<Set<string>>(new Set());
+
+  const handleLastTransitLoad = useCallback(async (venueLat: number, venueLng: number, tipoffUtc: string, stops: { code: string; name: string; lat: number; lng: number }[]) => {
+    const key = `${venueLat},${venueLng},${tipoffUtc}`;
+    if (stops.length === 0 || lastTransit[key] || lastTransitLoading.has(key) || lastTransitFailed.current.has(key)) return;
+    setLastTransitLoading((prev) => new Set(prev).add(key));
+    try {
+      const stopsParam = encodeURIComponent(JSON.stringify(stops.slice(0, 6)));
+      const res = await fetch(`/api/last-transit?venueLat=${venueLat}&venueLng=${venueLng}&tipoffUtc=${encodeURIComponent(tipoffUtc)}&stops=${stopsParam}`);
+      if (res.ok) {
+        const data = await res.json();
+        setLastTransit((prev) => ({ ...prev, [key]: data.lastTransit }));
+      } else {
+        lastTransitFailed.current.add(key);
+      }
+    } catch {
+      lastTransitFailed.current.add(key);
+    } finally {
+      setLastTransitLoading((prev) => { const next = new Set(prev); next.delete(key); return next; });
+    }
+  }, [lastTransit, lastTransitLoading]);
+
   // Auto-scroll and expand when a marker is clicked (selectedVenue changes)
   useEffect(() => {
     if (!selectedVenue || trayState === "collapsed") return;
@@ -944,6 +997,14 @@ export function BottomTray({
                       const aptCodes = (event.nearbyAirports ?? []).map((a) => a.code);
                       if (aptCodes.length > 0) handleDelaysLoad(aptCodes);
                       handleNewsLoad(event.city, event.state, event.venue);
+                      handleParkingLoad(event.venue, vLat, vLng, event.est_date || date);
+                      if (event.date_time_utc) {
+                        const transitStops = [
+                          ...(event.nearbyTrainStations ?? []).map((s) => ({ code: s.code, name: s.name, lat: s.lat, lng: s.lng })),
+                          ...(event.nearbyBusStations ?? []).map((s) => ({ code: s.code, name: s.name, lat: s.lat, lng: s.lng })),
+                        ];
+                        handleLastTransitLoad(vLat, vLng, event.date_time_utc, transitStops);
+                      }
                       handleHotelsLoad(event.venue, vLat, vLng, event.est_date || date);
                       const venueGames = games.filter((g) => g.venue === event.venue);
                       onVenueClick({
@@ -1240,6 +1301,63 @@ export function BottomTray({
                         );
                       })()}
 
+                      {/* Last transit home section */}
+                      {(() => {
+                        if (!event.date_time_utc || !event.lat || !event.lng) return null;
+                        const ltKey = `${event.lat},${event.lng},${event.date_time_utc}`;
+                        const ltData = lastTransit[ltKey];
+                        const ltLoading = lastTransitLoading.has(ltKey);
+
+                        if (!ltData && !ltLoading) return null;
+
+                        return (
+                          <div className="mt-2">
+                            <div className="text-[10px] font-mono tracking-widest text-[--primary]/70 uppercase flex items-center gap-1">
+                              <Timer className="size-3 text-[--primary]" /> LAST TRANSIT HOME
+                            </div>
+                            {ltLoading && !ltData && (
+                              <div className="flex items-center gap-1.5 mt-1.5 text-[11px] font-mono text-[--color-dim]">
+                                <Loader2 className="size-3 animate-spin" /> Checking schedules...
+                              </div>
+                            )}
+                            {ltData && ltData.length > 0 && (
+                              <div className="mt-1 space-y-1">
+                                {ltData.map((lt) => {
+                                  const depTime = lt.lastDeparture ? new Date(lt.lastDeparture) : null;
+                                  const depStr = depTime
+                                    ? depTime.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
+                                    : null;
+
+                                  return (
+                                    <div key={lt.stopCode} className="flex items-center gap-2 text-[11px] font-mono">
+                                      <span className="font-bold text-[--color-train] shrink-0">{lt.stopCode}</span>
+                                      {lt.available && depStr ? (
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          <span className={lt.warning ? "text-red-400 font-semibold" : "text-[--color-dim]"}>
+                                            Last dep {depStr}
+                                          </span>
+                                          {lt.durationMinutes && (
+                                            <span className="text-[--color-dim] text-[10px]">{lt.durationMinutes}min ride</span>
+                                          )}
+                                          {lt.warning && (
+                                            <span className="text-red-400 text-[10px] flex items-center gap-0.5">
+                                              <AlertTriangle className="size-2.5" /> May end before game
+                                            </span>
+                                          )}
+                                        </div>
+                                      ) : (
+                                        <span className="text-[--color-dim] text-[10px]">{lt.available ? "Schedule available" : "No late service found"}</span>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                                <div className="text-[9px] text-[--color-dim]/60">Post-game transit from venue area</div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+
                       {/* Venue policy section */}
                       {(() => {
                         const policy = venuePolicies[event.venue];
@@ -1361,6 +1479,78 @@ export function BottomTray({
                                   </div>
                                 ))}
                               </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+
+                      {/* Parking section */}
+                      {(() => {
+                        if (!event.lat || !event.lng) return null;
+                        const parkKey = `${event.lat},${event.lng}`;
+                        const spots = nearbyParking[parkKey];
+                        const pLoading = parkingLoading.has(parkKey);
+
+                        if (!spots && !pLoading) return null;
+
+                        return (
+                          <div className="mt-2">
+                            <div className="flex items-center gap-2">
+                              <div className="text-[10px] font-mono tracking-widest text-[--primary]/70 uppercase flex items-center gap-1">
+                                <ParkingSquare className="size-3 text-[--primary]" /> PARKING NEAR STADIUM
+                              </div>
+                              {spots && spots.length > 0 && (
+                                <a
+                                  href={spots[0].spotHeroUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-[9px] font-mono text-cyan-400 hover:text-cyan-300 no-underline ml-auto"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  Reserve on SpotHero <ExternalLink className="size-2 inline" />
+                                </a>
+                              )}
+                            </div>
+                            {pLoading && !spots && (
+                              <div className="flex items-center gap-1.5 mt-1.5 text-[11px] font-mono text-[--color-dim]">
+                                <Loader2 className="size-3 animate-spin" /> Finding parking...
+                              </div>
+                            )}
+                            {spots && spots.length > 0 && (
+                              <div className="mt-1 flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
+                                {spots.map((p, i) => (
+                                  <a
+                                    key={i}
+                                    href={p.directionsUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex flex-col gap-0.5 px-2 py-1.5 rounded bg-white/5 hover:bg-white/10 transition-colors shrink-0 min-w-[130px] max-w-[160px] no-underline"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <span className="text-[11px] font-mono text-foreground font-semibold truncate">{p.name}</span>
+                                    <div className="flex items-center gap-2 text-[10px] text-[--color-dim]">
+                                      <span className="flex items-center gap-0.5"><MapPin className="size-2.5 text-amber-400/60" />{p.distanceMiles} mi</span>
+                                      <span className="flex items-center gap-0.5"><Footprints className="size-2.5" />{p.walkMinutes}min walk</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-[10px]">
+                                      {p.rating && (
+                                        <span className="flex items-center gap-0.5 text-amber-400">
+                                          <Star className="size-2.5" />{p.rating}
+                                          {p.totalRatings > 0 && <span className="text-[--color-dim]">({p.totalRatings})</span>}
+                                        </span>
+                                      )}
+                                      {p.openNow != null && (
+                                        <span className={p.openNow ? "text-emerald-400" : "text-red-400"}>
+                                          {p.openNow ? "Open" : "Closed"}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </a>
+                                ))}
+                              </div>
+                            )}
+                            {spots && spots.length === 0 && (
+                              <div className="text-[10px] text-[--color-dim] mt-1 font-mono">No parking found nearby</div>
                             )}
                           </div>
                         );
