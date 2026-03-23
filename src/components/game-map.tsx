@@ -157,7 +157,7 @@ export function GameMap({
         disableDefaultUI: true,
         zoomControl: false,
         gestureHandling: "greedy",
-        colorScheme: "DARK",
+        colorScheme: "LIGHT",
         center: { lat: 39.8, lng: -98.5 },
         zoom: 4,
       });
