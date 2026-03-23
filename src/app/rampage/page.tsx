@@ -573,13 +573,15 @@ function ItinLegs({ itin }: { itin: Itinerary }) {
             <span className={`shrink-0 ${modeColor(l.mode)}`}>{modeIcon(l.mode)}</span>
             <span className="text-neutral-500 truncate min-w-0">
               {l.carrier && l.routeName && l.mode !== "drive" && l.mode !== "rideshare"
-                ? <><span className="text-foreground font-medium">{l.carrier}</span> <span className="text-neutral-400">{l.routeName}</span></>
+                ? <><span className="text-foreground font-medium">{l.carrier}</span> <span className="text-neutral-400 text-[9px]">{l.routeName}</span></>
                 : modeLabel(l.mode)}
             </span>
-            <span className="text-foreground font-semibold shrink-0">{formatDuration(l.minutes)}</span>
-            {l.miles > 0 && <span className="text-neutral-400 shrink-0">{l.miles}mi</span>}
-            {l.cost != null && <span className="text-[--color-price] font-semibold shrink-0">${l.cost}</span>}
-            <ArrowUpRight className="size-3 text-neutral-400 shrink-0 ml-auto" />
+            <span className="flex items-baseline gap-1.5 shrink-0 ml-auto">
+              <span className="text-foreground font-semibold">{formatDuration(l.minutes)}</span>
+              {l.miles > 0 && <span className="text-neutral-400 text-[9px]">{l.miles}mi</span>}
+              {l.cost != null && <span className="text-[--color-price] font-semibold">${l.cost}</span>}
+              <ArrowUpRight className="size-3 text-neutral-400" />
+            </span>
           </a>
           <div className="text-[9px] text-neutral-400 ml-6 leading-tight truncate">
             {l.mode === "drive" || l.mode === "rideshare" ? `Drive to ${l.to}` : `${l.from} → ${l.to}`}
