@@ -408,11 +408,11 @@ export function GameMap({
       const el = document.createElement("div");
       el.style.cssText = `
         width: 24px; height: 24px; border-radius: 50%;
-        background: #f97316; color: white; font-family: monospace;
+        background: #8b5cf6; color: white; font-family: monospace;
         font-size: 12px; font-weight: 700; display: flex;
         align-items: center; justify-content: center;
         border: 2px solid rgba(255,255,255,0.8);
-        box-shadow: 0 2px 8px rgba(249,115,22,0.5);
+        box-shadow: 0 2px 8px rgba(139,92,246,0.5);
       `;
       el.textContent = String(i + 1);
 
@@ -433,7 +433,7 @@ export function GameMap({
       rampagePolylineRef.current = new google.maps.Polyline({
         path: points,
         geodesic: true,
-        strokeColor: "#f97316",
+        strokeColor: "#8b5cf6",
         strokeOpacity: 0.6,
         strokeWeight: 2,
         icons: [{

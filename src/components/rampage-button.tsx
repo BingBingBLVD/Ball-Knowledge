@@ -172,8 +172,8 @@ export function RampageButton({
           onClick={handleToggle}
           className={`flex items-center gap-1.5 px-3 py-2 rounded-full shadow-md hover:shadow-lg transition-all ${
             rampage.active
-              ? "bg-orange-50 border border-orange-300 text-orange-600"
-              : "bg-white border border-neutral-200 text-neutral-500 hover:text-orange-600 hover:border-orange-300"
+              ? "bg-violet-50 border border-violet-300 text-violet-600"
+              : "bg-white border border-neutral-200 text-neutral-500 hover:text-violet-600 hover:border-violet-300"
           }`}
         >
           <Zap className="size-4" />
@@ -193,7 +193,7 @@ export function RampageButton({
             </button>
             <button
               onClick={handlePlanRampage}
-              className="flex items-center gap-1 px-3 py-2 rounded-full bg-orange-500 text-white shadow-md text-xs font-semibold hover:bg-orange-600 transition-all"
+              className="flex items-center gap-1 px-3 py-2 rounded-full bg-violet-500 text-white shadow-md text-xs font-semibold hover:bg-violet-600 transition-all"
             >
               PLAN
               <ArrowRight className="size-3.5" />

@@ -354,7 +354,7 @@ function RampageContent() {
       // Game markers (numbered)
       result!.games.forEach((game, i) => {
         const el = document.createElement("div");
-        el.style.cssText = `width:28px;height:28px;border-radius:50%;background:#f97316;color:white;font-family:monospace;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid white;box-shadow:0 2px 8px rgba(249,115,22,0.5);`;
+        el.style.cssText = `width:28px;height:28px;border-radius:50%;background:#8b5cf6;color:white;font-family:monospace;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid white;box-shadow:0 2px 8px rgba(139,92,246,0.5);`;
         el.textContent = String(i + 1);
         new google.maps.marker.AdvancedMarkerElement({ map, position: { lat: game.lat, lng: game.lng }, content: el });
         bounds.extend({ lat: game.lat, lng: game.lng });
@@ -375,7 +375,7 @@ function RampageContent() {
         new google.maps.Polyline({
           path: points,
           geodesic: true,
-          strokeColor: "#f97316",
+          strokeColor: "#8b5cf6",
           strokeOpacity: 0.7,
           strokeWeight: 3,
           map,

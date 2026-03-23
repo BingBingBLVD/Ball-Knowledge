@@ -17,7 +17,6 @@ import {
   Check,
   Ban,
   Loader2,
-  SlidersHorizontal,
   Map,
   Circle,
   CheckCircle2,
@@ -449,27 +448,8 @@ export function BottomTray({
     const raw = saved.current.visibleColumns as ColumnId[] | undefined;
     return raw ? new Set(raw) : getDefaultColumns();
   });
-  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => { saveTray({ sortKey, sortDir, visibleColumns: Array.from(visibleColumns) }); }, [sortKey, sortDir, visibleColumns]);
-
-  const toggleColumn = useCallback((col: ColumnId) => {
-    setVisibleColumns((prev) => {
-      const next = new Set(prev);
-      if (next.has(col)) { if (next.size > 1) next.delete(col); } else { next.add(col); }
-      return next;
-    });
-  }, []);
-
-  const filterRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!showFilters) return;
-    const handler = (e: PointerEvent) => {
-      if (filterRef.current && !filterRef.current.contains(e.target as Node)) setShowFilters(false);
-    };
-    document.addEventListener("pointerdown", handler);
-    return () => document.removeEventListener("pointerdown", handler);
-  }, [showFilters]);
 
   // Distances
   const distanceMap = useMemo(() => {
@@ -919,52 +899,6 @@ export function BottomTray({
           <div className="flex-1 min-w-0 border-r border-black/5">
             <SearchBar value={search} onChange={onSearchChange} onLocationChange={onLocationChange} />
           </div>
-          {/* Filters */}
-          <div className="relative shrink-0 border-r border-black/5" ref={filterRef}>
-            <button
-              onClick={() => setShowFilters((v) => !v)}
-              className={`flex items-center gap-1.5 text-xs tracking-wider px-3 py-2.5 transition-colors ${
-                showFilters || visibleColumns.size < ALL_COLUMNS.length
-                  ? "text-[--primary]"
-                  : "text-[--color-dim] hover:text-foreground"
-              }`}
-            >
-              <SlidersHorizontal className="size-4" />
-            </button>
-            {showFilters && (
-              <div
-                className="fixed inset-0 z-50 flex items-center justify-center"
-                onClick={(e) => { e.stopPropagation(); setShowFilters(false); }}
-              >
-                <div
-                  className="w-64 rounded-xl bg-white border border-neutral-200 shadow-xl py-2"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="px-4 py-2 text-xs tracking-widest text-foreground uppercase border-b border-black/5 font-semibold">
-                    Columns
-                  </div>
-                  {ALL_COLUMNS.map((col) => (
-                    <button
-                      key={col.id}
-                      onClick={() => toggleColumn(col.id)}
-                      className="flex items-center gap-3 w-full px-4 py-2.5 text-sm hover:bg-neutral-50 transition-all"
-                    >
-                      <span className={`size-5 rounded-md border-2 flex items-center justify-center transition-all ${
-                        visibleColumns.has(col.id)
-                          ? "bg-[--primary] border-[--primary] text-white shadow-md shadow-[--primary]/25"
-                          : "border-black/15 bg-black/[0.03]"
-                      }`}>
-                        {visibleColumns.has(col.id) && <Check className="size-3" />}
-                      </span>
-                      <span className={visibleColumns.has(col.id) ? "text-foreground font-medium" : "text-[--color-dim]"}>
-                        {col.label}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
           {/* Date selector */}
           <div className="shrink-0">
             <DateSelector
@@ -1017,7 +951,7 @@ export function BottomTray({
                   onMouseLeave={() => onVenueHover?.(null)}
                   className={`py-5 card-enter transition-all cursor-pointer ${
                     isRampageSelected
-                      ? "bg-orange-50 -mx-4 px-4 border-l-3 border-orange-500"
+                      ? "bg-violet-50 -mx-4 px-4 border-l-3 border-violet-500"
                       : ""
                   }`}
                   onClick={() => {
@@ -1119,7 +1053,7 @@ export function BottomTray({
                     {rampage.active && (
                       <div className="shrink-0 pt-1">
                         {isRampageSelected ? (
-                          <CheckCircle2 className="size-5 text-orange-500" />
+                          <CheckCircle2 className="size-5 text-violet-500" />
                         ) : (
                           <Circle className="size-5 text-neutral-300" />
                         )}
@@ -1223,7 +1157,7 @@ export function BottomTray({
                           router.push(`/rampage?cow=${id}`);
                         }}
                         disabled={!userLocation || !event.est_time}
-                        className="px-5 py-2.5 rounded-lg text-sm font-semibold bg-rose-500 text-white hover:bg-rose-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                        className="px-5 py-2.5 rounded-lg text-sm font-semibold bg-violet-500 text-white hover:bg-violet-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                       >
                         RUN IT!
                       </button>
@@ -1347,7 +1281,7 @@ export function BottomTray({
                       if (!inj && !iLoading) return null;
                       const statusColor = (s: string) => {
                         if (s === "Out") return "text-red-600 bg-red-50";
-                        if (s === "Doubtful") return "text-orange-600 bg-orange-50";
+                        if (s === "Doubtful") return "text-violet-600 bg-violet-50";
                         if (s === "Day-To-Day" || s === "Questionable") return "text-amber-600 bg-amber-50";
                         return "text-emerald-600 bg-emerald-50";
                       };

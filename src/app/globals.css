@@ -102,9 +102,9 @@
   --color-dim: #6b7280;
 
   /* Rampage mode */
-  --color-rampage: #ea580c;
-  --color-rampage-bright: #f97316;
-  --color-rampage-dim: #c2410c;
+  --color-rampage: #7c3aed;
+  --color-rampage-bright: #8b5cf6;
+  --color-rampage-dim: #6d28d9;
 }
 
 /* Dark mode alias — kept for shadcn compatibility but matches root */
@@ -244,8 +244,8 @@
 
 /* Rampage toggle glow */
 @keyframes rampage-glow {
-  0%, 100% { box-shadow: 0 0 4px var(--color-rampage), 0 0 8px rgba(249,115,22,0.3); }
-  50% { box-shadow: 0 0 8px var(--color-rampage), 0 0 16px rgba(249,115,22,0.4); }
+  0%, 100% { box-shadow: 0 0 4px var(--color-rampage), 0 0 8px rgba(139,92,246,0.3); }
+  50% { box-shadow: 0 0 8px var(--color-rampage), 0 0 16px rgba(139,92,246,0.4); }
 }
 .rampage-glow {
   animation: rampage-glow 2s ease-in-out infinite;
