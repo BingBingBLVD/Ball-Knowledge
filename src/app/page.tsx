@@ -98,7 +98,14 @@ function HomeInner() {
   const [search, setSearch] = useState(() => loadState().search ?? "");
   const [selectedVenue, setSelectedVenue] = useState<VenueInfo | null>(null);
   const [hoveredVenue, setHoveredVenue] = useState<string | null>(null);
+  const [hoverFromMarker, setHoverFromMarker] = useState(false);
   const [routeFocus, setRouteFocus] = useState<RouteFocus | null>(null);
+  const [selectedGameId, setSelectedGameId] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      return new URLSearchParams(window.location.search).get("game");
+    }
+    return null;
+  });
   const [trayState, setTrayState] = useState<"collapsed" | "peek" | "expanded">(() => {
     const saved = loadState().tray;
     // Migrate old "half" to "peek"
@@ -114,6 +121,17 @@ function HomeInner() {
   useEffect(() => { saveState({ search }); }, [search]);
   useEffect(() => { saveState({ tray: trayState }); }, [trayState]);
   useEffect(() => { saveState({ loc: userLocation }); }, [userLocation]);
+
+  // Sync selectedGameId to URL
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (selectedGameId) {
+      url.searchParams.set("game", selectedGameId);
+    } else {
+      url.searchParams.delete("game");
+    }
+    window.history.replaceState({}, "", url.toString());
+  }, [selectedGameId]);
 
   // Track viewport size
   useEffect(() => {
@@ -148,6 +166,38 @@ function HomeInner() {
       })
       .then((d: EventsResponse) => {
         setData(d);
+
+        // Restore game from URL param
+        const urlGameId = new URLSearchParams(window.location.search).get("game");
+        if (urlGameId) {
+          for (const dateGroup of d.dates) {
+            const game = dateGroup.events.find((e) => e.id === urlGameId);
+            if (game && game.lat != null && game.lng != null) {
+              setCurrentDate(dateGroup.date);
+              const venueGames = dateGroup.events.filter((g) => g.venue === game.venue);
+              setSelectedVenue({
+                venue: game.venue,
+                city: game.city,
+                state: game.state,
+                lat: game.lat!,
+                lng: game.lng!,
+                games: venueGames.map((g) => ({
+                  id: g.id, name: g.name, url: g.url,
+                  est_time: g.est_time,
+                  min_price: g.min_price, odds: g.odds,
+                })),
+                airports: game.nearbyAirports ?? [],
+                trains: game.nearbyTrainStations ?? [],
+                buses: [],
+              });
+              setTrayState("peek");
+              return;
+            }
+          }
+          // Game not found — clear the stale param
+          setSelectedGameId(null);
+        }
+
         const today = todayEST();
         const available = d.dates.map((g) => g.date);
         if (!available.includes(today) && available.length > 0) {
@@ -190,6 +240,7 @@ function HomeInner() {
     setCurrentDate(date);
     setSelectedVenue(null);
     setRouteFocus(null);
+    setSelectedGameId(null);
     // Keep tray open when changing dates
   }, []);
 
@@ -229,6 +280,7 @@ function HomeInner() {
     }
     setSelectedVenue(venue);
     setRouteFocus(null);
+    setSelectedGameId(null);
     setTrayState("peek");
   }, [rampage, todayGames, availableDates, currentDate]);
 
@@ -240,7 +292,12 @@ function HomeInner() {
     setTrayState(state);
     if (state === "collapsed") {
       setRouteFocus(null);
+      setSelectedGameId(null);
     }
+  }, []);
+
+  const handleGameSelect = useCallback((gameId: string | null) => {
+    setSelectedGameId(gameId);
   }, []);
 
   // Capture pre-rampage state for cancel/restore
@@ -281,7 +338,7 @@ function HomeInner() {
         routeFocus={routeFocus}
         selectedVenue={selectedVenue?.venue ?? null}
         onMarkerClick={handleMarkerClick}
-        onMarkerHover={setHoveredVenue}
+        onMarkerHover={(v) => { setHoveredVenue(v); setHoverFromMarker(v != null); }}
         hoveredVenue={hoveredVenue}
         userLocation={userLocation}
         bottomPadding={bottomPadding}
@@ -308,7 +365,8 @@ function HomeInner() {
           date={currentDate}
           selectedVenue={selectedVenue?.venue ?? null}
           hoveredVenue={hoveredVenue}
-          onVenueHover={setHoveredVenue}
+          hoverFromMarker={hoverFromMarker}
+          onVenueHover={(v) => { setHoveredVenue(v); setHoverFromMarker(false); }}
           onVenueClick={handleMarkerClick}
           onRouteFocus={handleRouteFocus}
           trayState={trayState}
@@ -322,6 +380,8 @@ function HomeInner() {
           onDateChange={handleDateChange}
           gameCountByDate={gameCountByDate}
           onLocationChange={setUserLocation}
+          selectedGameId={selectedGameId}
+          onGameSelect={handleGameSelect}
         />
       )}
 

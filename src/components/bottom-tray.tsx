@@ -382,6 +382,7 @@ export function BottomTray({
   date,
   selectedVenue,
   hoveredVenue,
+  hoverFromMarker,
   onVenueHover,
   onVenueClick,
   onRouteFocus,
@@ -396,11 +397,14 @@ export function BottomTray({
   onDateChange,
   gameCountByDate,
   onLocationChange,
+  selectedGameId,
+  onGameSelect,
 }: {
   games: GameEvent[];
   date: string;
   selectedVenue: string | null;
   hoveredVenue?: string | null;
+  hoverFromMarker?: boolean;
   onVenueHover?: (venue: string | null) => void;
   onVenueClick: (venue: VenueInfo) => void;
   onRouteFocus: (focus: RouteFocus | null) => void;
@@ -415,6 +419,8 @@ export function BottomTray({
   onDateChange: (date: string) => void;
   gameCountByDate: Record<string, number>;
   onLocationChange: (loc: { lat: number; lng: number } | null) => void;
+  selectedGameId?: string | null;
+  onGameSelect?: (gameId: string | null) => void;
 }) {
   const rampage = useRampage();
   const router = useRouter();
@@ -435,13 +441,15 @@ export function BottomTray({
   const openPopover = useCallback((id: string) => {
     setPopoverEventId(id);
     setPopoverScrolled(false);
+    onGameSelect?.(id);
     requestAnimationFrame(() => requestAnimationFrame(() => setPopoverVisible(true)));
-  }, []);
+  }, [onGameSelect]);
 
   const closePopover = useCallback(() => {
     setPopoverVisible(false);
+    onGameSelect?.(null);
     setTimeout(() => setPopoverEventId(null), 300);
-  }, []);
+  }, [onGameSelect]);
 
   // Watch title visibility for sticky header
   useEffect(() => {
@@ -915,16 +923,16 @@ export function BottomTray({
     return () => clearTimeout(timer);
   }, [selectedVenue, trayState, games]);
 
-  // Scroll to and highlight hovered venue (from map marker hover)
+  // Auto-scroll to card only when hover comes from a map marker, not from card hover
   useEffect(() => {
-    if (!hoveredVenue || trayState === "collapsed") return;
+    if (!hoveredVenue || !hoverFromMarker || trayState === "collapsed") return;
     const container = scrollRef.current;
     if (!container) return;
     const row = container.querySelector(`[data-venue="${CSS.escape(hoveredVenue)}"]`) as HTMLElement | null;
     if (row) {
       row.scrollIntoView({ behavior: "smooth", block: "center" });
     }
-  }, [hoveredVenue, trayState]);
+  }, [hoveredVenue, hoverFromMarker, trayState]);
 
   // Track tray state changes
   useEffect(() => {
