@@ -858,16 +858,6 @@ export function BottomTray({
     return () => clearTimeout(timer);
   }, [selectedVenue, trayState, games]);
 
-  // Eagerly load venue photos on wide screens for card images
-  useEffect(() => {
-    if (!isWide) return;
-    for (const g of games) {
-      if (g.lat != null && g.lng != null) {
-        handlePhotosLoad(g.venue, g.lat, g.lng);
-      }
-    }
-  }, [isWide, games]); // eslint-disable-line react-hooks/exhaustive-deps
-
   // Scroll to and highlight hovered venue (from map marker hover)
   useEffect(() => {
     if (!hoveredVenue || trayState === "collapsed") return;
@@ -929,6 +919,16 @@ export function BottomTray({
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
   }, []);
+
+  // Eagerly load venue photos on wide screens for card images
+  useEffect(() => {
+    if (!isWide) return;
+    for (const g of games) {
+      if (g.lat != null && g.lng != null) {
+        handlePhotosLoad(g.venue, g.lat, g.lng);
+      }
+    }
+  }, [isWide, games]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isExpanded = trayState === "expanded";
   const height = isWide ? "100dvh" : trayState === "collapsed" ? "56px" : trayState === "peek" ? "50vh" : "100vh";
