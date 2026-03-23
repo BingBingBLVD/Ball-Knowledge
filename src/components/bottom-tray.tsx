@@ -1180,8 +1180,15 @@ export function BottomTray({
                       <button onClick={closePopover} className="p-2 -ml-2 rounded-full hover:bg-neutral-100 transition-colors shrink-0">
                         <X className="size-5 text-neutral-600" />
                       </button>
-                      <div className={`truncate transition-opacity duration-200 ${popoverScrolled ? "opacity-100" : "opacity-0"}`}>
-                        <div className="text-sm font-semibold text-neutral-900 truncate">{away ? `${away} @ ${home}` : event.name}</div>
+                      <div className={`transition-opacity duration-200 ${popoverScrolled ? "opacity-100" : "opacity-0"}`}>
+                        {away ? (
+                          <>
+                            <div className="text-sm font-semibold text-neutral-900 leading-tight truncate">{away}</div>
+                            <div className="text-xs text-neutral-500 leading-tight truncate">@ {home}</div>
+                          </>
+                        ) : (
+                          <div className="text-sm font-semibold text-neutral-900 leading-tight truncate">{event.name}</div>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
