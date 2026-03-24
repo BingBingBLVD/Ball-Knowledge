@@ -43,18 +43,25 @@ async function fetchAllInjuries(): Promise<PlayerInjury[]> {
   const data = await res.json();
   const injuries: PlayerInjury[] = [];
 
-  // ESPN injuries response: { injuries: [{ team: {...}, injuries: [{ athlete: {...}, type, status, ... }] }] }
-  // OR it might be: { athletes: [...] } depending on the endpoint version
+  // ESPN injuries response: { injuries: [{ id, displayName, injuries: [{ athlete: {...}, status, details, ... }] }] }
+  // Team abbreviation lives on athlete.team.abbreviation, not the group level
   const teamGroups = data.injuries ?? [];
   for (const group of teamGroups) {
-    const teamName = group.team?.displayName ?? group.team?.name ?? "";
-    const teamAbbr = normalizeAbbr(group.team?.abbreviation ?? "");
+    const groupName = group.displayName ?? "";
     const playerInjuries = group.injuries ?? [];
     for (const inj of playerInjuries) {
       const athlete = inj.athlete ?? {};
       const name = athlete.displayName ?? athlete.fullName ?? "";
       const position = athlete.position?.abbreviation ?? "";
-      const status = inj.status ?? inj.type ?? "Unknown";
+      const teamName = athlete.team?.displayName ?? groupName;
+      const teamAbbr = normalizeAbbr(athlete.team?.abbreviation ?? "");
+      // fantasyStatus is more reliable: GTD = game-time decision, OUT = out, OFS = out for season
+      const fantasyAbbr = inj.details?.fantasyStatus?.abbreviation ?? "";
+      const rawStatus = inj.status ?? inj.type ?? "Unknown";
+      const status = fantasyAbbr === "GTD" ? "Day-To-Day"
+        : fantasyAbbr === "OFS" ? "Out"
+        : fantasyAbbr === "OUT" ? "Out"
+        : rawStatus;
       const desc = inj.details?.detail ?? inj.longComment ?? inj.shortComment ?? inj.description ?? "";
       if (name) {
         injuries.push({

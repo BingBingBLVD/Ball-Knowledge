@@ -886,32 +886,33 @@ export function BottomTray({
     }
   }, [lastTransit, lastTransitLoading]);
 
-  // Injury report state
-  interface PlayerInjury { name: string; position: string; team: string; teamAbbr: string; status: string; description: string }
-  const [injuries, setInjuries] = useState<Record<string, PlayerInjury[]>>({});
-  const [injuriesLoading, setInjuriesLoading] = useState<Set<string>>(new Set());
-  const injuriesFailed = useRef<Set<string>>(new Set());
+  // Player availability state
+  interface PlayerAvailability { name: string; position: string; jersey: string; status: "Playing" | "Out" | "Doubtful" | "Questionable" | "Day-To-Day"; injuryNote?: string; headshot?: string }
+  interface TeamAvailability { team: string; teamAbbr: string; playing: PlayerAvailability[]; out: PlayerAvailability[]; gameTime: PlayerAvailability[] }
+  const [availability, setAvailability] = useState<Record<string, TeamAvailability[]>>({});
+  const [availabilityLoading, setAvailabilityLoading] = useState<Set<string>>(new Set());
+  const availabilityFailed = useRef<Set<string>>(new Set());
 
-  const handleInjuriesLoad = useCallback(async (awayCode: string | null, homeCode: string | null) => {
+  const handleAvailabilityLoad = useCallback(async (awayCode: string | null, homeCode: string | null) => {
     const codes = [awayCode, homeCode].filter(Boolean) as string[];
     if (codes.length === 0) return;
     const key = codes.sort().join(",");
-    if (injuries[key] || injuriesLoading.has(key) || injuriesFailed.current.has(key)) return;
-    setInjuriesLoading((prev) => new Set(prev).add(key));
+    if (availability[key] || availabilityLoading.has(key) || availabilityFailed.current.has(key)) return;
+    setAvailabilityLoading((prev) => new Set(prev).add(key));
     try {
-      const res = await fetch(`/api/injuries?teams=${encodeURIComponent(key)}`);
+      const res = await fetch(`/api/availability?teams=${encodeURIComponent(key)}`);
       if (res.ok) {
         const data = await res.json();
-        setInjuries((prev) => ({ ...prev, [key]: data.injuries }));
+        setAvailability((prev) => ({ ...prev, [key]: data.availability }));
       } else {
-        injuriesFailed.current.add(key);
+        availabilityFailed.current.add(key);
       }
     } catch {
-      injuriesFailed.current.add(key);
+      availabilityFailed.current.add(key);
     } finally {
-      setInjuriesLoading((prev) => { const next = new Set(prev); next.delete(key); return next; });
+      setAvailabilityLoading((prev) => { const next = new Set(prev); next.delete(key); return next; });
     }
-  }, [injuries, injuriesLoading]);
+  }, [availability, availabilityLoading]);
 
   // Auto-scroll and expand when a marker is clicked (selectedVenue changes)
   useEffect(() => {
@@ -1154,7 +1155,7 @@ export function BottomTray({
                         handleLastTransitLoad(vLat, vLng, event.date_time_utc, transitStops);
                       }
                       handleHotelsLoad(event.venue, vLat, vLng, event.est_date || date);
-                      handleInjuriesLoad(event.odds?.away_team ?? null, event.odds?.home_team ?? null);
+                      handleAvailabilityLoad(event.odds?.away_team ?? null, event.odds?.home_team ?? null);
                       const venueGames = games.filter((g) => g.venue === event.venue);
                       onVenueClick({
                         venue: event.venue,
@@ -1443,51 +1444,108 @@ export function BottomTray({
                       </div>
                     )}
 
-                    {/* Injury Report */}
+                    {/* Player Availability */}
                     {(() => {
                       const codes = [event.odds?.away_team, event.odds?.home_team].filter(Boolean).sort() as string[];
                       if (codes.length === 0) return null;
-                      const injKey = codes.join(",");
-                      const inj = injuries[injKey];
-                      const iLoading = injuriesLoading.has(injKey);
-                      if (!inj && !iLoading) return null;
+                      const availKey = codes.join(",");
+                      const avail = availability[availKey];
+                      const aLoading = availabilityLoading.has(availKey);
+                      if (!avail && !aLoading) return null;
                       const statusColor = (s: string) => {
                         if (s === "Out") return "text-red-600 bg-red-50";
                         if (s === "Doubtful") return "text-blue-600 bg-blue-50";
                         if (s === "Day-To-Day" || s === "Questionable") return "text-amber-600 bg-amber-50";
                         return "text-emerald-600 bg-emerald-50";
                       };
-                      // Group by team
-                      const byTeam: Record<string, typeof inj> = {};
-                      for (const p of (inj ?? [])) {
-                        if (!byTeam[p.team]) byTeam[p.team] = [];
-                        byTeam[p.team].push(p);
-                      }
                       return (
                         <div className="py-8 border-b border-neutral-200">
-                          <h2 className="text-[22px] font-semibold text-neutral-900 mb-1">Injury report</h2>
-                          <p className="text-sm text-neutral-500 mb-4">Key player availability</p>
-                          {iLoading && !inj && <div className="flex items-center gap-2 text-sm text-neutral-500"><Loader2 className="size-4 animate-spin" /> Checking injuries...</div>}
-                          {inj && inj.length === 0 && <div className="text-sm text-emerald-600 font-medium">No injuries reported — full strength</div>}
-                          {inj && inj.length > 0 && (
-                            <div className="space-y-5">
-                              {Object.entries(byTeam).map(([team, players]) => (
-                                <div key={team}>
-                                  <h3 className="text-sm font-semibold text-neutral-900 mb-2">{team}</h3>
-                                  <div className="space-y-2">
-                                    {players.map((p) => (
-                                      <div key={p.name} className="flex items-center justify-between py-2 border-b border-neutral-100 last:border-0">
-                                        <div className="flex items-center gap-2 min-w-0">
-                                          <HeartPulse className="size-4 shrink-0 text-neutral-400" />
-                                          <div className="min-w-0">
-                                            <div className="text-sm font-medium text-neutral-900 truncate">{p.name} <span className="text-neutral-400 font-normal">{p.position}</span></div>
-                                            {p.description && <div className="text-xs text-neutral-500">{p.description}</div>}
-                                          </div>
-                                        </div>
-                                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 ml-2 ${statusColor(p.status)}`}>{p.status}</span>
+                          <h2 className="text-[22px] font-semibold text-neutral-900 mb-1">Player availability</h2>
+                          <p className="text-sm text-neutral-500 mb-4">Who&apos;s playing tonight</p>
+                          {aLoading && !avail && <div className="flex items-center gap-2 text-sm text-neutral-500"><Loader2 className="size-4 animate-spin" /> Loading rosters...</div>}
+                          {avail && avail.length > 0 && (
+                            <div className="space-y-6">
+                              {avail.map((team) => (
+                                <div key={team.teamAbbr}>
+                                  <h3 className="text-sm font-semibold text-neutral-900 mb-3">{team.team}</h3>
+
+                                  {/* Playing */}
+                                  {team.playing.length > 0 && (
+                                    <div className="mb-3">
+                                      <div className="flex items-center gap-1.5 mb-2">
+                                        <Check className="size-3.5 text-emerald-600" />
+                                        <span className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">Playing ({team.playing.length})</span>
                                       </div>
-                                    ))}
-                                  </div>
+                                      <div className="flex flex-wrap gap-2">
+                                        {team.playing.map((p) => {
+                                          const parts = p.name.split(" ");
+                                          const first = parts[0] ?? "";
+                                          const last = parts.slice(1).join(" ") || "";
+                                          return (
+                                            <div key={p.name} className="flex flex-col items-center gap-0.5 w-[60px]">
+                                              <div className="size-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-bold leading-none text-center px-0.5">{p.jersey || (first[0] ?? "") + (parts[1]?.[0] ?? "")}</div>
+                                              <span className="text-[10px] font-medium text-neutral-700 text-center leading-tight w-full truncate">{first}</span>
+                                              <span className="text-[10px] text-neutral-500 text-center leading-tight w-full truncate">{last}</span>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Game-time decisions */}
+                                  {team.gameTime.length > 0 && (
+                                    <div className="mb-3">
+                                      <div className="flex items-center gap-1.5 mb-2">
+                                        <HeartPulse className="size-3.5 text-amber-600" />
+                                        <span className="text-xs font-semibold text-amber-700 uppercase tracking-wide">Game-time decision ({team.gameTime.length})</span>
+                                      </div>
+                                      <div className="flex flex-wrap gap-2">
+                                        {team.gameTime.map((p) => {
+                                          const parts = p.name.split(" ");
+                                          const first = parts[0] ?? "";
+                                          const last = parts.slice(1).join(" ") || "";
+                                          return (
+                                            <div key={p.name} className="flex flex-col items-center gap-0.5 w-[60px]">
+                                              <div className="size-10 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-[10px] font-bold leading-none text-center px-0.5 ring-2 ring-amber-300">{p.jersey || (first[0] ?? "") + (parts[1]?.[0] ?? "")}</div>
+                                              <span className="text-[10px] font-medium text-neutral-700 text-center leading-tight w-full truncate">{first}</span>
+                                              <span className="text-[10px] text-neutral-500 text-center leading-tight w-full truncate">{last}</span>
+                                              {p.injuryNote && <span className="text-[9px] text-amber-600 text-center leading-tight truncate w-full">{p.injuryNote}</span>}
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Out */}
+                                  {team.out.length > 0 && (
+                                    <div>
+                                      <div className="flex items-center gap-1.5 mb-2">
+                                        <Ban className="size-3.5 text-red-500" />
+                                        <span className="text-xs font-semibold text-red-700 uppercase tracking-wide">Out ({team.out.length})</span>
+                                      </div>
+                                      <div className="flex flex-wrap gap-2">
+                                        {team.out.map((p) => {
+                                          const parts = p.name.split(" ");
+                                          const first = parts[0] ?? "";
+                                          const last = parts.slice(1).join(" ") || "";
+                                          return (
+                                            <div key={p.name} className="flex flex-col items-center gap-0.5 w-[60px]">
+                                              <div className="size-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-[10px] font-bold leading-none text-center px-0.5 line-through decoration-red-400">{p.jersey || (first[0] ?? "") + (parts[1]?.[0] ?? "")}</div>
+                                              <span className="text-[10px] font-medium text-neutral-400 text-center leading-tight w-full truncate line-through">{first}</span>
+                                              <span className="text-[10px] text-neutral-400 text-center leading-tight w-full truncate line-through">{last}</span>
+                                              {p.injuryNote && <span className="text-[9px] text-red-400 text-center leading-tight truncate w-full">{p.injuryNote}</span>}
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {team.playing.length === 0 && team.out.length === 0 && team.gameTime.length === 0 && (
+                                    <div className="text-sm text-neutral-400">Roster unavailable</div>
+                                  )}
                                 </div>
                               ))}
                             </div>
