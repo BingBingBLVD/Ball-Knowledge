@@ -1239,7 +1239,7 @@ export function BottomTray({
                         {event.venue} · {event.city}, {event.state}{dist != null ? ` · ${Math.round(dist)} mi` : ""}
                       </div>
 
-                      {/* Time + records */}
+                      {/* Time + odds */}
                       <div className={`mt-1 text-xs text-neutral-400 ${isWide ? "" : "flex items-center gap-2"}`}>
                         <div className={isWide ? "" : "contents"}>
                           <span className="text-neutral-600 font-medium">{formatTime(event.local_time ?? event.est_time, event.tz)}</span>
@@ -1247,6 +1247,9 @@ export function BottomTray({
                             isWide
                               ? <div className="text-neutral-400">{userLocal.text} {userLocal.tz}</div>
                               : <span> · {userLocal.text} {userLocal.tz}</span>
+                          )}
+                          {event.odds && away && (
+                            <span> · <span className="text-neutral-500 tabular-nums">{event.odds.away_win}–{event.odds.home_win}%</span></span>
                           )}
                         </div>
                       </div>
