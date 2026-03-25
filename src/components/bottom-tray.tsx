@@ -1248,8 +1248,8 @@ export function BottomTray({
                               ? <div className="text-neutral-400">{userLocal.text} {userLocal.tz}</div>
                               : <span> · {userLocal.text} {userLocal.tz}</span>
                           )}
-                          {event.odds && away && (
-                            <span> · <span className="text-neutral-500 tabular-nums">{event.odds.away_win}–{event.odds.home_win}%</span></span>
+                          {event.away_record && event.home_record && (
+                            <span> · <span className="text-neutral-500 tabular-nums">{event.away_record} v {event.home_record}</span></span>
                           )}
                         </div>
                       </div>
