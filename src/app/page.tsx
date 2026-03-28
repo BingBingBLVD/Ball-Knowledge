@@ -6,6 +6,7 @@ import type { RouteFocus, VenueInfo } from "@/components/game-map";
 import { BottomTray } from "@/components/bottom-tray";
 import { LocationButton } from "@/components/location-button";
 import { RampageProvider, useRampage } from "@/lib/rampage-context";
+import { PlayerHoverCardProvider } from "@/components/player-hover-card";
 import { RampageButton } from "@/components/rampage-button";
 
 const GameMap = dynamic(
@@ -84,7 +85,9 @@ function saveState(patch: Record<string, unknown>) {
 export default function Home() {
   return (
     <RampageProvider>
-      <HomeInner />
+      <PlayerHoverCardProvider>
+        <HomeInner />
+      </PlayerHoverCardProvider>
     </RampageProvider>
   );
 }

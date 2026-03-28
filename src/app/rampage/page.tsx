@@ -23,6 +23,7 @@ import {
 import Link from "next/link";
 import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 import { GameDetailPopover, type GameEvent } from "@/components/game-detail-popover";
+import { PlayerHoverCardProvider } from "@/components/player-hover-card";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -229,13 +230,15 @@ function modeColor(mode: string): string {
 
 export default function RampagePage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-dvh bg-[var(--background)] flex items-center justify-center">
-        <Loader2 className="size-8 text-[--color-rampage] animate-spin" />
-      </div>
-    }>
-      <RampageContent />
-    </Suspense>
+    <PlayerHoverCardProvider>
+      <Suspense fallback={
+        <div className="min-h-dvh bg-[var(--background)] flex items-center justify-center">
+          <Loader2 className="size-8 text-[--color-rampage] animate-spin" />
+        </div>
+      }>
+        <RampageContent />
+      </Suspense>
+    </PlayerHoverCardProvider>
   );
 }
 

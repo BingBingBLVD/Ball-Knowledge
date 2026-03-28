@@ -54,6 +54,7 @@ import {
   Minus,
 } from "lucide-react";
 import type { VenuePolicy } from "@/lib/venue-policies";
+import { PlayerChip } from "./player-chip";
 import { SearchBar } from "./search-bar";
 import { DateSelector } from "./date-selector";
 import { useRampage } from "@/lib/rampage-context";
@@ -887,7 +888,7 @@ export function BottomTray({
   }, [lastTransit, lastTransitLoading]);
 
   // Player availability state
-  interface PlayerAvailability { name: string; position: string; jersey: string; status: "Playing" | "Out" | "Doubtful" | "Questionable" | "Day-To-Day"; injuryNote?: string; headshot?: string }
+  interface PlayerAvailability { name: string; position: string; jersey: string; status: "Playing" | "Out" | "Doubtful" | "Questionable" | "Day-To-Day"; injuryNote?: string; headshot?: string; espnId?: string }
   interface TeamAvailability { team: string; teamAbbr: string; playing: PlayerAvailability[]; out: PlayerAvailability[]; gameTime: PlayerAvailability[] }
   const [availability, setAvailability] = useState<Record<string, TeamAvailability[]>>({});
   const [availabilityLoading, setAvailabilityLoading] = useState<Set<string>>(new Set());
@@ -1480,18 +1481,9 @@ export function BottomTray({
                                         <span className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">Playing ({team.playing.length})</span>
                                       </div>
                                       <div className="flex flex-wrap gap-2">
-                                        {team.playing.map((p) => {
-                                          const parts = p.name.split(" ");
-                                          const first = parts[0] ?? "";
-                                          const last = parts.slice(1).join(" ") || "";
-                                          return (
-                                            <div key={p.name} className="flex flex-col items-center gap-0.5 w-[60px]">
-                                              <div className="size-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-bold leading-none text-center px-0.5">{p.jersey || (first[0] ?? "") + (parts[1]?.[0] ?? "")}</div>
-                                              <span className="text-[10px] font-medium text-neutral-700 text-center leading-tight w-full truncate">{first}</span>
-                                              <span className="text-[10px] text-neutral-500 text-center leading-tight w-full truncate">{last}</span>
-                                            </div>
-                                          );
-                                        })}
+                                        {team.playing.map((p) => (
+                                          <PlayerChip key={p.name} player={p} teamName={team.team} teamAbbr={team.teamAbbr} variant="playing" />
+                                        ))}
                                       </div>
                                     </div>
                                   )}
@@ -1504,19 +1496,9 @@ export function BottomTray({
                                         <span className="text-xs font-semibold text-amber-700 uppercase tracking-wide">Game-time decision ({team.gameTime.length})</span>
                                       </div>
                                       <div className="flex flex-wrap gap-2">
-                                        {team.gameTime.map((p) => {
-                                          const parts = p.name.split(" ");
-                                          const first = parts[0] ?? "";
-                                          const last = parts.slice(1).join(" ") || "";
-                                          return (
-                                            <div key={p.name} className="flex flex-col items-center gap-0.5 w-[60px]">
-                                              <div className="size-10 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-[10px] font-bold leading-none text-center px-0.5 ring-2 ring-amber-300">{p.jersey || (first[0] ?? "") + (parts[1]?.[0] ?? "")}</div>
-                                              <span className="text-[10px] font-medium text-neutral-700 text-center leading-tight w-full truncate">{first}</span>
-                                              <span className="text-[10px] text-neutral-500 text-center leading-tight w-full truncate">{last}</span>
-                                              {p.injuryNote && <span className="text-[9px] text-amber-600 text-center leading-tight truncate w-full">{p.injuryNote}</span>}
-                                            </div>
-                                          );
-                                        })}
+                                        {team.gameTime.map((p) => (
+                                          <PlayerChip key={p.name} player={p} teamName={team.team} teamAbbr={team.teamAbbr} variant="gameTime" />
+                                        ))}
                                       </div>
                                     </div>
                                   )}
@@ -1529,19 +1511,9 @@ export function BottomTray({
                                         <span className="text-xs font-semibold text-red-700 uppercase tracking-wide">Out ({team.out.length})</span>
                                       </div>
                                       <div className="flex flex-wrap gap-2">
-                                        {team.out.map((p) => {
-                                          const parts = p.name.split(" ");
-                                          const first = parts[0] ?? "";
-                                          const last = parts.slice(1).join(" ") || "";
-                                          return (
-                                            <div key={p.name} className="flex flex-col items-center gap-0.5 w-[60px]">
-                                              <div className="size-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-[10px] font-bold leading-none text-center px-0.5 line-through decoration-red-400">{p.jersey || (first[0] ?? "") + (parts[1]?.[0] ?? "")}</div>
-                                              <span className="text-[10px] font-medium text-neutral-400 text-center leading-tight w-full truncate line-through">{first}</span>
-                                              <span className="text-[10px] text-neutral-400 text-center leading-tight w-full truncate line-through">{last}</span>
-                                              {p.injuryNote && <span className="text-[9px] text-red-400 text-center leading-tight truncate w-full">{p.injuryNote}</span>}
-                                            </div>
-                                          );
-                                        })}
+                                        {team.out.map((p) => (
+                                          <PlayerChip key={p.name} player={p} teamName={team.team} teamAbbr={team.teamAbbr} variant="out" />
+                                        ))}
                                       </div>
                                     </div>
                                   )}

@@ -7,6 +7,7 @@ export interface PlayerAvailability {
   status: "Playing" | "Out" | "Doubtful" | "Questionable" | "Day-To-Day";
   injuryNote?: string;
   headshot?: string;
+  espnId?: string;
 }
 
 export interface TeamAvailability {
@@ -63,6 +64,7 @@ interface RosterPlayer {
   position: string;
   jersey: string;
   headshot?: string;
+  espnId?: string;
 }
 
 const rosterCache: Record<string, { data: RosterPlayer[]; teamName: string; ts: number }> = {};
@@ -97,6 +99,7 @@ async function fetchRoster(espnTeamId: number): Promise<{ players: RosterPlayer[
       position: athlete.position?.abbreviation ?? "",
       jersey: athlete.jersey ?? "",
       headshot: athlete.headshot?.href ?? undefined,
+      espnId: athlete.id ? String(athlete.id) : undefined,
     });
   }
 
@@ -215,6 +218,7 @@ export async function GET(request: NextRequest) {
               status: injury.status === "Out" ? "Out" : (injury.status as PlayerAvailability["status"]),
               injuryNote: injury.description,
               headshot: p.headshot,
+              espnId: p.espnId,
             };
             if (injury.status === "Out") out.push(entry);
             else gameTime.push(entry);
@@ -225,6 +229,7 @@ export async function GET(request: NextRequest) {
               jersey: p.jersey,
               status: "Playing",
               headshot: p.headshot,
+              espnId: p.espnId,
             });
           }
         }
