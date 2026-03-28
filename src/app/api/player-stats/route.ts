@@ -106,7 +106,7 @@ export async function GET(request: NextRequest) {
       if (field && values[i] !== undefined) {
         const num = Number(values[i]);
         if (!Number.isNaN(num)) {
-          (stats as Record<string, number>)[field] = num;
+          (stats as unknown as Record<string, number>)[field] = num;
         }
       }
     }
