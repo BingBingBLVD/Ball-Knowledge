@@ -2,6 +2,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { getTravelTimes } from "@/lib/driving";
 import { queryOverpass } from "@/lib/overpass";
 
+async function fetchWikiImage(name: string): Promise<string | null> {
+  try {
+    const title = name.replace(/\s+/g, "_");
+    const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=pageimages&format=json&pithumbsize=400`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(4000) });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const pages = data?.query?.pages;
+    if (!pages) return null;
+    for (const p of Object.values(pages) as any[]) {
+      if (p.thumbnail?.source) return p.thumbnail.source;
+    }
+    return null;
+  } catch { return null; }
+}
+
 interface HotelSuggestion {
   name: string;
   vicinity: string;
@@ -67,12 +83,11 @@ export async function GET(req: NextRequest) {
       .sort((a, b) => a.dist - b.dist)
       .slice(0, 5);
 
-    // Fetch real travel times for each hotel in parallel
-    const travelResults = await Promise.all(
-      topPlaces.map((p) =>
-        getTravelTimes(p.hLat, p.hLng, venueLat, venueLng).catch(() => null)
-      )
-    );
+    // Fetch travel times and Wikipedia images in parallel
+    const [travelResults, photoResults] = await Promise.all([
+      Promise.all(topPlaces.map((p) => getTravelTimes(p.hLat, p.hLng, venueLat, venueLng).catch(() => null))),
+      Promise.all(topPlaces.map((p) => fetchWikiImage(p.tags.name))),
+    ]);
 
     const hotels: HotelSuggestion[] = topPlaces.map((entry, i) => {
       const { tags, hLat, hLng, dist } = entry;
@@ -106,7 +121,7 @@ export async function GET(req: NextRequest) {
         priceLevel: stars > 0 ? stars : null,
         estimatedPrice,
         bookingUrl: `https://www.google.com/travel/hotels/?q=hotels+near+${encodeURIComponent(venueName)}&dates=${date},${checkout}`,
-        photoUrl: null,
+        photoUrl: photoResults[i] ?? null,
         lat: hLat,
         lng: hLng,
         distanceMiles: Math.round(dist * 10) / 10,

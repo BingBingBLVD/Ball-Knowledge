@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { RouteMiniMap } from "./route-mini-map";
 import {
   X,
   Clock,
@@ -384,6 +385,7 @@ function TransitRows({
                       <span className="cursor-pointer hover:underline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(lyftDeepLink(vLat, vLng, stop.lat, stop.lng), "_blank"); }}>Lyft {times.lyftEstimate ? `~${extractUpperBound(times.lyftEstimate)}` : "--"}</span>
                     </div>
                   </a>
+                  <RouteMiniMap fromLat={stop.lat} fromLng={stop.lng} toLat={vLat} toLng={vLng} />
                 </div>
                 {/* Transit column */}
                 {times.transitMinutes != null && (
@@ -1112,7 +1114,6 @@ export function GameDetailPopover({
                               {hotel.rating && <span className="flex items-center gap-0.5 text-sm shrink-0 ml-2"><Star className="size-3.5 text-neutral-900" /> {hotel.rating}</span>}
                             </div>
                             <div className="text-sm text-neutral-500 mt-0.5">{hotel.distanceMiles} mi from venue</div>
-                            <div className="text-sm font-semibold text-neutral-900 mt-1">{hotel.estimatedPrice}</div>
                             <div className="flex items-center gap-2 mt-2 text-xs text-neutral-500">
                               <span className="flex items-center gap-1"><Car className="size-3" /> {hotel.driveMinutes}m</span>
                               {hotel.transitMinutes != null && <span className="flex items-center gap-1"><Bus className="size-3" /> {hotel.transitMinutes}m</span>}
