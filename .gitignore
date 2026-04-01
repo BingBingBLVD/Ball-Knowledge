@@ -45,3 +45,4 @@ next-env.d.ts
 # GTFS raw downloads (large; rebuild with: node scripts/build-gtfs.mjs)
 /data/gtfs/
 .gstack/
+.env*.local
