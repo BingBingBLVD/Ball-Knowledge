@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { searchRoutes, type Itinerary, type Leg } from "@/lib/route-search";
 import { getTravelTimes } from "@/lib/driving";
+import { queryOverpass } from "@/lib/overpass";
 
 interface RampageGame {
   venue: string;
@@ -110,17 +111,9 @@ async function searchHotelsNearVenue(
   checkinDate: string,
 ): Promise<HotelSuggestion[]> {
   try {
-    // Use Overpass API instead of Google Places
+    // Use Overpass API with retry across mirrors
     const query = `[out:json][timeout:10];(node["tourism"="hotel"](around:8000,${venueLat},${venueLng});way["tourism"="hotel"](around:8000,${venueLat},${venueLng});node["tourism"="motel"](around:8000,${venueLat},${venueLng});way["tourism"="motel"](around:8000,${venueLat},${venueLng}););out center body 15;`;
-    const res = await fetch("https://overpass-api.de/api/interpreter", {
-      method: "POST",
-      body: `data=${encodeURIComponent(query)}`,
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      signal: AbortSignal.timeout(12000),
-    });
-    if (!res.ok) return [];
-    const data = await res.json();
-    if (!data.elements) return [];
+    const data = await queryOverpass(query);
 
     const checkoutDate = new Date(checkinDate + "T12:00:00");
     checkoutDate.setDate(checkoutDate.getDate() + 1);
@@ -158,9 +151,9 @@ async function searchHotelsNearVenue(
           directionsUrl: `https://www.google.com/maps/dir/?api=1&origin=${hLat},${hLng}&destination=${venueLat},${venueLng}`,
         };
       })
-      .filter(Boolean)
-      .sort((a: HotelSuggestion, b: HotelSuggestion) => a.distanceMiles - b.distanceMiles)
-      .slice(0, 5);
+      .filter((x) => x != null)
+      .sort((a, b) => a!.distanceMiles - b!.distanceMiles)
+      .slice(0, 5) as HotelSuggestion[];
   } catch {
     return [];
   }

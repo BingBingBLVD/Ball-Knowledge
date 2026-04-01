@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { queryOverpass } from "@/lib/overpass";
 
 export interface ParkingSpot {
   name: string;
@@ -47,22 +48,14 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // Query OpenStreetMap Overpass API for parking within 2km
+    // Query OpenStreetMap Overpass API for parking within 2km (with retry across mirrors)
     const query = `[out:json][timeout:10];(node["amenity"="parking"](around:2000,${venueLat},${venueLng});way["amenity"="parking"](around:2000,${venueLat},${venueLng}););out center body 20;`;
-    const res = await fetch("https://overpass-api.de/api/interpreter", {
-      method: "POST",
-      body: `data=${encodeURIComponent(query)}`,
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      signal: AbortSignal.timeout(12000),
-    });
-    if (!res.ok) return NextResponse.json({ parking: [] });
-    const data = await res.json();
-    if (!data.elements) return NextResponse.json({ parking: [] });
+    const data = await queryOverpass(query);
 
     const spotHeroBase = `https://spothero.com/search?latitude=${venueLat}&longitude=${venueLng}${date ? `&starts=${date}T16:00&ends=${date}T23:59` : ""}`;
 
-    const spots: ParkingSpot[] = data.elements
-      .map((el: { lat?: number; lon?: number; center?: { lat: number; lon: number }; tags?: Record<string, string> }) => {
+    const spots = (data.elements as { lat?: number; lon?: number; center?: { lat: number; lon: number }; tags?: Record<string, string> }[])
+      .map((el) => {
         const pLat = el.lat ?? el.center?.lat;
         const pLng = el.lon ?? el.center?.lon;
         if (pLat == null || pLng == null) return null;
@@ -103,9 +96,9 @@ export async function GET(req: NextRequest) {
           directionsUrl: `https://www.google.com/maps/dir/?api=1&destination=${pLat},${pLng}&travelmode=driving`,
         };
       })
-      .filter(Boolean)
-      .sort((a: ParkingSpot, b: ParkingSpot) => a.distanceMiles - b.distanceMiles)
-      .slice(0, 8);
+      .filter((x) => x != null)
+      .sort((a, b) => a!.distanceMiles - b!.distanceMiles)
+      .slice(0, 8) as ParkingSpot[];
 
     cache.set(key, { data: spots, ts: Date.now() });
     return NextResponse.json({ parking: spots });

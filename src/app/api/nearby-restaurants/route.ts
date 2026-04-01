@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { queryOverpass } from "@/lib/overpass";
 
 export interface RestaurantSpot {
   name: string;
@@ -45,17 +46,9 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // Query Overpass for restaurants and bars/pubs within 1.5km
+    // Query Overpass for restaurants and bars/pubs within 1.5km (with retry across mirrors)
     const query = `[out:json][timeout:10];(node["amenity"="restaurant"](around:1500,${venueLat},${venueLng});node["amenity"="bar"](around:1500,${venueLat},${venueLng});node["amenity"="pub"](around:1500,${venueLat},${venueLng}););out body 30;`;
-    const res = await fetch("https://overpass-api.de/api/interpreter", {
-      method: "POST",
-      body: `data=${encodeURIComponent(query)}`,
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      signal: AbortSignal.timeout(12000),
-    });
-    if (!res.ok) return NextResponse.json({ restaurants: [] });
-    const data = await res.json();
-    if (!data.elements) return NextResponse.json({ restaurants: [] });
+    const data = await queryOverpass(query);
 
     const seenNames = new Set<string>();
     const allResults: RestaurantSpot[] = [];

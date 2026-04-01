@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getTravelTimes } from "@/lib/driving";
+import { queryOverpass } from "@/lib/overpass";
 
 interface HotelSuggestion {
   name: string;
@@ -43,17 +44,9 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // Query Overpass API for hotels/lodging within 8km
+    // Query Overpass API for hotels/lodging within 8km (with retry across mirrors)
     const query = `[out:json][timeout:10];(node["tourism"="hotel"](around:8000,${venueLat},${venueLng});way["tourism"="hotel"](around:8000,${venueLat},${venueLng});node["tourism"="motel"](around:8000,${venueLat},${venueLng});way["tourism"="motel"](around:8000,${venueLat},${venueLng}););out center body 20;`;
-    const res = await fetch("https://overpass-api.de/api/interpreter", {
-      method: "POST",
-      body: `data=${encodeURIComponent(query)}`,
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      signal: AbortSignal.timeout(12000),
-    });
-    if (!res.ok) return NextResponse.json({ hotels: [] });
-    const data = await res.json();
-    if (!data.elements) return NextResponse.json({ hotels: [] });
+    const data = await queryOverpass(query);
 
     const checkoutDate = new Date(date + "T12:00:00");
     checkoutDate.setDate(checkoutDate.getDate() + 1);
@@ -70,18 +63,18 @@ export async function GET(req: NextRequest) {
         const dist = haversineMiles(hLat, hLng, venueLat, venueLng);
         return { tags, hLat, hLng, dist };
       })
-      .filter(Boolean)
-      .sort((a: { dist: number }, b: { dist: number }) => a.dist - b.dist)
+      .filter((x): x is { tags: Record<string, string>; hLat: number; hLng: number; dist: number } => x != null)
+      .sort((a, b) => a.dist - b.dist)
       .slice(0, 5);
 
     // Fetch real travel times for each hotel in parallel
     const travelResults = await Promise.all(
-      topPlaces.map((p: { hLat: number; hLng: number }) =>
+      topPlaces.map((p) =>
         getTravelTimes(p.hLat, p.hLng, venueLat, venueLng).catch(() => null)
       )
     );
 
-    const hotels: HotelSuggestion[] = topPlaces.map((entry: { tags: Record<string, string>; hLat: number; hLng: number; dist: number }, i: number) => {
+    const hotels: HotelSuggestion[] = topPlaces.map((entry, i) => {
       const { tags, hLat, hLng, dist } = entry;
       const times = travelResults[i];
       const roadMiles = dist * 1.3;
