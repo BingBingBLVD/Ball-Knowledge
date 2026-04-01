@@ -126,15 +126,6 @@ interface HourlyWeather {
   humidity: number;
 }
 
-interface AirportDelay {
-  code: string;
-  name: string;
-  delayIndex: number | null;
-  departureDel: number | null;
-  arrivalDel: number | null;
-  reasons: string[];
-}
-
 interface StationDeparture {
   carrier: string;
   routeName: string;
@@ -361,7 +352,7 @@ function TransitRows({
             <div className="flex items-center gap-2 mb-2">
               <Icon className={`size-4 ${colorClass}`} />
               <a
-                href={`https://www.google.com/maps/search/?api=1&query=${stop.lat},${stop.lng}`}
+                href={`https://www.openstreetmap.org/?mlat=${stop.lat}&mlon=${stop.lng}#map=15/${stop.lat}/${stop.lng}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`font-bold text-sm no-underline hover:underline ${colorClass}`}
@@ -393,15 +384,6 @@ function TransitRows({
                       <span className="cursor-pointer hover:underline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(lyftDeepLink(vLat, vLng, stop.lat, stop.lng), "_blank"); }}>Lyft {times.lyftEstimate ? `~${extractUpperBound(times.lyftEstimate)}` : "--"}</span>
                     </div>
                   </a>
-                  <div className="rounded-lg overflow-hidden border border-black/5">
-                    <iframe
-                      className="w-full h-[180px]"
-                      style={{ colorScheme: "light" }}
-                      loading="lazy"
-                      referrerPolicy="no-referrer-when-downgrade"
-                      src={`https://www.google.com/maps/embed/v1/directions?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&origin=${stop.lat},${stop.lng}&destination=${vLat},${vLng}&mode=driving&zoom=10`}
-                    />
-                  </div>
                 </div>
                 {/* Transit column */}
                 {times.transitMinutes != null && (
@@ -419,14 +401,6 @@ function TransitRows({
                       </div>
                       <div className="text-[10px] text-emerald-600 mt-1">{times.transitFare ?? "No fare info"}</div>
                     </a>
-                    <div className="rounded-lg overflow-hidden border border-black/5">
-                      <iframe
-                        className="w-full h-[180px]"
-                        loading="lazy"
-                        referrerPolicy="no-referrer-when-downgrade"
-                        src={`https://www.google.com/maps/embed/v1/directions?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&origin=${stop.lat},${stop.lng}&destination=${vLat},${vLng}&mode=transit&zoom=10`}
-                      />
-                    </div>
                   </div>
                 )}
               </div>
@@ -476,8 +450,6 @@ export function GameDetailPopover({
   const [restaurantsLoading, setRestaurantsLoading] = useState(false);
   const [localNews, setLocalNews] = useState<NewsItem[] | null>(null);
   const [newsLoading, setNewsLoading] = useState(false);
-  const [airportDelays, setAirportDelays] = useState<AirportDelay[] | null>(null);
-  const [delaysLoading, setDelaysLoading] = useState(false);
   const [lastTransit, setLastTransit] = useState<LastTransitInfo[] | null>(null);
   const [lastTransitLoading, setLastTransitLoading] = useState(false);
   const [stationDepartures, setStationDepartures] = useState<StationDepartureResult[] | null>(null);
@@ -525,7 +497,6 @@ export function GameDetailPopover({
     setParking(null);
     setRestaurants(null);
     setLocalNews(null);
-    setAirportDelays(null);
     setLastTransit(null);
     setStationDepartures(null);
     setEnriched({});
@@ -602,18 +573,7 @@ export function GameDetailPopover({
       .catch(() => {})
       .finally(() => setNewsLoading(false));
 
-    // 9. Airport delays
-    const aptCodes = (game.nearbyAirports ?? []).map((a) => a.code);
-    if (aptCodes.length > 0) {
-      setDelaysLoading(true);
-      fetch(`/api/airport-delays?codes=${encodeURIComponent(aptCodes.sort().join(","))}`)
-        .then((r) => r.ok ? r.json() : null)
-        .then((d) => { if (d?.delays) setAirportDelays(d.delays); })
-        .catch(() => {})
-        .finally(() => setDelaysLoading(false));
-    }
-
-    // 10. Station departures (trains & buses)
+    // 9. Station departures (trains & buses)
     const allTransitStops = [
       ...(game.nearbyTrainStations ?? []).map((s) => ({ code: s.code, name: s.name, lat: s.lat, lng: s.lng })),
       ...(game.nearbyBusStations ?? []).map((s) => ({ code: s.code, name: s.name, lat: s.lat, lng: s.lng })),
@@ -971,34 +931,6 @@ export function GameDetailPopover({
                 {transitTab === "flights" && airports.length > 0 && <TransitRows stops={airports} icon={Plane} vLat={vLat} vLng={vLng} enriched={enriched} enriching={enriching} onEnrich={(stop) => handleEnrich(stop)} onRouteFocus={routeFocusHandler} isAnimating={false} venueName={game.venue} colorClass="text-[--color-flight]" tipoffUtc={game.date_time_utc} />}
                 {transitTab === "trains" && trains.length > 0 && <TransitRows stops={trains} icon={TrainFront} vLat={vLat} vLng={vLng} enriched={enriched} enriching={enriching} onEnrich={(stop) => handleEnrich(stop)} onRouteFocus={routeFocusHandler} isAnimating={false} venueName={game.venue} colorClass="text-[--color-train]" tipoffUtc={game.date_time_utc} />}
                 {transitTab === "buses" && buses.length > 0 && <TransitRows stops={buses} icon={BusFront} vLat={vLat} vLng={vLng} enriched={enriched} enriching={enriching} onEnrich={(stop) => handleEnrich(stop)} onRouteFocus={routeFocusHandler} isAnimating={false} venueName={game.venue} colorClass="text-[--color-bus]" tipoffUtc={game.date_time_utc} />}
-
-                {/* Airport Status (flights tab only) */}
-                {transitTab === "flights" && (() => {
-                  const delays = airportDelays;
-                  const dLoading = delaysLoading;
-                  if (airports.length === 0 || (!delays && !dLoading)) return null;
-                  return (
-                    <div className="mt-6">
-                      <h3 className="text-base font-semibold text-neutral-800 mb-3">Airport status</h3>
-                      {dLoading && !delays && <div className="flex items-center gap-2 text-sm text-neutral-500"><Loader2 className="size-4 animate-spin" /> Checking delays...</div>}
-                      {delays && (
-                        <div className="flex flex-wrap gap-2">
-                          {delays.map((d) => {
-                            const maxDelay = Math.max(d.departureDel ?? 0, d.arrivalDel ?? 0);
-                            const hasDelay = maxDelay > 0;
-                            return (
-                              <div key={d.code} className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold ${hasDelay ? "bg-amber-50 border border-amber-200 text-amber-600" : "bg-neutral-50 text-neutral-900"}`}>
-                                {d.code}
-                                <span className={`size-2 rounded-full ${hasDelay ? "bg-amber-400" : "bg-emerald-500"}`} />
-                                {hasDelay && <span className="text-xs font-medium">Delays +{maxDelay}m</span>}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
 
                 {/* Station Departures (trains/buses tabs) */}
                 {(transitTab === "trains" || transitTab === "buses") && (() => {

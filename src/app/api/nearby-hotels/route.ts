@@ -22,13 +22,6 @@ interface HotelSuggestion {
   directionsUrl: string;
 }
 
-const PRICE_LEVEL_MAP: Record<number, string> = {
-  1: "$50-80/night",
-  2: "$80-150/night",
-  3: "$150-250/night",
-  4: "$250+/night",
-};
-
 function haversineMiles(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const toRad = (d: number) => (d * Math.PI) / 180;
   const R = 3958.8;
@@ -49,43 +42,47 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ hotels: [] });
   }
 
-  const apiKey = process.env.GOOGLE_MAPS_API_KEY ?? process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
-  if (!apiKey) return NextResponse.json({ hotels: [] });
-
   try {
-    const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${venueLat},${venueLng}&radius=8000&type=lodging&key=${apiKey}&rankby=prominence`;
-    const res = await fetch(url);
+    // Query Overpass API for hotels/lodging within 8km
+    const query = `[out:json][timeout:10];(node["tourism"="hotel"](around:8000,${venueLat},${venueLng});way["tourism"="hotel"](around:8000,${venueLat},${venueLng});node["tourism"="motel"](around:8000,${venueLat},${venueLng});way["tourism"="motel"](around:8000,${venueLat},${venueLng}););out center body 20;`;
+    const res = await fetch("https://overpass-api.de/api/interpreter", {
+      method: "POST",
+      body: `data=${encodeURIComponent(query)}`,
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      signal: AbortSignal.timeout(12000),
+    });
     if (!res.ok) return NextResponse.json({ hotels: [] });
     const data = await res.json();
-    if (data.status !== "OK" || !data.results) return NextResponse.json({ hotels: [] });
+    if (!data.elements) return NextResponse.json({ hotels: [] });
 
     const checkoutDate = new Date(date + "T12:00:00");
     checkoutDate.setDate(checkoutDate.getDate() + 1);
     const checkout = checkoutDate.toISOString().split("T")[0];
 
-    const topPlaces = data.results.slice(0, 8).map((place: {
-      name: string;
-      vicinity: string;
-      rating?: number;
-      price_level?: number;
-      photos?: { photo_reference: string }[];
-      geometry: { location: { lat: number; lng: number } };
-    }) => {
-      const hLat = place.geometry.location.lat;
-      const hLng = place.geometry.location.lng;
-      const dist = haversineMiles(hLat, hLng, venueLat, venueLng);
-      return { place, hLat, hLng, dist };
-    }).sort((a: { dist: number }, b: { dist: number }) => a.dist - b.dist).slice(0, 5);
+    // Parse and sort by distance
+    const topPlaces = data.elements
+      .map((el: { lat?: number; lon?: number; center?: { lat: number; lon: number }; tags?: Record<string, string> }) => {
+        const hLat = el.lat ?? el.center?.lat;
+        const hLng = el.lon ?? el.center?.lon;
+        if (hLat == null || hLng == null) return null;
+        const tags = el.tags ?? {};
+        if (!tags.name) return null;
+        const dist = haversineMiles(hLat, hLng, venueLat, venueLng);
+        return { tags, hLat, hLng, dist };
+      })
+      .filter(Boolean)
+      .sort((a: { dist: number }, b: { dist: number }) => a.dist - b.dist)
+      .slice(0, 5);
 
-    // Fetch real travel times (drive + transit) for each hotel in parallel
+    // Fetch real travel times for each hotel in parallel
     const travelResults = await Promise.all(
       topPlaces.map((p: { hLat: number; hLng: number }) =>
         getTravelTimes(p.hLat, p.hLng, venueLat, venueLng).catch(() => null)
       )
     );
 
-    const hotels: HotelSuggestion[] = topPlaces.map((entry: { place: { name: string; vicinity: string; rating?: number; price_level?: number; photos?: { photo_reference: string }[] }; hLat: number; hLng: number; dist: number }, i: number) => {
-      const { place, hLat, hLng, dist } = entry;
+    const hotels: HotelSuggestion[] = topPlaces.map((entry: { tags: Record<string, string>; hLat: number; hLng: number; dist: number }, i: number) => {
+      const { tags, hLat, hLng, dist } = entry;
       const times = travelResults[i];
       const roadMiles = dist * 1.3;
       const driveMin = times?.driveMinutes ?? Math.max(3, Math.round((roadMiles / 25) * 60));
@@ -102,17 +99,21 @@ export async function GET(req: NextRequest) {
         return low === high ? `~$${low}` : `~$${low}–${high}`;
       })();
 
-      const photoRef = place.photos?.[0]?.photo_reference;
-      const photoUrl = photoRef ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${photoRef}&key=${apiKey}` : null;
+      // Estimate price from OSM stars tag if available
+      const stars = parseInt(tags.stars ?? "0");
+      let estimatedPrice = "—";
+      if (stars >= 4) estimatedPrice = "$150–250/night";
+      else if (stars >= 3) estimatedPrice = "$80–150/night";
+      else if (stars >= 2) estimatedPrice = "$50–80/night";
 
       return {
-        name: place.name,
-        vicinity: place.vicinity,
-        rating: place.rating ?? null,
-        priceLevel: place.price_level ?? null,
-        estimatedPrice: place.price_level ? PRICE_LEVEL_MAP[place.price_level] ?? "—" : "—",
+        name: tags.name,
+        vicinity: tags["addr:street"] ? `${tags["addr:housenumber"] ?? ""} ${tags["addr:street"]}`.trim() : "",
+        rating: null,
+        priceLevel: stars > 0 ? stars : null,
+        estimatedPrice,
         bookingUrl: `https://www.google.com/travel/hotels/?q=hotels+near+${encodeURIComponent(venueName)}&dates=${date},${checkout}`,
-        photoUrl,
+        photoUrl: null,
         lat: hLat,
         lng: hLng,
         distanceMiles: Math.round(dist * 10) / 10,

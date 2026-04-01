@@ -3,24 +3,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Zap, MapPin, Navigation, Loader2, Search, X, ArrowRight } from "lucide-react";
 import { useRampage } from "@/lib/rampage-context";
-import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 import { useRouter } from "next/navigation";
 
-const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
-
-let placesReady: Promise<void> | null = null;
-function ensurePlaces(): Promise<void> {
-  if (!placesReady) {
-    setOptions({ key: API_KEY, v: "weekly" });
-    placesReady = importLibrary("places").then(() => {});
-  }
-  return placesReady;
-}
-
 interface Suggestion {
-  placeId: string;
+  id: string;
   main: string;
   secondary: string;
+  lat: number;
+  lng: number;
 }
 
 export function RampageButton({
@@ -43,49 +33,40 @@ export function RampageButton({
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [locatingField, setLocatingField] = useState<"start" | "end" | null>(null);
 
-  const autocompleteRef = useRef<google.maps.places.AutocompleteService | null>(null);
-  const sessionTokenRef = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
-  const geocoderRef = useRef<google.maps.Geocoder | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    ensurePlaces().then(() => {
-      autocompleteRef.current = new google.maps.places.AutocompleteService();
-      sessionTokenRef.current = new google.maps.places.AutocompleteSessionToken();
-      geocoderRef.current = new google.maps.Geocoder();
-    });
-  }, []);
 
   useEffect(() => {
     if (editingField && inputRef.current) inputRef.current.focus();
   }, [editingField]);
 
-  const fetchSuggestions = useCallback((input: string) => {
-    if (!input.trim() || !autocompleteRef.current) {
+  const fetchSuggestions = useCallback(async (input: string) => {
+    if (!input.trim()) {
       setSuggestions([]);
       return;
     }
-    autocompleteRef.current.getPlacePredictions(
-      {
-        input,
-        types: ["geocode"],
-        sessionToken: sessionTokenRef.current!,
-      },
-      (predictions, status) => {
-        if (status !== "OK" || !predictions) {
-          setSuggestions([]);
-          return;
-        }
-        setSuggestions(
-          predictions.slice(0, 4).map((p) => ({
-            placeId: p.place_id,
-            main: p.structured_formatting.main_text,
-            secondary: p.structured_formatting.secondary_text,
-          }))
-        );
-      }
-    );
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(input)}&format=json&limit=4&addressdetails=1`,
+        { headers: { "Accept-Language": "en" } }
+      );
+      if (!res.ok) { setSuggestions([]); return; }
+      const data = await res.json();
+      setSuggestions(
+        data.map((r: { place_id: number; display_name: string; lat: string; lon: string }) => {
+          const parts = r.display_name.split(", ");
+          return {
+            id: String(r.place_id),
+            main: parts[0],
+            secondary: parts.slice(1, 3).join(", "),
+            lat: parseFloat(r.lat),
+            lng: parseFloat(r.lon),
+          };
+        })
+      );
+    } catch {
+      setSuggestions([]);
+    }
   }, []);
 
   function handleQueryChange(val: string) {
@@ -99,19 +80,13 @@ export function RampageButton({
   }
 
   function selectSuggestion(s: Suggestion) {
-    if (!geocoderRef.current || !editingField) return;
-    geocoderRef.current.geocode({ placeId: s.placeId }, (results, status) => {
-      if (status === "OK" && results?.[0]?.geometry?.location) {
-        const loc = results[0].geometry.location;
-        const locObj = { lat: loc.lat(), lng: loc.lng(), label: s.main };
-        if (editingField === "start") rampage.setStartLocation(locObj);
-        else rampage.setEndLocation(locObj);
-        sessionTokenRef.current = new google.maps.places.AutocompleteSessionToken();
-        setSuggestions([]);
-        setQuery("");
-        setEditingField(null);
-      }
-    });
+    if (!editingField) return;
+    const locObj = { lat: s.lat, lng: s.lng, label: s.main };
+    if (editingField === "start") rampage.setStartLocation(locObj);
+    else rampage.setEndLocation(locObj);
+    setSuggestions([]);
+    setQuery("");
+    setEditingField(null);
   }
 
   function useGps(field: "start" | "end") {
@@ -406,7 +381,7 @@ function LocationRow({
         <div className="ml-[22px] mt-1.5 border border-neutral-200 rounded-2xl overflow-hidden bg-white shadow-lg">
           {suggestions.map((s, i) => (
             <button
-              key={s.placeId}
+              key={s.id}
               onClick={() => onSelectSuggestion(s)}
               className={`w-full text-left px-4 py-3 hover:bg-neutral-50 transition-colors flex items-center gap-3 ${
                 i < suggestions.length - 1 ? "border-b border-neutral-100" : ""

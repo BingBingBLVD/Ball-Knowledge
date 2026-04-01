@@ -21,7 +21,8 @@ import {
   ChevronDown,
 } from "lucide-react";
 import Link from "next/link";
-import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
+import type L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import { GameDetailPopover, type GameEvent } from "@/components/game-detail-popover";
 import { PlayerHoverCardProvider } from "@/components/player-hover-card";
 
@@ -251,7 +252,7 @@ function RampageContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const mapRef = useRef<HTMLDivElement>(null);
-  const googleMapRef = useRef<google.maps.Map | null>(null);
+  const leafletMapRef = useRef<L.Map | null>(null);
   const [popoverGameId, setPopoverGameId] = useState<string | null>(null);
   const [popoverVisible, setPopoverVisible] = useState(false);
 
@@ -327,43 +328,51 @@ function RampageContent() {
     fetchRampage();
   }, [cow, cowId]);
 
-  // Init map
+  // Init map with Leaflet
   useEffect(() => {
-    if (!result || !mapRef.current || googleMapRef.current) return;
+    if (!result || !mapRef.current || leafletMapRef.current) return;
     async function initMap() {
-      setOptions({ key: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "", v: "weekly" });
-      await Promise.all([importLibrary("maps"), importLibrary("marker")]);
+      const Leaf = (await import("leaflet")).default;
       if (!mapRef.current) return;
-      const map = new google.maps.Map(mapRef.current, {
-        center: { lat: 39.8, lng: -98.5 }, zoom: 4, mapId: "rampage_map",
-        disableDefaultUI: true, zoomControl: true, gestureHandling: "greedy",
+      const map = Leaf.map(mapRef.current, {
+        center: [39.8, -98.5], zoom: 4,
+        zoomControl: true, attributionControl: false,
       });
-      googleMapRef.current = map;
-      const bounds = new google.maps.LatLngBounds();
-      const points: { lat: number; lng: number }[] = [];
+      Leaf.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", { maxZoom: 19 }).addTo(map);
+      leafletMapRef.current = map;
+      const bounds = Leaf.latLngBounds([]);
+      const points: [number, number][] = [];
       if (cow) {
-        const startEl = document.createElement("div");
-        startEl.style.cssText = "width:20px;height:20px;border-radius:50%;background:#22c55e;border:2.5px solid white;box-shadow:0 2px 8px rgba(34,197,94,0.4);";
-        new google.maps.marker.AdvancedMarkerElement({ map, position: cow.startLocation, content: startEl });
-        bounds.extend(cow.startLocation); points.push(cow.startLocation);
+        const startIcon = Leaf.divIcon({
+          html: '<div style="width:20px;height:20px;border-radius:50%;background:#22c55e;border:2.5px solid white;box-shadow:0 2px 8px rgba(34,197,94,0.4);"></div>',
+          className: "", iconSize: [20, 20], iconAnchor: [10, 10],
+        });
+        Leaf.marker([cow.startLocation.lat, cow.startLocation.lng], { icon: startIcon }).addTo(map);
+        bounds.extend([cow.startLocation.lat, cow.startLocation.lng]);
+        points.push([cow.startLocation.lat, cow.startLocation.lng]);
       }
       result!.games.forEach((game, i) => {
-        const el = document.createElement("div");
-        el.style.cssText = `width:28px;height:28px;border-radius:50%;background:#3b82f6;color:white;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2.5px solid white;box-shadow:0 2px 8px rgba(59,130,246,0.4);`;
-        el.textContent = String(i + 1);
-        new google.maps.marker.AdvancedMarkerElement({ map, position: { lat: game.lat, lng: game.lng }, content: el });
-        bounds.extend({ lat: game.lat, lng: game.lng }); points.push({ lat: game.lat, lng: game.lng });
+        const gameIcon = Leaf.divIcon({
+          html: `<div style="width:28px;height:28px;border-radius:50%;background:#3b82f6;color:white;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2.5px solid white;box-shadow:0 2px 8px rgba(59,130,246,0.4);">${i + 1}</div>`,
+          className: "", iconSize: [28, 28], iconAnchor: [14, 14],
+        });
+        Leaf.marker([game.lat, game.lng], { icon: gameIcon }).addTo(map);
+        bounds.extend([game.lat, game.lng]);
+        points.push([game.lat, game.lng]);
       });
       if (cow) {
-        const endEl = document.createElement("div");
-        endEl.style.cssText = "width:20px;height:20px;border-radius:50%;background:#ef4444;border:2.5px solid white;box-shadow:0 2px 8px rgba(239,68,68,0.4);";
-        new google.maps.marker.AdvancedMarkerElement({ map, position: cow.endLocation, content: endEl });
-        bounds.extend(cow.endLocation); points.push(cow.endLocation);
+        const endIcon = Leaf.divIcon({
+          html: '<div style="width:20px;height:20px;border-radius:50%;background:#ef4444;border:2.5px solid white;box-shadow:0 2px 8px rgba(239,68,68,0.4);"></div>',
+          className: "", iconSize: [20, 20], iconAnchor: [10, 10],
+        });
+        Leaf.marker([cow.endLocation.lat, cow.endLocation.lng], { icon: endIcon }).addTo(map);
+        bounds.extend([cow.endLocation.lat, cow.endLocation.lng]);
+        points.push([cow.endLocation.lat, cow.endLocation.lng]);
       }
       if (points.length >= 2) {
-        new google.maps.Polyline({ path: points, geodesic: true, strokeColor: "#3b82f6", strokeOpacity: 0.6, strokeWeight: 3, map });
+        Leaf.polyline(points, { color: "#3b82f6", opacity: 0.6, weight: 3 }).addTo(map);
       }
-      map.fitBounds(bounds, { top: 20, right: 20, bottom: 20, left: 20 });
+      map.fitBounds(bounds, { padding: [20, 20] });
     }
     initMap();
   }, [result, cow]);

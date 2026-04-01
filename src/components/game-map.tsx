@@ -1,22 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
-
-let mapsReady: Promise<void> | null = null;
-
-function ensureMaps(): Promise<void> {
-  if (!mapsReady) {
-    setOptions({ key: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "", v: "weekly" });
-    mapsReady = Promise.all([
-      importLibrary("maps"),
-      importLibrary("marker"),
-      importLibrary("routes"),
-      importLibrary("places"),
-    ]).then(() => {});
-  }
-  return mapsReady;
-}
+import type L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 interface MapEvent {
   id: string;
@@ -93,7 +79,30 @@ export interface VenueInfo {
   buses: TransitStop[];
 }
 
-const directionsCache = new Map<string, google.maps.DirectionsResult>();
+// Cache for OSRM route geometries
+const routeCache = new Map<string, [number, number][]>();
+
+async function fetchRouteGeometry(
+  fromLat: number, fromLng: number,
+  toLat: number, toLng: number
+): Promise<[number, number][] | null> {
+  const key = `${fromLat},${fromLng};${toLat},${toLng}`;
+  const cached = routeCache.get(key);
+  if (cached) return cached;
+  try {
+    const url = `https://router.project-osrm.org/route/v1/driving/${fromLng},${fromLat};${toLng},${toLat}?overview=full&geometries=geojson`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const coords = data?.routes?.[0]?.geometry?.coordinates;
+    if (!coords) return null;
+    const latLngs: [number, number][] = coords.map((c: [number, number]) => [c[1], c[0]]);
+    routeCache.set(key, latLngs);
+    return latLngs;
+  } catch {
+    return null;
+  }
+}
 
 export function GameMap({
   events,
@@ -123,15 +132,16 @@ export function GameMap({
   rampageEnd?: { lat: number; lng: number; label: string } | null;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<google.maps.Map | null>(null);
-  const markersRef = useRef<{ marker: google.maps.marker.AdvancedMarkerElement; venue: string; dot: HTMLDivElement }[]>([]);
-  const overlayMarkersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
-  const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
-  const defaultBoundsRef = useRef<google.maps.LatLngBounds | null>(null);
-  const userMarkerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
-  const rampageMarkersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
-  const rampagePolylineRef = useRef<google.maps.Polyline | null>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const markersRef = useRef<{ marker: L.Marker; venue: string; dot: HTMLDivElement }[]>([]);
+  const overlayMarkersRef = useRef<L.Marker[]>([]);
+  const routeLayerRef = useRef<L.Polyline | null>(null);
+  const defaultBoundsRef = useRef<L.LatLngBounds | null>(null);
+  const userMarkerRef = useRef<L.Marker | null>(null);
+  const rampageMarkersRef = useRef<L.Marker[]>([]);
+  const rampagePolylineRef = useRef<L.Polyline | null>(null);
   const [mapReady, setMapReady] = useState(false);
+  const leafletRef = useRef<typeof L | null>(null);
   const onMarkerClickRef = useRef(onMarkerClick);
   onMarkerClickRef.current = onMarkerClick;
   const onMarkerHoverRef = useRef(onMarkerHover);
@@ -140,38 +150,31 @@ export function GameMap({
   bottomPaddingRef.current = bottomPadding;
   const routeFocusRef = useRef(routeFocus);
   routeFocusRef.current = routeFocus;
-
   const eventsRef = useRef(events);
   eventsRef.current = events;
 
-  // Initialize map once — DARK mode
+  // Initialize map once
   useEffect(() => {
     let cancelled = false;
 
     async function init() {
-      await ensureMaps();
+      const Leaf = (await import("leaflet")).default;
       if (cancelled || !containerRef.current || mapRef.current) return;
 
-      const map = new google.maps.Map(containerRef.current, {
-        mapId: "DEMO_MAP_ID",
-        disableDefaultUI: true,
-        zoomControl: false,
-        gestureHandling: "greedy",
-        colorScheme: "LIGHT",
-        center: { lat: 39.8, lng: -98.5 },
+      leafletRef.current = Leaf;
+
+      const map = Leaf.map(containerRef.current, {
+        center: [39.8, -98.5],
         zoom: 4,
+        zoomControl: false,
+        attributionControl: false,
       });
+
+      Leaf.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+        maxZoom: 19,
+      }).addTo(map);
+
       mapRef.current = map;
-      directionsRendererRef.current = new google.maps.DirectionsRenderer({
-        map,
-        suppressMarkers: true,
-        preserveViewport: true,
-        polylineOptions: {
-          strokeColor: "#d4a843",
-          strokeWeight: 4,
-          strokeOpacity: 0.8,
-        },
-      });
       setMapReady(true);
     }
 
@@ -182,9 +185,10 @@ export function GameMap({
   // Update markers when events change
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !mapReady) return;
+    const Leaf = leafletRef.current;
+    if (!map || !mapReady || !Leaf) return;
 
-    markersRef.current.forEach((m) => (m.marker.map = null));
+    markersRef.current.forEach((m) => m.marker.remove());
     markersRef.current = [];
 
     const withCoords = events.filter(
@@ -196,7 +200,7 @@ export function GameMap({
       return;
     }
 
-    const bounds = new google.maps.LatLngBounds();
+    const bounds = Leaf.latLngBounds([]);
 
     const byVenue: Record<string, {
       lat: number; lng: number; venue: string; city: string; state: string;
@@ -211,19 +215,22 @@ export function GameMap({
     }
 
     for (const v of Object.values(byVenue)) {
-      const pos = { lat: v.lat, lng: v.lng };
+      const pos: [number, number] = [v.lat, v.lng];
       bounds.extend(pos);
 
       const dot = document.createElement("div");
       dot.style.cssText = "width:16px;height:16px;border-radius:50%;background:#d4a843;border:2.5px solid rgba(255,255,255,0.8);cursor:pointer;transition:all 150ms;";
 
-      const marker = new google.maps.marker.AdvancedMarkerElement({
-        map,
-        position: pos,
-        content: dot,
+      const icon = Leaf.divIcon({
+        html: dot.outerHTML,
+        className: "",
+        iconSize: [16, 16],
+        iconAnchor: [8, 8],
       });
 
-      marker.addListener("click", () => {
+      const marker = Leaf.marker(pos, { icon }).addTo(map);
+
+      marker.on("click", () => {
         const currentEvents = eventsRef.current;
         const venueGames = currentEvents.filter((e) => e.venue === v.venue);
         const firstWithAirports = venueGames.find((e) => e.nearbyAirports?.length);
@@ -254,18 +261,19 @@ export function GameMap({
         onMarkerClickRef.current?.(venueInfo);
       });
 
-      dot.addEventListener("mouseenter", () => {
-        onMarkerHoverRef.current?.(v.venue);
-      });
-      dot.addEventListener("mouseleave", () => {
-        onMarkerHoverRef.current?.(null);
-      });
+      // Store ref to actual dot in DOM for hover/selection styling
+      const dotEl = marker.getElement()?.querySelector("div") as HTMLDivElement | null;
 
-      markersRef.current.push({ marker, venue: v.venue, dot });
+      if (dotEl) {
+        dotEl.addEventListener("mouseenter", () => onMarkerHoverRef.current?.(v.venue));
+        dotEl.addEventListener("mouseleave", () => onMarkerHoverRef.current?.(null));
+      }
+
+      markersRef.current.push({ marker, venue: v.venue, dot: dotEl ?? dot });
     }
 
     defaultBoundsRef.current = bounds;
-    map.fitBounds(bounds, { top: 40, left: 40, right: 40, bottom: 40 + bottomPaddingRef.current });
+    map.fitBounds(bounds, { padding: [40, 40] });
   }, [events, mapReady]);
 
   // Highlight selected or hovered venue — green glow
@@ -288,24 +296,23 @@ export function GameMap({
   // User location marker
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !mapReady) return;
+    const Leaf = leafletRef.current;
+    if (!map || !mapReady || !Leaf) return;
 
     if (userMarkerRef.current) {
-      userMarkerRef.current.map = null;
+      userMarkerRef.current.remove();
       userMarkerRef.current = null;
     }
 
     if (userLocation) {
-      const dot = document.createElement("div");
-      dot.className = "user-location-dot";
-
-      const marker = new google.maps.marker.AdvancedMarkerElement({
-        map,
-        position: { lat: userLocation.lat, lng: userLocation.lng },
-        content: dot,
-        title: "Your location",
+      const icon = Leaf.divIcon({
+        html: '<div class="user-location-dot"></div>',
+        className: "",
+        iconSize: [16, 16],
+        iconAnchor: [8, 8],
       });
-      userMarkerRef.current = marker;
+
+      userMarkerRef.current = Leaf.marker([userLocation.lat, userLocation.lng], { icon }).addTo(map);
     }
   }, [userLocation, mapReady]);
 
@@ -316,133 +323,115 @@ export function GameMap({
 
     const rf = routeFocusRef.current;
     if (rf) {
-      const bounds = new google.maps.LatLngBounds();
-      bounds.extend({ lat: rf.venueLat, lng: rf.venueLng });
-      bounds.extend({ lat: rf.airportLat, lng: rf.airportLng });
-      map.fitBounds(bounds, { top: 50, left: 50, right: 50, bottom: 50 + bottomPadding });
+      const Leaf = leafletRef.current!;
+      const bounds = Leaf.latLngBounds([
+        [rf.venueLat, rf.venueLng],
+        [rf.airportLat, rf.airportLng],
+      ]);
+      map.fitBounds(bounds, { padding: [50, 50], paddingBottomRight: [0, bottomPadding] });
     } else if (defaultBoundsRef.current) {
-      map.fitBounds(defaultBoundsRef.current, { top: 40, left: 40, right: 40, bottom: 40 + bottomPadding });
+      map.fitBounds(defaultBoundsRef.current, { padding: [40, 40], paddingBottomRight: [0, bottomPadding] });
     }
   }, [bottomPadding, mapReady]);
 
-  // Route focus — overlay markers amber/green
+  // Route focus — overlay markers + route polyline
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !mapReady) return;
+    const Leaf = leafletRef.current;
+    if (!map || !mapReady || !Leaf) return;
 
-    overlayMarkersRef.current.forEach((m) => (m.map = null));
+    overlayMarkersRef.current.forEach((m) => m.remove());
     overlayMarkersRef.current = [];
-    directionsRendererRef.current?.setDirections({ routes: [] } as unknown as google.maps.DirectionsResult);
+    if (routeLayerRef.current) {
+      routeLayerRef.current.remove();
+      routeLayerRef.current = null;
+    }
 
     if (!routeFocus) {
       if (defaultBoundsRef.current) {
-        map.fitBounds(defaultBoundsRef.current, { top: 40, left: 40, right: 40, bottom: 40 + bottomPaddingRef.current });
+        map.fitBounds(defaultBoundsRef.current, { padding: [40, 40], paddingBottomRight: [0, bottomPaddingRef.current] });
       }
       return;
     }
 
-    const venuePos = { lat: routeFocus.venueLat, lng: routeFocus.venueLng };
-    const airportPos = { lat: routeFocus.airportLat, lng: routeFocus.airportLng };
+    const venuePos: [number, number] = [routeFocus.venueLat, routeFocus.venueLng];
+    const airportPos: [number, number] = [routeFocus.airportLat, routeFocus.airportLng];
 
-    const venueDot = document.createElement("div");
-    venueDot.style.cssText = "width:20px;height:20px;border-radius:50%;background:#22c55e;border:2px solid rgba(255,255,255,0.8);";
-    const venueMarker = new google.maps.marker.AdvancedMarkerElement({
-      map, position: venuePos, content: venueDot, title: routeFocus.venueName,
+    const venueIcon = Leaf.divIcon({
+      html: '<div style="width:20px;height:20px;border-radius:50%;background:#22c55e;border:2px solid rgba(255,255,255,0.8);"></div>',
+      className: "",
+      iconSize: [20, 20],
+      iconAnchor: [10, 10],
     });
+    const venueMarker = Leaf.marker(venuePos, { icon: venueIcon, title: routeFocus.venueName }).addTo(map);
     overlayMarkersRef.current.push(venueMarker);
 
-    const airportDot = document.createElement("div");
-    airportDot.style.cssText = "width:20px;height:20px;border-radius:50%;background:#d4a843;border:2px solid rgba(255,255,255,0.8);";
-    const airportMarker = new google.maps.marker.AdvancedMarkerElement({
-      map, position: airportPos, content: airportDot, title: routeFocus.airportCode,
+    const airportIcon = Leaf.divIcon({
+      html: '<div style="width:20px;height:20px;border-radius:50%;background:#d4a843;border:2px solid rgba(255,255,255,0.8);"></div>',
+      className: "",
+      iconSize: [20, 20],
+      iconAnchor: [10, 10],
     });
+    const airportMarker = Leaf.marker(airportPos, { icon: airportIcon, title: routeFocus.airportCode }).addTo(map);
     overlayMarkersRef.current.push(airportMarker);
 
-    const bounds = new google.maps.LatLngBounds();
-    bounds.extend(venuePos);
-    bounds.extend(airportPos);
-    map.fitBounds(bounds, { top: 50, left: 50, right: 50, bottom: 50 + bottomPaddingRef.current });
+    const bounds = Leaf.latLngBounds([venuePos, airportPos]);
+    map.fitBounds(bounds, { padding: [50, 50], paddingBottomRight: [0, bottomPaddingRef.current] });
 
     if (!routeFocus.pinOnly) {
-      const cacheKey = `${routeFocus.venueLat},${routeFocus.venueLng};${routeFocus.airportLat},${routeFocus.airportLng}`;
-      const cached = directionsCache.get(cacheKey);
-      if (cached) {
-        directionsRendererRef.current?.setDirections(cached);
-      } else {
-        const svc = new google.maps.DirectionsService();
-        svc.route(
-          { origin: venuePos, destination: airportPos, travelMode: google.maps.TravelMode.DRIVING },
-          (result, status) => {
-            if (status === "OK" && result) {
-              directionsCache.set(cacheKey, result);
-              directionsRendererRef.current?.setDirections(result);
-            }
+      fetchRouteGeometry(routeFocus.venueLat, routeFocus.venueLng, routeFocus.airportLat, routeFocus.airportLng)
+        .then((coords) => {
+          if (coords && mapRef.current) {
+            routeLayerRef.current = Leaf.polyline(coords, {
+              color: "#d4a843",
+              weight: 4,
+              opacity: 0.8,
+            }).addTo(mapRef.current);
           }
-        );
-      }
+        });
     }
   }, [routeFocus, mapReady]);
 
   // Rampage overlay: numbered markers + connecting polyline
   useEffect(() => {
-    // Clean up previous rampage markers and polyline
-    for (const m of rampageMarkersRef.current) m.map = null;
+    const Leaf = leafletRef.current;
+    rampageMarkersRef.current.forEach((m) => m.remove());
     rampageMarkersRef.current = [];
     if (rampagePolylineRef.current) {
-      rampagePolylineRef.current.setMap(null);
+      rampagePolylineRef.current.remove();
       rampagePolylineRef.current = null;
     }
 
-    if (!mapReady || !mapRef.current || !rampageActive || rampageGames.length === 0) return;
+    if (!mapReady || !mapRef.current || !Leaf || !rampageActive || rampageGames.length === 0) return;
 
     const map = mapRef.current;
-    const points: { lat: number; lng: number }[] = [];
+    const points: [number, number][] = [];
 
-    // Add start point
-    if (rampageStart) points.push({ lat: rampageStart.lat, lng: rampageStart.lng });
+    if (rampageStart) points.push([rampageStart.lat, rampageStart.lng]);
 
-    // Add numbered markers for each game
     rampageGames.forEach((game, i) => {
-      points.push({ lat: game.lat, lng: game.lng });
+      points.push([game.lat, game.lng]);
 
-      const el = document.createElement("div");
-      el.style.cssText = `
-        width: 24px; height: 24px; border-radius: 50%;
-        background: #60a5fa; color: white; font-family: monospace;
-        font-size: 12px; font-weight: 700; display: flex;
-        align-items: center; justify-content: center;
-        border: 2px solid rgba(255,255,255,0.8);
-        box-shadow: 0 2px 8px rgba(59,130,246,0.5);
-      `;
-      el.textContent = String(i + 1);
-
-      const marker = new google.maps.marker.AdvancedMarkerElement({
-        map,
-        position: { lat: game.lat, lng: game.lng },
-        content: el,
-        zIndex: 1000 + i,
+      const icon = Leaf.divIcon({
+        html: `<div style="width:24px;height:24px;border-radius:50%;background:#60a5fa;color:white;font-family:monospace;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,0.8);box-shadow:0 2px 8px rgba(59,130,246,0.5);">${i + 1}</div>`,
+        className: "",
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
       });
+
+      const marker = Leaf.marker([game.lat, game.lng], { icon, zIndexOffset: 1000 + i }).addTo(map);
       rampageMarkersRef.current.push(marker);
     });
 
-    // Add end point
-    if (rampageEnd) points.push({ lat: rampageEnd.lat, lng: rampageEnd.lng });
+    if (rampageEnd) points.push([rampageEnd.lat, rampageEnd.lng]);
 
-    // Draw connecting polyline
     if (points.length >= 2) {
-      rampagePolylineRef.current = new google.maps.Polyline({
-        path: points,
-        geodesic: true,
-        strokeColor: "#60a5fa",
-        strokeOpacity: 0.6,
-        strokeWeight: 2,
-        icons: [{
-          icon: { path: "M 0,-1 0,1", strokeOpacity: 1, scale: 3 },
-          offset: "0",
-          repeat: "16px",
-        }],
-        map,
-      });
+      rampagePolylineRef.current = Leaf.polyline(points, {
+        color: "#60a5fa",
+        weight: 2,
+        opacity: 0.6,
+        dashArray: "8 8",
+      }).addTo(map);
     }
   }, [rampageActive, rampageGames, rampageStart, rampageEnd, mapReady]);
 

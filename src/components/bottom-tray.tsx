@@ -294,7 +294,7 @@ function TransitRows({
             <div className="flex items-center gap-2 mb-2">
               <Icon className={`size-4 ${colorClass}`} />
               <a
-                href={`https://www.google.com/maps/search/?api=1&query=${stop.lat},${stop.lng}`}
+                href={`https://www.openstreetmap.org/?mlat=${stop.lat}&mlon=${stop.lng}#map=15/${stop.lat}/${stop.lng}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`font-bold text-sm no-underline hover:underline ${colorClass}`}
@@ -326,15 +326,6 @@ function TransitRows({
                       <span className="cursor-pointer hover:underline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(lyftDeepLink(vLat, vLng, stop.lat, stop.lng), "_blank"); }}>Lyft {times.lyftEstimate ? `~${extractUpperBound(times.lyftEstimate)}` : "--"}</span>
                     </div>
                   </a>
-                  <div className="rounded-lg overflow-hidden border border-black/5">
-                    <iframe
-                      className="w-full h-[180px]"
-                      style={{ colorScheme: "light" }}
-                      loading="lazy"
-                      referrerPolicy="no-referrer-when-downgrade"
-                      src={`https://www.google.com/maps/embed/v1/directions?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&origin=${stop.lat},${stop.lng}&destination=${vLat},${vLng}&mode=driving&zoom=10`}
-                    />
-                  </div>
                 </div>
                 {/* Transit column */}
                 {times.transitMinutes != null && (
@@ -352,14 +343,6 @@ function TransitRows({
                       </div>
                       <div className="text-[10px] text-emerald-600 mt-1">{times.transitFare ?? "No fare info"}</div>
                     </a>
-                    <div className="rounded-lg overflow-hidden border border-black/5">
-                      <iframe
-                        className="w-full h-[180px]"
-                        loading="lazy"
-                        referrerPolicy="no-referrer-when-downgrade"
-                        src={`https://www.google.com/maps/embed/v1/directions?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&origin=${stop.lat},${stop.lng}&destination=${vLat},${vLng}&mode=transit&zoom=10`}
-                      />
-                    </div>
                   </div>
                 )}
               </div>
@@ -697,35 +680,6 @@ export function BottomTray({
       });
     }
   }, [weather, weatherLoading]);
-
-  // Airport delays state
-  interface AirportDelay { code: string; name: string; delayIndex: number | null; departureDel: number | null; arrivalDel: number | null; reasons: string[] }
-  const [airportDelays, setAirportDelays] = useState<Record<string, AirportDelay[]>>({});
-  const [delaysLoading, setDelaysLoading] = useState<Set<string>>(new Set());
-  const delaysFailed = useRef<Set<string>>(new Set());
-
-  const handleDelaysLoad = useCallback(async (airportCodes: string[]) => {
-    const key = airportCodes.sort().join(",");
-    if (!key || airportDelays[key] || delaysLoading.has(key) || delaysFailed.current.has(key)) return;
-    setDelaysLoading((prev) => new Set(prev).add(key));
-    try {
-      const res = await fetch(`/api/airport-delays?codes=${encodeURIComponent(key)}`);
-      if (res.ok) {
-        const data = await res.json();
-        setAirportDelays((prev) => ({ ...prev, [key]: data.delays }));
-      } else {
-        delaysFailed.current.add(key);
-      }
-    } catch {
-      delaysFailed.current.add(key);
-    } finally {
-      setDelaysLoading((prev) => {
-        const next = new Set(prev);
-        next.delete(key);
-        return next;
-      });
-    }
-  }, [airportDelays, delaysLoading]);
 
   // Station departures state (trains & buses)
   interface StationDeparture { carrier: string; routeName: string; headsign: string; mode: "bus" | "train"; departMinutes: number; departTime: string; destination: string }
@@ -1137,8 +1091,6 @@ export function BottomTray({
                       }
                       handlePolicyLoad(event.venue);
                       handleWeatherLoad(vLat, vLng, event.est_date || date);
-                      const aptCodes = (event.nearbyAirports ?? []).map((a) => a.code);
-                      if (aptCodes.length > 0) handleDelaysLoad(aptCodes);
                       const transitStopsForDeps = [
                         ...(event.nearbyTrainStations ?? []).map((s) => ({ code: s.code, name: s.name, lat: s.lat, lng: s.lng })),
                         ...(event.nearbyBusStations ?? []).map((s) => ({ code: s.code, name: s.name, lat: s.lat, lng: s.lng })),
@@ -1592,36 +1544,6 @@ export function BottomTray({
                         {transitTab === "flights" && airports.length > 0 && <TransitRows stops={airports} icon={Plane} vLat={event.lat!} vLng={event.lng!} enriched={enriched} enriching={enriching} onEnrich={(stop) => handleEnrich(event.lat!, event.lng!, stop, event.date_time_utc)} onRouteFocus={onRouteFocus} isAnimating={false} venueName={event.venue} colorClass="text-[--color-flight]" tipoffUtc={event.date_time_utc} />}
                         {transitTab === "trains" && trains.length > 0 && <TransitRows stops={trains} icon={TrainFront} vLat={event.lat!} vLng={event.lng!} enriched={enriched} enriching={enriching} onEnrich={(stop) => handleEnrich(event.lat!, event.lng!, stop, event.date_time_utc)} onRouteFocus={onRouteFocus} isAnimating={false} venueName={event.venue} colorClass="text-[--color-train]" tipoffUtc={event.date_time_utc} />}
                         {transitTab === "buses" && buses.length > 0 && <TransitRows stops={buses} icon={BusFront} vLat={event.lat!} vLng={event.lng!} enriched={enriched} enriching={enriching} onEnrich={(stop) => handleEnrich(event.lat!, event.lng!, stop, event.date_time_utc)} onRouteFocus={onRouteFocus} isAnimating={false} venueName={event.venue} colorClass="text-[--color-bus]" tipoffUtc={event.date_time_utc} />}
-
-                        {/* Airport Status (flights tab only) */}
-                        {transitTab === "flights" && (() => {
-                          const aptCodes = airports.map((a) => a.code);
-                          const delayKey = aptCodes.sort().join(",");
-                          const delays = airportDelays[delayKey];
-                          const dLoading = delaysLoading.has(delayKey);
-                          if (aptCodes.length === 0 || (!delays && !dLoading)) return null;
-                          return (
-                            <div className="mt-6">
-                              <h3 className="text-base font-semibold text-neutral-800 mb-3">Airport status</h3>
-                              {dLoading && !delays && <div className="flex items-center gap-2 text-sm text-neutral-500"><Loader2 className="size-4 animate-spin" /> Checking delays...</div>}
-                              {delays && (
-                                <div className="flex flex-wrap gap-2">
-                                  {delays.map((d) => {
-                                    const maxDelay = Math.max(d.departureDel ?? 0, d.arrivalDel ?? 0);
-                                    const hasDelay = maxDelay > 0;
-                                    return (
-                                      <div key={d.code} className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold ${hasDelay ? "bg-amber-50 border border-amber-200 text-amber-600" : "bg-neutral-50 text-neutral-900"}`}>
-                                        {d.code}
-                                        <span className={`size-2 rounded-full ${hasDelay ? "bg-amber-400" : "bg-emerald-500"}`} />
-                                        {hasDelay && <span className="text-xs font-medium">Delays +{maxDelay}m</span>}
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })()}
 
                         {/* Station Departures (trains/buses tabs) */}
                         {(transitTab === "trains" || transitTab === "buses") && (() => {

@@ -109,55 +109,58 @@ async function searchHotelsNearVenue(
   venueName: string,
   checkinDate: string,
 ): Promise<HotelSuggestion[]> {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
-  if (!apiKey) return [];
-
   try {
-    const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${venueLat},${venueLng}&radius=8000&type=lodging&key=${apiKey}&rankby=prominence`;
-    const res = await fetch(url);
+    // Use Overpass API instead of Google Places
+    const query = `[out:json][timeout:10];(node["tourism"="hotel"](around:8000,${venueLat},${venueLng});way["tourism"="hotel"](around:8000,${venueLat},${venueLng});node["tourism"="motel"](around:8000,${venueLat},${venueLng});way["tourism"="motel"](around:8000,${venueLat},${venueLng}););out center body 15;`;
+    const res = await fetch("https://overpass-api.de/api/interpreter", {
+      method: "POST",
+      body: `data=${encodeURIComponent(query)}`,
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      signal: AbortSignal.timeout(12000),
+    });
     if (!res.ok) return [];
     const data = await res.json();
-    if (data.status !== "OK" || !data.results) return [];
+    if (!data.elements) return [];
 
     const checkoutDate = new Date(checkinDate + "T12:00:00");
     checkoutDate.setDate(checkoutDate.getDate() + 1);
     const checkout = checkoutDate.toISOString().split("T")[0];
 
-    return data.results.slice(0, 8).map((place: {
-      name: string;
-      vicinity: string;
-      rating?: number;
-      price_level?: number;
-      geometry: { location: { lat: number; lng: number } };
-    }) => {
-      const hLat = place.geometry.location.lat;
-      const hLng = place.geometry.location.lng;
-      const dist = haversineMiles(hLat, hLng, venueLat, venueLng);
-      const roadMiles = dist * 1.3;
-      const driveMin = Math.max(3, Math.round((roadMiles / 25) * 60));
-      // Uber: $2.50 base + $1.50/mi + $0.25/min, $7 min
-      const uberLow = Math.max(7, Math.round(2.5 + 1.5 * roadMiles + 0.25 * driveMin));
-      const uberHigh = Math.round(uberLow * 1.3);
-      // Lyft: $2.00 base + $1.35/mi + $0.20/min, $6 min
-      const lyftLow = Math.max(6, Math.round(2.0 + 1.35 * roadMiles + 0.20 * driveMin));
-      const lyftHigh = Math.round(lyftLow * 1.3);
+    return data.elements
+      .map((el: { lat?: number; lon?: number; center?: { lat: number; lon: number }; tags?: Record<string, string> }) => {
+        const hLat = el.lat ?? el.center?.lat;
+        const hLng = el.lon ?? el.center?.lon;
+        if (hLat == null || hLng == null) return null;
+        const tags = el.tags ?? {};
+        if (!tags.name) return null;
+        const dist = haversineMiles(hLat, hLng, venueLat, venueLng);
+        const roadMiles = dist * 1.3;
+        const driveMin = Math.max(3, Math.round((roadMiles / 25) * 60));
+        const uberLow = Math.max(7, Math.round(2.5 + 1.5 * roadMiles + 0.25 * driveMin));
+        const uberHigh = Math.round(uberLow * 1.3);
+        const lyftLow = Math.max(6, Math.round(2.0 + 1.35 * roadMiles + 0.20 * driveMin));
+        const lyftHigh = Math.round(lyftLow * 1.3);
+        const stars = parseInt(tags.stars ?? "0");
 
-      return {
-        name: place.name,
-        vicinity: place.vicinity,
-        rating: place.rating ?? null,
-        priceLevel: place.price_level ?? null,
-        estimatedPrice: place.price_level ? PRICE_LEVEL_MAP[place.price_level] ?? "Unknown" : "Check price",
-        bookingUrl: `https://www.google.com/travel/hotels/?q=hotels+near+${encodeURIComponent(venueName)}&dates=${checkinDate},${checkout}`,
-        lat: hLat,
-        lng: hLng,
-        distanceMiles: Math.round(dist * 10) / 10,
-        driveMinutes: driveMin,
-        uberEstimate: uberLow === uberHigh ? `~$${uberLow}` : `~$${uberLow}–${uberHigh}`,
-        lyftEstimate: lyftLow === lyftHigh ? `~$${lyftLow}` : `~$${lyftLow}–${lyftHigh}`,
-        directionsUrl: `https://www.google.com/maps/dir/?api=1&origin=${hLat},${hLng}&destination=${venueLat},${venueLng}`,
-      };
-    }).sort((a: HotelSuggestion, b: HotelSuggestion) => a.distanceMiles - b.distanceMiles).slice(0, 5);
+        return {
+          name: tags.name,
+          vicinity: tags["addr:street"] ? `${tags["addr:housenumber"] ?? ""} ${tags["addr:street"]}`.trim() : "",
+          rating: null,
+          priceLevel: stars > 0 ? stars : null,
+          estimatedPrice: stars >= 4 ? "$150-250/night" : stars >= 3 ? "$80-150/night" : stars >= 2 ? "$50-80/night" : "Check price",
+          bookingUrl: `https://www.google.com/travel/hotels/?q=hotels+near+${encodeURIComponent(venueName)}&dates=${checkinDate},${checkout}`,
+          lat: hLat,
+          lng: hLng,
+          distanceMiles: Math.round(dist * 10) / 10,
+          driveMinutes: driveMin,
+          uberEstimate: uberLow === uberHigh ? `~$${uberLow}` : `~$${uberLow}–${uberHigh}`,
+          lyftEstimate: lyftLow === lyftHigh ? `~$${lyftLow}` : `~$${lyftLow}–${lyftHigh}`,
+          directionsUrl: `https://www.google.com/maps/dir/?api=1&origin=${hLat},${hLng}&destination=${venueLat},${venueLng}`,
+        };
+      })
+      .filter(Boolean)
+      .sort((a: HotelSuggestion, b: HotelSuggestion) => a.distanceMiles - b.distanceMiles)
+      .slice(0, 5);
   } catch {
     return [];
   }

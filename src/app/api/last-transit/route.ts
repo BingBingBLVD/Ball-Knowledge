@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const GOOGLE_API_KEY = process.env.GOOGLE_MAPS_API_KEY ?? "";
-
 export interface LastTransitInfo {
   stopCode: string;
   stopName: string;
@@ -18,34 +16,23 @@ export interface LastTransitInfo {
 const cache = new Map<string, { data: LastTransitInfo[]; ts: number }>();
 const CACHE_TTL = 30 * 60 * 1000;
 
-async function checkTransitAt(
+/** Fetch driving duration from OSRM as proxy for transit time */
+async function estimateTransitViaOsrm(
   venueLat: number, venueLng: number,
   stopLat: number, stopLng: number,
-  departEpoch: number
-): Promise<{
-  departureTime: number | null;
-  arrivalTime: number | null;
-  durationMin: number | null;
-} | null> {
-  if (!GOOGLE_API_KEY) return null;
-
+): Promise<number | null> {
   try {
-    const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${venueLat},${venueLng}&destination=${stopLat},${stopLng}&mode=transit&departure_time=${departEpoch}&key=${GOOGLE_API_KEY}`;
+    const url = `https://router.project-osrm.org/route/v1/driving/${venueLng},${venueLat};${stopLng},${stopLat}?overview=false`;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 6000);
     const res = await fetch(url, { signal: controller.signal });
     clearTimeout(timeout);
-
     if (!res.ok) return null;
     const data = await res.json();
-    const leg = data?.routes?.[0]?.legs?.[0];
-    if (!leg?.duration?.value) return null;
-
-    return {
-      departureTime: leg.departure_time?.value ?? null,
-      arrivalTime: leg.arrival_time?.value ?? null,
-      durationMin: Math.round(leg.duration.value / 60),
-    };
+    const duration = data?.routes?.[0]?.duration;
+    if (duration == null) return null;
+    // Transit is roughly 1.5x driving time
+    return Math.round((duration / 60) * 1.5);
   } catch {
     return null;
   }
@@ -72,50 +59,55 @@ export async function GET(req: NextRequest) {
 
   if (stops.length === 0) return NextResponse.json({ lastTransit: [] });
 
-  const cacheKey = `${venueLat.toFixed(3)},${venueLng.toFixed(3)},${tipoffUtc},${stops.map((s) => s.code).join(",")}`;
-  const cached = cache.get(cacheKey);
+  const cacheKeyStr = `${venueLat.toFixed(3)},${venueLng.toFixed(3)},${tipoffUtc},${stops.map((s) => s.code).join(",")}`;
+  const cached = cache.get(cacheKeyStr);
   if (cached && Date.now() - cached.ts < CACHE_TTL) {
     return NextResponse.json({ lastTransit: cached.data });
   }
 
   const tipoffMs = new Date(tipoffUtc).getTime();
-  // NBA game ~2.5 hours; check transit departing at game end + 30min buffer
-  const gameEndEpoch = Math.floor((tipoffMs + 3 * 3600000) / 1000);
-  // Also check a late departure (11 PM local-ish — 3.5h after tipoff as proxy)
-  const lateEpoch = Math.floor((tipoffMs + 3.5 * 3600000) / 1000);
-
+  // NBA game ~2.5 hours; estimate departure at game end + 30min buffer
+  const gameEndMs = tipoffMs + 3 * 3600000;
   const estGameEnd = tipoffMs + 2.5 * 3600000;
 
-  // Process stops in parallel (max 6 stops × 2 checks each)
+  // Process stops in parallel
   const results: LastTransitInfo[] = await Promise.all(
     stops.slice(0, 6).map(async (stop) => {
-      const [gameEndResult, lateResult] = await Promise.all([
-        checkTransitAt(venueLat, venueLng, stop.lat, stop.lng, gameEndEpoch),
-        checkTransitAt(venueLat, venueLng, stop.lat, stop.lng, lateEpoch),
-      ]);
+      const durationMin = await estimateTransitViaOsrm(venueLat, venueLng, stop.lat, stop.lng);
 
-      // Use the later result that still has transit available
-      const best = lateResult ?? gameEndResult;
-      const lastDep = best?.departureTime ? best.departureTime : gameEndResult?.departureTime ?? null;
-      const lastArr = best?.arrivalTime ? best.arrivalTime : gameEndResult?.arrivalTime ?? null;
+      if (durationMin == null) {
+        return {
+          stopCode: stop.code,
+          stopName: stop.name,
+          stopLat: stop.lat,
+          stopLng: stop.lng,
+          lastDeparture: null,
+          lastArrival: null,
+          durationMinutes: null,
+          available: false,
+          warning: false,
+        };
+      }
 
-      // Warn if the last departure is before game likely ends (~2.5h after tipoff)
-      const warning = lastDep != null && (lastDep * 1000) < estGameEnd;
+      // Estimate: depart at game end, arrive durationMin later
+      const departureMs = gameEndMs;
+      const arrivalMs = departureMs + durationMin * 60000;
+      const warning = departureMs < estGameEnd;
 
       return {
         stopCode: stop.code,
         stopName: stop.name,
         stopLat: stop.lat,
         stopLng: stop.lng,
-        lastDeparture: lastDep ? new Date(lastDep * 1000).toISOString() : null,
-        lastArrival: lastArr ? new Date(lastArr * 1000).toISOString() : null,
-        durationMinutes: best?.durationMin ?? null,
-        available: best != null,
+        lastDeparture: new Date(departureMs).toISOString(),
+        lastArrival: new Date(arrivalMs).toISOString(),
+        durationMinutes: durationMin,
+        available: true,
         warning,
       };
     })
   );
 
-  cache.set(cacheKey, { data: results, ts: Date.now() });
+  cache.set(cacheKeyStr, { data: results, ts: Date.now() });
   return NextResponse.json({ lastTransit: results });
 }

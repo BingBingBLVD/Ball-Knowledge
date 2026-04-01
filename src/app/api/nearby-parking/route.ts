@@ -34,15 +34,11 @@ export async function GET(req: NextRequest) {
   const sp = req.nextUrl.searchParams;
   const venueLat = parseFloat(sp.get("venueLat") ?? "");
   const venueLng = parseFloat(sp.get("venueLng") ?? "");
-  const venueName = sp.get("venueName") ?? "";
   const date = sp.get("date") ?? "";
 
   if (isNaN(venueLat) || isNaN(venueLng)) {
     return NextResponse.json({ parking: [] });
   }
-
-  const apiKey = process.env.GOOGLE_MAPS_API_KEY ?? process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
-  if (!apiKey) return NextResponse.json({ parking: [] });
 
   const key = `${venueLat.toFixed(3)},${venueLng.toFixed(3)}`;
   const cached = cache.get(key);
@@ -51,36 +47,32 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // Search for parking near venue — 2km radius
-    const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${venueLat},${venueLng}&radius=2000&type=parking&key=${apiKey}`;
-    const res = await fetch(url);
+    // Query OpenStreetMap Overpass API for parking within 2km
+    const query = `[out:json][timeout:10];(node["amenity"="parking"](around:2000,${venueLat},${venueLng});way["amenity"="parking"](around:2000,${venueLat},${venueLng}););out center body 20;`;
+    const res = await fetch("https://overpass-api.de/api/interpreter", {
+      method: "POST",
+      body: `data=${encodeURIComponent(query)}`,
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      signal: AbortSignal.timeout(12000),
+    });
     if (!res.ok) return NextResponse.json({ parking: [] });
     const data = await res.json();
-    if (data.status !== "OK" || !data.results) return NextResponse.json({ parking: [] });
+    if (!data.elements) return NextResponse.json({ parking: [] });
 
-    // SpotHero search URL for venue area
     const spotHeroBase = `https://spothero.com/search?latitude=${venueLat}&longitude=${venueLng}${date ? `&starts=${date}T16:00&ends=${date}T23:59` : ""}`;
 
-    const PRICE_MAP: Record<number, string> = { 0: "Free", 1: "$", 2: "$$", 3: "$$$", 4: "$$$$" };
+    const spots: ParkingSpot[] = data.elements
+      .map((el: { lat?: number; lon?: number; center?: { lat: number; lon: number }; tags?: Record<string, string> }) => {
+        const pLat = el.lat ?? el.center?.lat;
+        const pLng = el.lon ?? el.center?.lon;
+        if (pLat == null || pLng == null) return null;
 
-    const spots: ParkingSpot[] = data.results
-      .slice(0, 15)
-      .map((place: {
-        name: string;
-        vicinity: string;
-        rating?: number;
-        user_ratings_total?: number;
-        price_level?: number;
-        photos?: { photo_reference: string }[];
-        opening_hours?: { open_now?: boolean };
-        geometry: { location: { lat: number; lng: number } };
-      }) => {
-        const pLat = place.geometry.location.lat;
-        const pLng = place.geometry.location.lng;
+        const tags = el.tags ?? {};
+        const name = tags.name || "Parking";
         const dist = haversineMiles(pLat, pLng, venueLat, venueLng);
         const walkMin = Math.max(1, Math.round(dist * 20));
-        // Estimate event parking price based on distance (closer = pricier)
-        const isFree = place.name.toLowerCase().includes("free") || place.price_level === 0;
+
+        const isFree = tags.fee === "no" || name.toLowerCase().includes("free");
         let estimatedPrice: string | null = null;
         if (isFree) {
           estimatedPrice = "Free";
@@ -94,26 +86,24 @@ export async function GET(req: NextRequest) {
           estimatedPrice = "$5–15";
         }
 
-        const photoRef = place.photos?.[0]?.photo_reference;
-        const photoUrl = photoRef ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${photoRef}&key=${apiKey}` : null;
-
         return {
-          name: place.name,
-          vicinity: place.vicinity || "",
+          name,
+          vicinity: tags["addr:street"] ? `${tags["addr:housenumber"] ?? ""} ${tags["addr:street"]}`.trim() : "",
           lat: pLat,
           lng: pLng,
           distanceMiles: Math.round(dist * 100) / 100,
           walkMinutes: walkMin,
-          rating: place.rating ?? null,
-          totalRatings: place.user_ratings_total ?? 0,
-          openNow: place.opening_hours?.open_now ?? null,
-          priceLevel: place.price_level != null ? PRICE_MAP[place.price_level] ?? null : null,
+          rating: null,
+          totalRatings: 0,
+          openNow: null,
+          priceLevel: isFree ? "Free" : tags.fee === "yes" ? "$" : null,
           estimatedPrice,
-          photoUrl,
+          photoUrl: null,
           spotHeroUrl: spotHeroBase,
           directionsUrl: `https://www.google.com/maps/dir/?api=1&destination=${pLat},${pLng}&travelmode=driving`,
         };
       })
+      .filter(Boolean)
       .sort((a: ParkingSpot, b: ParkingSpot) => a.distanceMiles - b.distanceMiles)
       .slice(0, 8);
 

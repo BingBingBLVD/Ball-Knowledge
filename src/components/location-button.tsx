@@ -2,23 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { MapPin, Navigation, Search, X, Loader2 } from "lucide-react";
-import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
-
-const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
-
-let placesReady: Promise<void> | null = null;
-function ensurePlaces(): Promise<void> {
-  if (!placesReady) {
-    setOptions({ key: API_KEY, v: "weekly" });
-    placesReady = importLibrary("places").then(() => {});
-  }
-  return placesReady;
-}
 
 interface Suggestion {
-  placeId: string;
+  id: string;
   main: string;
   secondary: string;
+  lat: number;
+  lng: number;
 }
 
 export function LocationButton({
@@ -36,37 +26,26 @@ export function LocationButton({
   const [label, setLabel] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const autocompleteRef = useRef<google.maps.places.AutocompleteService | null>(null);
-  const sessionTokenRef = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
-  const geocoderRef = useRef<google.maps.Geocoder | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Init Google Places
+  // Reverse geocode current location for label via Nominatim
   useEffect(() => {
-    ensurePlaces().then(() => {
-      autocompleteRef.current = new google.maps.places.AutocompleteService();
-      sessionTokenRef.current = new google.maps.places.AutocompleteSessionToken();
-      geocoderRef.current = new google.maps.Geocoder();
-    });
-  }, []);
-
-  // Reverse geocode current location for label
-  useEffect(() => {
-    if (!userLocation || !geocoderRef.current) {
+    if (!userLocation) {
       setLabel(null);
       return;
     }
-    geocoderRef.current.geocode(
-      { location: { lat: userLocation.lat, lng: userLocation.lng } },
-      (results, status) => {
-        if (status === "OK" && results?.[0]) {
-          const addr = results[0].address_components;
-          const city = addr.find((c) => c.types.includes("locality"))?.short_name;
-          const state = addr.find((c) => c.types.includes("administrative_area_level_1"))?.short_name;
-          setLabel(city && state ? `${city}, ${state}` : results[0].formatted_address.split(",").slice(0, 2).join(","));
-        }
-      }
-    );
+    fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${userLocation.lat}&lon=${userLocation.lng}&format=json&addressdetails=1`,
+      { headers: { "Accept-Language": "en" } }
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        const addr = data.address;
+        const city = addr?.city || addr?.town || addr?.village || "";
+        const state = addr?.state || "";
+        setLabel(city && state ? `${city}, ${state}` : data.display_name?.split(",").slice(0, 2).join(",") ?? null);
+      })
+      .catch(() => setLabel(null));
   }, [userLocation]);
 
   // Close on outside click
@@ -89,31 +68,33 @@ export function LocationButton({
     if (addressMode && inputRef.current) inputRef.current.focus();
   }, [addressMode]);
 
-  const fetchSuggestions = useCallback((input: string) => {
-    if (!input.trim() || !autocompleteRef.current) {
+  const fetchSuggestions = useCallback(async (input: string) => {
+    if (!input.trim()) {
       setSuggestions([]);
       return;
     }
-    autocompleteRef.current.getPlacePredictions(
-      {
-        input,
-        types: ["geocode"],
-        sessionToken: sessionTokenRef.current!,
-      },
-      (predictions, status) => {
-        if (status !== "OK" || !predictions) {
-          setSuggestions([]);
-          return;
-        }
-        setSuggestions(
-          predictions.slice(0, 4).map((p) => ({
-            placeId: p.place_id,
-            main: p.structured_formatting.main_text,
-            secondary: p.structured_formatting.secondary_text,
-          }))
-        );
-      }
-    );
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(input)}&format=json&limit=4&addressdetails=1`,
+        { headers: { "Accept-Language": "en" } }
+      );
+      if (!res.ok) { setSuggestions([]); return; }
+      const data = await res.json();
+      setSuggestions(
+        data.map((r: { place_id: number; display_name: string; lat: string; lon: string }) => {
+          const parts = r.display_name.split(", ");
+          return {
+            id: String(r.place_id),
+            main: parts[0],
+            secondary: parts.slice(1, 3).join(", "),
+            lat: parseFloat(r.lat),
+            lng: parseFloat(r.lon),
+          };
+        })
+      );
+    } catch {
+      setSuggestions([]);
+    }
   }, []);
 
   function handleQueryChange(val: string) {
@@ -127,18 +108,11 @@ export function LocationButton({
   }
 
   function selectSuggestion(s: Suggestion) {
-    if (!geocoderRef.current) return;
-    geocoderRef.current.geocode({ placeId: s.placeId }, (results, status) => {
-      if (status === "OK" && results?.[0]?.geometry?.location) {
-        const loc = results[0].geometry.location;
-        onLocationChange({ lat: loc.lat(), lng: loc.lng() });
-        sessionTokenRef.current = new google.maps.places.AutocompleteSessionToken();
-        setSuggestions([]);
-        setQuery("");
-        setAddressMode(false);
-        setOpen(false);
-      }
-    });
+    onLocationChange({ lat: s.lat, lng: s.lng });
+    setSuggestions([]);
+    setQuery("");
+    setAddressMode(false);
+    setOpen(false);
   }
 
   function useCurrentLocation() {
@@ -226,7 +200,7 @@ export function LocationButton({
                 <div className="mt-1">
                   {suggestions.map((s) => (
                     <button
-                      key={s.placeId}
+                      key={s.id}
                       onClick={() => selectSuggestion(s)}
                       className="w-full text-left px-2 py-2 text-sm hover:bg-neutral-50 rounded transition-colors"
                     >
